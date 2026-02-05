@@ -15,8 +15,12 @@ Thumbs.db
 training/checkpoints/
 training/.venv/
 training/*.json
-training/*.png
 training/uv.lock
+
+# Visualizations (tracked - except generated PNGs in training/)
+training/*.png
+
+# Note: visualizations/*.png is tracked, see visualizations/.gitkeep
 
 # Build outputs
 pkg/
