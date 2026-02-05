@@ -1,0 +1,35 @@
+[package]
+name = "swipe-desktop"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "swipe-dtw"
+path = "src/bin/swipe-dtw.rs"
+
+[[bin]]
+name = "swipe-ctc"
+path = "src/bin/swipe-ctc.rs"
+required-features = ["neural"]
+
+[[bin]]
+name = "analyze"
+path = "src/bin/analyze.rs"
+
+[[bin]]
+name = "compare"
+path = "src/bin/compare.rs"
+
+[[bin]]
+name = "jagged"
+path = "src/bin/jagged.rs"
+
+[features]
+default = ["neural"]
+neural = ["swipe-engine/neural"]
+
+[dependencies]
+swipe-engine = { path = "../../crates/swipe-engine" }
+macroquad = "0.4"
+serde = { workspace = true }
+serde_json = { workspace = true }

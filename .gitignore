@@ -1,0 +1,36 @@
+# Rust / Cargo
+target/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Training artifacts
+training/checkpoints/
+training/.venv/
+training/*.json
+training/*.png
+training/uv.lock
+
+# Build outputs
+pkg/
+build/
+
+# Logs
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# ONNX model files (should be in checkpoints)
+*.onnx
+*.onnx.data

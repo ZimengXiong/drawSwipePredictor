@@ -1,0 +1,14 @@
+[package]
+name = "swipe-engine"
+version.workspace = true
+edition.workspace = true
+
+[features]
+default = []
+neural = ["ort", "ndarray"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+ort = { version = "2.0.0-rc", optional = true }
+ndarray = { version = "0.15", optional = true }

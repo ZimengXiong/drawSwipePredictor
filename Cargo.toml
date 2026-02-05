@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/swipe-engine",
+    "apps/desktop",
+]
+default-members = ["apps/desktop"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Zimeng Xiong"]
+license = "MIT"
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
