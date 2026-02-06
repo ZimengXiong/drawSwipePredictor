@@ -25,7 +25,8 @@ uv run python train_ctc.py --resume training/checkpoints/checkpoint_epoch_50.pt 
 ## Architecture
 
 ```
-Gesture Path → Feature Extraction(7d) → Conv1D(128) → BiLSTM(256, 3) → CTC Decoder → Letter Sequence
+Gesture Path → Feature Extraction(7d) → Feature Masking → Conv1D(128) →
+Relative Gesture Attention → BiLSTM(256, 3) → CTC Decoder → Letter Sequence
 ```
 
 ### Input Features (7 dimensions per timestep)
@@ -41,11 +42,28 @@ Gesture Path → Feature Extraction(7d) → Conv1D(128) → BiLSTM(256, 3) → C
 The richer feature set gives the model local directional context at each
 timestep, significantly improving CTC alignment compared to raw (x, y) alone.
 
+### Feature Masking (GestureFeatureMasking)
+
+During training, randomly masks contiguous spans of the input sequence
+(zeroing out 1–8 timesteps per span, up to 2 spans). This forces the model
+to reconstruct missing path segments from surrounding context, making it
+robust to the partially-recalled gestures common in blind drawing.
+Disabled during inference.
+
 ### Conv1D Front-End
 
 Two Conv1D layers (kernel_size=3) with BatchNorm extract local n-gram-like
-patterns before the BiLSTM, improving the model's ability to recognize
-short letter sequences and transitions.
+patterns before the attention and BiLSTM layers.
+
+### Relative Gesture Attention (RelativeGestureAttention)
+
+A lightweight self-attention layer between Conv1D and BiLSTM that lets
+the model see the global gesture shape while processing local patterns.
+Uses learnable relative position biases so nearby points attend more
+strongly to each other, which is natural for gesture paths. This helps
+the model understand "where am I in the overall shape" — critical for
+CTC alignment since blind drawings have distorted proportions but
+correct overall topology.
 
 ### Training Schedule
 

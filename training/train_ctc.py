@@ -2,11 +2,21 @@
 """
 CTC-based sequence-to-sequence model for blind swipe typing.
 
-This model learns to decode gesture paths into letter sequences,
-allowing it to generalize to ANY word - even words never seen in training.
+This model learns to decode gesture paths drawn from memory into letter
+sequences, allowing it to generalize to ANY word - even words never seen
+in training.
 
 Architecture:
-    Path points → Feature Extraction → Conv1D → BiLSTM Encoder → CTC Decoder
+    Path points → Feature Extraction → Feature Masking →
+    Conv1D → Relative Gesture Attention → BiLSTM Encoder → CTC Decoder
+
+Key innovations for blind drawing recognition:
+    1. Feature masking: randomly masks contiguous path segments during
+       training, forcing robustness to partially-recalled gestures
+    2. Relative gesture attention: position-aware self-attention between
+       Conv and LSTM captures global shape topology
+    3. Shape-intrinsic features: 7 dimensions that are invariant to the
+       arbitrary scale/rotation/position of blind drawings
 
 Features per timestep (7 dimensions):
     - (x, y): normalized position
@@ -421,14 +431,122 @@ def collate_fn(batch):
 # ============================================================================
 
 
+class GestureFeatureMasking(nn.Module):
+    """
+    Randomly masks contiguous spans of the feature sequence during training.
+
+    This is conceptually similar to SpecAugment but designed for gesture paths:
+    rather than masking frequency bands (which don't exist in gesture data),
+    we mask contiguous time spans to force the model to infer missing path
+    segments from surrounding context. This is especially important for blind
+    drawing where parts of the gesture may be poorly recalled.
+
+    During inference, no masking is applied.
+    """
+
+    def __init__(self, max_mask_spans: int = 2, max_span_len: int = 8):
+        super().__init__()
+        self.max_mask_spans = max_mask_spans
+        self.max_span_len = max_span_len
+
+    def forward(self, x):
+        # x: (batch, seq_len, features)
+        if not self.training:
+            return x
+
+        batch_sz, seq_len, _ = x.shape
+        mask = torch.ones(batch_sz, seq_len, 1, device=x.device, dtype=x.dtype)
+
+        for b in range(batch_sz):
+            n_spans = random.randint(0, self.max_mask_spans)
+            for _ in range(n_spans):
+                span_len = random.randint(1, min(self.max_span_len, seq_len // 4))
+                start = random.randint(0, seq_len - span_len)
+                mask[b, start : start + span_len, 0] = 0.0
+
+        return x * mask
+
+
+class RelativeGestureAttention(nn.Module):
+    """
+    Lightweight relative-position self-attention for gesture sequences.
+
+    Unlike standard self-attention, this uses relative position offsets
+    (how far apart two timesteps are along the path) as a bias term.
+    This captures "nearby points should attend more to each other"
+    which is natural for gesture paths.
+
+    The attention operates on the gesture embedding dimension and uses
+    a single head for efficiency since our sequences are short (64 points).
+    """
+
+    def __init__(self, embed_dim: int, max_relative_pos: int = 64, drop: float = 0.1):
+        super().__init__()
+        self.embed_dim = embed_dim
+        # Project to queries, keys, values
+        self.qkv_proj = nn.Linear(embed_dim, embed_dim * 3)
+        self.out_proj = nn.Linear(embed_dim, embed_dim)
+        self.layer_norm = nn.LayerNorm(embed_dim)
+        self.dropout = nn.Dropout(drop)
+
+        # Learnable relative position bias table
+        # Positions range from -max_relative_pos to +max_relative_pos
+        self.rel_bias = nn.Parameter(
+            torch.zeros(2 * max_relative_pos + 1)
+        )
+        self.max_relative_pos = max_relative_pos
+        self._inv_scale = 1.0 / (embed_dim ** 0.5)
+
+    def forward(self, x):
+        # x: (batch, seq_len, embed_dim)
+        residual = x
+        x = self.layer_norm(x)
+
+        batch_sz, seq_len, _ = x.shape
+
+        # Compute Q, K, V in one projection
+        qkv = self.qkv_proj(x)
+        q, k, v = qkv.chunk(3, dim=-1)
+
+        # Scaled dot-product attention scores
+        attn_scores = torch.bmm(q, k.transpose(1, 2)) * self._inv_scale
+
+        # Add relative position bias
+        positions = torch.arange(seq_len, device=x.device)
+        rel_offsets = positions.unsqueeze(0) - positions.unsqueeze(1)  # (seq, seq)
+        rel_offsets = rel_offsets.clamp(-self.max_relative_pos, self.max_relative_pos)
+        rel_offsets = rel_offsets + self.max_relative_pos  # shift to [0, 2*max]
+        pos_bias = self.rel_bias[rel_offsets]  # (seq, seq)
+        attn_scores = attn_scores + pos_bias.unsqueeze(0)
+
+        attn_weights = torch.softmax(attn_scores, dim=-1)
+        attn_weights = self.dropout(attn_weights)
+
+        attended = torch.bmm(attn_weights, v)
+        out = self.out_proj(attended)
+        out = self.dropout(out)
+
+        return residual + out
+
+
 class CTCSwipeModel(nn.Module):
     """
-    Conv1D + BiLSTM encoder with CTC decoder for gesture-to-text.
+    Conv1D + Relative Attention + BiLSTM encoder with CTC decoder.
 
-    Architecture:
-        1. Conv1D front-end: extracts local patterns (n-gram-like features)
-        2. BiLSTM encoder: captures sequential dependencies
-        3. Linear projection: maps to character probabilities
+    Architecture designed for blind-drawn gesture recognition:
+        1. Feature masking: forces robustness to missing path segments
+        2. Conv1D front-end: extracts local stroke patterns
+        3. Relative gesture attention: captures global shape context with
+           position-aware attention (nearby points attend more strongly)
+        4. BiLSTM encoder: models sequential dependencies
+        5. Linear projection: maps to character probabilities
+
+    The attention layer between Conv and LSTM is the key novel component —
+    it lets the model see the "big picture" of the gesture shape before
+    the LSTM processes it sequentially. This is critical because blind
+    drawings from memory often have distorted proportions but correct
+    overall topology, and the attention helps the model focus on the
+    topological structure.
 
     Input: (batch, seq_len, input_dim) - extracted path features
     Output: (seq_len, batch, num_classes) - character probabilities
@@ -444,18 +562,28 @@ class CTCSwipeModel(nn.Module):
     ):
         super().__init__()
 
+        # Feature masking for regularization during training
+        self.feature_mask = GestureFeatureMasking(
+            max_mask_spans=2, max_span_len=8
+        )
+
         # Conv1D front-end for local feature extraction
         self.conv = nn.Sequential(
-            # First conv block: input_dim -> conv_channels
             nn.Conv1d(input_dim, conv_channels, kernel_size=3, padding=1),
             nn.BatchNorm1d(conv_channels),
             nn.ReLU(),
             nn.Dropout(dropout * 0.5),
-            # Second conv block: conv_channels -> conv_channels
             nn.Conv1d(conv_channels, conv_channels, kernel_size=3, padding=1),
             nn.BatchNorm1d(conv_channels),
             nn.ReLU(),
             nn.Dropout(dropout * 0.5),
+        )
+
+        # Relative gesture attention for global shape context
+        self.gesture_attn = RelativeGestureAttention(
+            embed_dim=conv_channels,
+            max_relative_pos=64,
+            drop=dropout,
         )
 
         self.encoder = nn.LSTM(
@@ -477,11 +605,17 @@ class CTCSwipeModel(nn.Module):
     def forward(self, x):
         # x: (batch, seq_len, input_dim)
 
+        # Apply feature masking during training
+        x = self.feature_mask(x)
+
         # Conv1D expects (batch, channels, seq_len)
         x = x.permute(0, 2, 1)
         x = self.conv(x)
         # Back to (batch, seq_len, channels)
         x = x.permute(0, 2, 1)
+
+        # Relative gesture attention for global context
+        x = self.gesture_attn(x)
 
         encoder_out, _ = self.encoder(x)  # (batch, seq_len, hidden*2)
         logits = self.fc(encoder_out)  # (batch, seq_len, num_classes)
