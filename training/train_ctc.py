@@ -77,17 +77,6 @@ KEYBOARD_LAYOUT = {
 }
 
 
-# Pre-compute adjacency map for key neighborhood confusion
-_KEY_NEIGHBORS: dict = {}
-for _c, _pos in KEYBOARD_LAYOUT.items():
-    _KEY_NEIGHBORS[_c] = []
-    for _c2, _pos2 in KEYBOARD_LAYOUT.items():
-        if _c2 != _c:
-            _d = math.hypot(_pos[0] - _pos2[0], _pos[1] - _pos2[1])
-            if _d <= 1.5:  # Adjacent keys are typically ≤1.5 units apart
-                _KEY_NEIGHBORS[_c].append(_c2)
-
-
 # ============================================================================
 # Path Generation
 # ============================================================================
@@ -99,43 +88,6 @@ def get_word_path(word: str) -> np.ndarray:
     for char in word.lower():
         if char in KEYBOARD_LAYOUT:
             points.append(KEYBOARD_LAYOUT[char])
-    if len(points) < 2:
-        return np.array([])
-    return np.array(points)
-
-
-def get_word_path_realistic(word: str, severity: float = 1.0) -> np.ndarray:
-    """
-    Generate a realistic swipe path with per-key noise and optional errors.
-
-    Improvements over get_word_path:
-    1. Per-key positional noise: fingers don't hit key centers exactly
-    2. Key neighborhood confusion: occasionally target an adjacent key
-    3. Letter skipping: fast swipers sometimes skip intermediate keys
-    4. Per-key dwell variation: some keys get more points (lingering)
-    """
-    chars = [c for c in word.lower() if c in KEYBOARD_LAYOUT]
-    if len(chars) < 2:
-        return np.array([])
-
-    points = []
-    for i, char in enumerate(chars):
-        # Occasional letter skipping (skip mid-word keys, never first/last)
-        if 0 < i < len(chars) - 1 and random.random() < 0.08 * severity:
-            continue
-
-        # Key neighborhood confusion: small chance of targeting adjacent key
-        target_char = char
-        if random.random() < 0.03 * severity and _KEY_NEIGHBORS.get(char):
-            target_char = random.choice(_KEY_NEIGHBORS[char])
-
-        pos = np.array(KEYBOARD_LAYOUT[target_char], dtype=np.float64)
-
-        # Per-key positional noise (Gaussian around key center)
-        pos = pos + np.random.normal(0, 0.15 * severity, 2)
-
-        points.append(pos)
-
     if len(points) < 2:
         return np.array([])
     return np.array(points)
@@ -155,89 +107,6 @@ def interpolate_path(path: np.ndarray, step: float = 0.3) -> np.ndarray:
                 t = j / (n_steps + 1)
                 result.append(p1 + t * (p2 - p1))
         result.append(p2)
-    return np.array(result)
-
-
-def interpolate_path_curved(
-    path: np.ndarray, step: float = 0.3, severity: float = 1.0
-) -> np.ndarray:
-    """
-    Interpolate path with momentum-aware curves instead of straight lines.
-
-    Simulates realistic finger movement:
-    1. Bezier-like curves between keys (momentum/overshoot at turns)
-    2. Per-key dwell variation (linger on some keys, rush through others)
-    3. Overshoot at sharp direction changes
-
-    This produces far more realistic gesture paths than pure linear
-    interpolation. Real fingers have inertia: they can't make
-    instantaneous sharp turns, so they overshoot and curve.
-    """
-    if len(path) < 2:
-        return path
-
-    result = [path[0]]
-
-    for i in range(1, len(path)):
-        p0 = path[max(0, i - 2)]  # Two segments back (for momentum)
-        p1 = path[i - 1]
-        p2 = path[i]
-        p3 = path[min(len(path) - 1, i + 1)]  # Next key (for look-ahead)
-
-        dist = np.linalg.norm(p2 - p1)
-        if dist < 1e-9:
-            result.append(p2)
-            continue
-
-        n_interp = max(int(dist / step), 1)
-
-        # Compute incoming and outgoing direction for Catmull-Rom-like control
-        incoming = p1 - p0
-        outgoing = p3 - p2
-
-        # Overshoot factor: stronger at sharp direction changes
-        seg_dir = p2 - p1
-        if np.linalg.norm(incoming) > 1e-9:
-            cos_angle = np.dot(seg_dir, incoming) / (
-                np.linalg.norm(seg_dir) * np.linalg.norm(incoming) + 1e-9
-            )
-            # More curvature at sharp turns
-            curvature_factor = max(0, 1.0 - cos_angle) * 0.15 * severity
-        else:
-            curvature_factor = 0.0
-
-        # Two control points for a cubic Bezier
-        tension = random.uniform(0.2, 0.5) * severity
-        ctrl1 = p1 + incoming * tension * 0.3
-        ctrl2 = p2 - outgoing * tension * 0.3
-
-        # Add overshoot perpendicular to segment direction
-        seg_norm = seg_dir / (np.linalg.norm(seg_dir) + 1e-9)
-        perp = np.array([-seg_norm[1], seg_norm[0]])
-        overshoot = perp * curvature_factor * dist * random.uniform(-1, 1)
-        ctrl1 = ctrl1 + overshoot * 0.5
-        ctrl2 = ctrl2 + overshoot * 0.5
-
-        for j in range(1, n_interp + 1):
-            t = j / (n_interp + 1)
-            # Cubic Bezier interpolation
-            pt = (
-                (1 - t) ** 3 * p1
-                + 3 * (1 - t) ** 2 * t * ctrl1
-                + 3 * (1 - t) * t**2 * ctrl2
-                + t**3 * p2
-            )
-            result.append(pt)
-
-        # Per-key dwell: occasionally add extra points near key positions
-        if random.random() < 0.2 * severity:
-            dwell_count = random.randint(1, 3)
-            for _ in range(dwell_count):
-                jitter = np.random.normal(0, 0.03 * severity, 2)
-                result.append(p2 + jitter)
-
-        result.append(p2)
-
     return np.array(result)
 
 
@@ -340,101 +209,131 @@ def extract_features(path: np.ndarray) -> np.ndarray:
 
 def augment_for_blind_swipe(path: np.ndarray, severity: float = 1.0) -> np.ndarray:
     """
-    Realistic blind swipe augmentation with enhanced diversity.
+    Augment a swipe path to simulate drawing from memory on a blank trackpad.
 
-    Augmentation categories:
-    - Global transforms: scale, rotation, translation, aspect distortion
-    - Drift: smooth vertical and horizontal drift along the path
-    - Local deformation: spatially-varying noise (some regions sloppier)
-    - Smoothing: corner rounding via Gaussian filter
-    - Speed warping: non-uniform temporal resampling
+    The user has NO keyboard visible. They remember the approximate shape of
+    the swipe gesture and draw it from memory. This means:
+
+    1. The overall shape is approximately right but proportions are distorted
+    2. Angles are remembered roughly (±20-30°)
+    3. Some segments are compressed/stretched relative to others
+    4. Sharp turns get rounded (momentum) or exaggerated
+    5. The path may be drawn at any scale, rotation, or position
+    6. Parts of the path the user is less confident about are sloppier
+    7. Fine details (small direction changes) may be lost entirely
     """
     path = path.copy()
 
-    # Global scale
-    scale = np.random.lognormal(0, 0.2 * severity)
-    scale = np.clip(scale, 0.5, 2.0)
+    # --- Global shape transforms (mental keyboard can be any size/orientation) ---
+
+    # Arbitrary scale: the user's mental model has no absolute size
+    scale = np.random.lognormal(0, 0.3 * severity)
+    scale = np.clip(scale, 0.3, 3.0)
     path *= scale
 
-    # Independent X/Y scaling
-    x_scale = np.clip(np.random.lognormal(0, 0.15 * severity), 0.7, 1.4)
-    y_scale = np.clip(np.random.lognormal(0, 0.15 * severity), 0.7, 1.4)
+    # Arbitrary aspect ratio: mental keyboard proportions vary widely
+    # (some people remember wider, some taller layouts)
+    x_scale = np.clip(np.random.lognormal(0, 0.25 * severity), 0.5, 2.0)
+    y_scale = np.clip(np.random.lognormal(0, 0.25 * severity), 0.5, 2.0)
     centroid = path.mean(axis=0)
     path[:, 0] = (path[:, 0] - centroid[0]) * x_scale + centroid[0]
     path[:, 1] = (path[:, 1] - centroid[1]) * y_scale + centroid[1]
 
-    # Exaggerate angles
-    if len(path) > 3:
-        centroid = path.mean(axis=0)
-        exaggeration = 1.0 + random.uniform(0.1, 0.4) * severity
-        for i in range(len(path)):
-            vec = path[i] - centroid
-            path[i] = centroid + vec * exaggeration
-
-    # Vertical drift
-    drift = gaussian_filter1d(
-        np.cumsum(np.random.normal(0, 0.08 * severity, len(path))), 3
-    )
-    path[:, 1] += drift
-
-    # Horizontal drift (people's mental keyboard can shift left/right too)
-    h_drift = gaussian_filter1d(
-        np.cumsum(np.random.normal(0, 0.04 * severity, len(path))), 4
-    )
-    path[:, 0] += h_drift
-
-    # Small rotation
-    angle = np.random.normal(0, 4 * severity) * np.pi / 180
+    # Rotation: mental keyboard orientation is approximate
+    angle = np.random.normal(0, 8 * severity) * np.pi / 180
     cos_a, sin_a = np.cos(angle), np.sin(angle)
     rot = np.array([[cos_a, -sin_a], [sin_a, cos_a]])
     centroid = path.mean(axis=0)
     path = (path - centroid) @ rot.T + centroid
 
-    # Corner rounding
-    if len(path) > 5:
-        sigma = random.uniform(0.8, 1.8) * severity
-        path[:, 0] = gaussian_filter1d(path[:, 0], sigma)
-        path[:, 1] = gaussian_filter1d(path[:, 1], sigma)
+    # --- Segment-level distortions (remembered proportions are approximate) ---
 
-    # Local deformation: spatially-varying noise
-    # Simulates parts of the word being drawn well vs sloppily
-    if len(path) > 4 and random.random() < 0.5:
+    # Non-uniform segment stretching: some parts of the path get
+    # compressed or stretched relative to others. This is THE key
+    # distortion in drawing from memory - relative proportions are
+    # only approximately correct.
+    if len(path) > 4:
         n = len(path)
         t = np.linspace(0, 1, n)
-        # Random "sloppiness envelope" - some regions get more noise
-        n_bumps = random.randint(1, 3)
-        envelope = np.zeros(n)
-        for _ in range(n_bumps):
-            center = random.uniform(0, 1)
-            width = random.uniform(0.1, 0.3)
-            amplitude = random.uniform(0.5, 2.0) * severity
-            envelope += amplitude * np.exp(-((t - center) ** 2) / (2 * width**2))
-        local_noise = np.random.normal(0, 0.04, path.shape)
-        local_noise[:, 0] *= envelope
-        local_noise[:, 1] *= envelope
-        path += local_noise
-
-    # Minimal jitter
-    path += np.random.normal(0, 0.02 * severity, path.shape)
-
-    # Global translation
-    path += np.random.normal(0, 0.3 * severity, 2)
-
-    # Occasional speed warping: non-uniform resampling along path
-    if random.random() < 0.3 * severity:
-        n = len(path)
-        # Create non-uniform parameter
-        t = np.linspace(0, 1, n)
-        warp_freq = random.uniform(1.0, 3.0)
-        warp_amp = random.uniform(0.05, 0.15) * severity
-        t_warped = t + warp_amp * np.sin(warp_freq * np.pi * t)
+        # Create smooth warp function that stretches some regions
+        n_waves = random.randint(1, 3)
+        warp = np.zeros(n)
+        for _ in range(n_waves):
+            freq = random.uniform(0.5, 2.5)
+            phase = random.uniform(0, 2 * math.pi)
+            amp = random.uniform(0.05, 0.2) * severity
+            warp += amp * np.sin(freq * math.pi * t + phase)
+        t_warped = t + warp
         t_warped = np.clip(t_warped, 0, 1)
+        # Ensure monotonic
+        for i in range(1, n):
+            if t_warped[i] <= t_warped[i - 1]:
+                t_warped[i] = t_warped[i - 1] + 1e-6
         t_warped = (t_warped - t_warped[0]) / (t_warped[-1] - t_warped[0] + 1e-9)
-        # Interpolate path at warped positions
         new_path = np.zeros_like(path)
         for dim in range(2):
             new_path[:, dim] = np.interp(t_warped, t, path[:, dim])
         path = new_path
+
+    # --- Angle/direction distortions (memory recall errors) ---
+
+    # Exaggerate or flatten the overall shape
+    if len(path) > 3:
+        centroid = path.mean(axis=0)
+        # Can be < 1.0 (flattened) or > 1.0 (exaggerated)
+        exaggeration = np.clip(
+            np.random.normal(1.0, 0.2 * severity), 0.7, 1.5
+        )
+        for i in range(len(path)):
+            vec = path[i] - centroid
+            path[i] = centroid + vec * exaggeration
+
+    # --- Smooth drift (hand wanders during drawing) ---
+
+    # Vertical drift: hand drifts up or down during the drawing
+    drift = gaussian_filter1d(
+        np.cumsum(np.random.normal(0, 0.1 * severity, len(path))), 3
+    )
+    path[:, 1] += drift
+
+    # Horizontal drift: hand drifts left or right
+    h_drift = gaussian_filter1d(
+        np.cumsum(np.random.normal(0, 0.06 * severity, len(path))), 4
+    )
+    path[:, 0] += h_drift
+
+    # --- Corner rounding (finger momentum) ---
+    # Drawing from memory, users tend to round sharp corners even more
+    # because they're moving continuously rather than targeting specific keys
+    if len(path) > 5:
+        sigma = random.uniform(1.0, 2.5) * severity
+        path[:, 0] = gaussian_filter1d(path[:, 0], sigma)
+        path[:, 1] = gaussian_filter1d(path[:, 1], sigma)
+
+    # --- Spatially-varying confidence ---
+    # Some parts of the word shape are remembered better than others.
+    # Well-remembered parts are precise; fuzzy parts get extra noise.
+    if len(path) > 4 and random.random() < 0.6:
+        n = len(path)
+        t = np.linspace(0, 1, n)
+        # Random "uncertainty envelope" - some regions are sloppier
+        n_bumps = random.randint(1, 3)
+        envelope = np.zeros(n)
+        for _ in range(n_bumps):
+            center = random.uniform(0, 1)
+            width = random.uniform(0.1, 0.4)
+            amplitude = random.uniform(0.5, 2.5) * severity
+            envelope += amplitude * np.exp(-((t - center) ** 2) / (2 * width**2))
+        local_noise = np.random.normal(0, 0.05, path.shape)
+        local_noise[:, 0] *= envelope
+        local_noise[:, 1] *= envelope
+        path += local_noise
+
+    # --- General drawing noise (hand tremor/trackpad precision) ---
+    path += np.random.normal(0, 0.03 * severity, path.shape)
+
+    # --- Position: arbitrary, since there's no reference frame ---
+    path += np.random.normal(0, 0.5 * severity, 2)
 
     return path
 
@@ -447,12 +346,11 @@ def augment_for_blind_swipe(path: np.ndarray, severity: float = 1.0) -> np.ndarr
 class CTCSwipeDataset(Dataset):
     """Dataset for CTC training - outputs letter sequences.
 
-    Uses a mixture of path generation strategies:
-    - ~50% realistic paths: per-key noise, curved interpolation, momentum
-    - ~50% ideal paths with global augmentation (original approach)
-
-    This gives the model exposure to both realistic finger dynamics
-    and the broader geometric variability from global transforms.
+    Simulates blind swipe drawing: users recall the shape of a word's
+    swipe path from memory and draw it on a blank trackpad. There is
+    no keyboard visible - the user is reproducing the remembered gesture
+    shape with all the distortions that entails (wrong proportions,
+    rounded corners, missing details, arbitrary scale/rotation).
     """
 
     def __init__(
@@ -486,21 +384,10 @@ class CTCSwipeDataset(Dataset):
         word_idx = idx // self.samples_per_word
         word, ideal_path, label = self.data[word_idx]
 
-        # Mix generation strategies for diversity
-        if random.random() < 0.5:
-            # Realistic path: per-key noise + curved interpolation + augmentation
-            key_path = get_word_path_realistic(word, self.augment_severity)
-            if len(key_path) < 2:
-                key_path = get_word_path(word)
-            augmented = interpolate_path_curved(
-                key_path, severity=self.augment_severity
-            )
-            augmented = augment_for_blind_swipe(augmented, self.augment_severity * 0.6)
-        else:
-            # Classic approach: ideal path + strong global augmentation
-            augmented = augment_for_blind_swipe(
-                ideal_path.copy(), self.augment_severity
-            )
+        # Simulate drawing the path from memory
+        augmented = augment_for_blind_swipe(
+            ideal_path.copy(), self.augment_severity
+        )
 
         # Resample and normalize
         resampled = resample_path(augmented, self.n_points)

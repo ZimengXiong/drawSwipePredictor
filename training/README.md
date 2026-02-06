@@ -44,7 +44,7 @@ timestep, significantly improving CTC alignment compared to raw (x, y) alone.
 ### Conv1D Front-End
 
 Two Conv1D layers (kernel_size=3) with BatchNorm extract local n-gram-like
-patterns before the BiLSTM, improving the model's ability to recognise
+patterns before the BiLSTM, improving the model's ability to recognize
 short letter sequences and transitions.
 
 ### Training Schedule
@@ -54,46 +54,43 @@ short letter sequences and transitions.
 
 ## Training Data Generation
 
-Uses a **two-strategy mixture** for maximum diversity:
+### The Problem: Drawing From Memory
 
-### Strategy 1: Realistic Path Generation (~50%)
+Users draw swipe gestures **from memory on a blank trackpad** — there is no
+keyboard visible. They recall the approximate shape of a word's swipe path
+and reproduce it freehand. This creates very different distortions than
+swiping on an actual keyboard:
 
-Simulates how a real finger moves across the keyboard:
+- **No absolute reference frame**: the drawing can be any scale, rotation, position
+- **Proportions are approximate**: some segments get compressed or stretched
+- **Angles are remembered roughly**: ±20–30° direction errors are common
+- **Sharp corners get rounded**: finger momentum smooths out details
+- **Confidence varies along the path**: well-remembered parts are precise, fuzzy parts are sloppy
+- **Overall shape is simplified**: fine directional details may be lost
 
-| Technique              | Description                                                    |
-|------------------------|----------------------------------------------------------------|
-| Per-key positional noise | Gaussian noise around key centers (fingers miss targets)     |
-| Key neighborhood confusion | Small probability of targeting adjacent key              |
-| Letter skipping        | Fast swipers sometimes skip intermediate keys                  |
-| Curved interpolation   | Bezier-like curves between keys with momentum/overshoot        |
-| Per-key dwell variation | Some keys get lingered on (extra points near key position)    |
-| Finger inertia         | Overshoot at sharp direction changes (momentum simulation)     |
+### Augmentation Strategy
 
-### Strategy 2: Global Augmentation (~50%)
-
-Applies broad geometric transforms to ideal straight-line paths:
-
-| Technique              | Description                                                    |
-|------------------------|----------------------------------------------------------------|
-| Scale variation        | 0.5x–2.0x size (people draw at different sizes)                |
-| Rotation               | ±25° (mental keyboard orientation varies)                      |
-| Aspect distortion      | Independent X/Y stretch (horizontal/vertical bias)             |
-| Vertical drift         | Smooth Y-axis drift (hand wanders)                             |
-| Horizontal drift       | Smooth X-axis drift (lateral keyboard shift)                   |
-| Corner rounding        | Gaussian smoothing (sharp turns become curves)                 |
-| Local deformation      | Spatially-varying noise (some regions sloppier than others)    |
-| Speed warping          | Sinusoidal time warping (non-uniform drawing speed)            |
-| Point jitter           | Gaussian noise (hand tremor and imprecision)                   |
-| Global translation     | Random offset (different drawing positions)                    |
+| Technique                  | Description                                                    |
+|----------------------------|----------------------------------------------------------------|
+| Arbitrary scale            | 0.3x–3.0x (no absolute size reference)                         |
+| Arbitrary aspect ratio     | Independent X/Y scale 0.5x–2.0x (remembered proportions vary) |
+| Rotation                   | ±8° (mental keyboard orientation is approximate)               |
+| Segment stretching/compression | Smooth non-uniform warping along the path (proportions are approximate) |
+| Shape exaggeration/flattening | 0.7x–1.5x radial distortion (angles remembered roughly)     |
+| Vertical drift             | Smooth Y-axis wander during drawing                            |
+| Horizontal drift           | Smooth X-axis wander during drawing                            |
+| Corner rounding            | Gaussian smoothing (finger momentum rounds sharp turns)        |
+| Spatially-varying noise    | Some regions sloppier than others (confidence varies)          |
+| Hand tremor                | Gaussian jitter (trackpad drawing precision)                   |
+| Arbitrary position         | Random global offset (no reference point)                      |
 
 ### Pipeline
 
 Each training sample:
 
-- Selects a generation strategy (realistic or classic)
-- Gets word path from QWERTY layout (with or without per-key noise)
-- Interpolates between keys (curved or straight)
-- Applies augmentation transforms
+- Gets ideal word path from QWERTY layout
+- Interpolates between key positions
+- Applies blind-drawing augmentations (simulating memory recall)
 - Resamples to 64 equidistant points
 - Normalizes: center at centroid, scale by path length
 - Extracts 7 features per point
