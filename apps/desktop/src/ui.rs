@@ -154,7 +154,7 @@ fn draw_breakdown_panel(pred: &Prediction, backend: &str) {
             ("Angles (10%)", b.angles, 0.10),
             ("Displacements (8%)", b.displacements, 0.08),
             ("Start Angle (6%)", b.start_angle, 0.06),
-            ("Turns (8-12%)", b.turns, 0.10),
+            ("Turns (10%)", b.turns, 0.10),
             ("Seg Ratios (7%)", b.segment_ratios, 0.07),
             ("Histogram (6%)", b.histogram, 0.06),
             ("End Vector (6%)", b.end_vector, 0.06),

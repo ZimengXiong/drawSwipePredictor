@@ -455,12 +455,16 @@ class GestureFeatureMasking(nn.Module):
             return x
 
         batch_sz, seq_len, _ = x.shape
+        if seq_len < 4:
+            return x
+
         mask = torch.ones(batch_sz, seq_len, 1, device=x.device, dtype=x.dtype)
 
         for b in range(batch_sz):
             n_spans = random.randint(0, self.max_mask_spans)
             for _ in range(n_spans):
-                span_len = random.randint(1, min(self.max_span_len, seq_len // 4))
+                max_len = max(1, min(self.max_span_len, seq_len // 4))
+                span_len = random.randint(1, max_len)
                 start = random.randint(0, seq_len - span_len)
                 mask[b, start : start + span_len, 0] = 0.0
 
