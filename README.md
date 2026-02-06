@@ -10,10 +10,15 @@ As you can see, DTW was able to predict `lunchbox` much better than `alpacas` be
 
 ## DTW (Dynamic Time Warping)
 
-We generalize and score paths on the folowing characteristics:
+All features are **shape-intrinsic** — invariant to the scale, translation,
+and rotation of the user's drawing, which is critical since users draw from
+memory on a blank trackpad with no reference frame.
+
 | Feature | Description | Type |
 | ------------------- | -------------------------------------------------------------- | ------------------ |
-| shape | Normalized resampled path (32 points, centered, length-scaled) | Position-invariant |
+| procrustes | Optimally-aligned shape distance (rotation + scale invariant)  | Shape-intrinsic |
+| shape | Normalized resampled path (32 points, centered, length-scaled) | Shape-intrinsic |
+| angular_dtw | DTW on turn-rate signatures (captures turn-by-turn rhythm)     | Shape-intrinsic |
 | angles | Direction angles per segment (radians) | Sequential |
 | displacements | Normalized displacement vectors per segment | Sequential |
 | turn_angles | Turn angles (signed: +CCW/-CW) | Sequential |
@@ -24,14 +29,26 @@ We generalize and score paths on the folowing characteristics:
 | total_turning | Sum of turn angles (complexity) | Global |
 | segment_ratios | Segment lengths / total length | Sequential |
 | direction_histogram | 8-bin direction distribution | Distribution |
-| location | Absolute position matching (SHARK2-style) | Positional |
+| curvature | Turn angle normalized by segment length | Sequential |
+
+Key novel techniques:
+- **Procrustes alignment**: optimally rotates and scales the drawn path to match
+  each candidate word template before measuring residual distance
+- **Angular signature DTW**: compares the sequence of direction *changes* using
+  DTW, inherently invariant to translation/scale/rotation
+- **No position-based matching**: unlike traditional swipe keyboards, location
+  distance is not used since the user's raw pixel positions have no meaningful
+  relationship to keyboard key positions
 
 ## CTC (Connectionist Temporal Classification)
 
-- Neural network (BiLSTM) trained on synthetic gesture-to-letter sequences
+- Conv1D + **Relative Gesture Attention** + BiLSTM architecture
+- **Feature masking**: randomly masks path segments during training for
+  robustness to partially-recalled gestures
+- Rich 7-dimensional input features: position, delta, angle, speed, curvature
+- Warmup + cosine annealing learning rate schedule
 - Decodes variable-length gestures into letter sequences
 - Generalizes to unseen words
-- Worse performance compared to DTW as of now
 
 ## Usage
 

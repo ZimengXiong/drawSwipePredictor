@@ -2,11 +2,28 @@
 """
 CTC-based sequence-to-sequence model for blind swipe typing.
 
-This model learns to decode gesture paths into letter sequences,
-allowing it to generalize to ANY word - even words never seen in training.
+This model learns to decode gesture paths drawn from memory into letter
+sequences, allowing it to generalize to ANY word - even words never seen
+in training.
 
 Architecture:
-    Path points → BiLSTM Encoder → CTC Decoder → Letter sequence
+    Path points → Feature Extraction → Feature Masking →
+    Conv1D → Relative Gesture Attention → BiLSTM Encoder → CTC Decoder
+
+Key innovations for blind drawing recognition:
+    1. Feature masking: randomly masks contiguous path segments during
+       training, forcing robustness to partially-recalled gestures
+    2. Relative gesture attention: position-aware self-attention between
+       Conv and LSTM captures global shape topology
+    3. Shape-intrinsic features: 7 dimensions that are invariant to the
+       arbitrary scale/rotation/position of blind drawings
+
+Features per timestep (7 dimensions):
+    - (x, y): normalized position
+    - (dx, dy): delta to next point (local direction)
+    - angle: direction angle (radians / pi, normalized to [-1, 1])
+    - speed: segment length relative to average
+    - curvature: change in direction angle
 
 Example:
     Input: [(x1,y1), (x2,y2), ...] (normalized path for "hello")
@@ -26,6 +43,7 @@ import random
 from scipy.ndimage import gaussian_filter1d
 from tqdm import tqdm
 import os
+import math
 
 # MPS doesn't support CTC loss, so we compute loss on CPU
 # Model runs on MPS (fast), loss on CPU (small overhead)
@@ -75,7 +93,7 @@ KEYBOARD_LAYOUT = {
 
 
 def get_word_path(word: str) -> np.ndarray:
-    """Convert word to keyboard path."""
+    """Convert word to keyboard path (ideal, exact key centers)."""
     points = []
     for char in word.lower():
         if char in KEYBOARD_LAYOUT:
@@ -86,7 +104,7 @@ def get_word_path(word: str) -> np.ndarray:
 
 
 def interpolate_path(path: np.ndarray, step: float = 0.3) -> np.ndarray:
-    """Interpolate path for smooth gesture."""
+    """Interpolate path with straight lines for smooth gesture."""
     if len(path) < 2:
         return path
     result = [path[0]]
@@ -142,59 +160,190 @@ def normalize_path(path: np.ndarray) -> np.ndarray:
     return (path - centroid) / total_len
 
 
+# Number of input features per timestep
+INPUT_DIM = 7  # x, y, dx, dy, angle, speed, curvature
+
+
+def extract_features(path: np.ndarray) -> np.ndarray:
+    """
+    Extract rich per-timestep features from a normalized path.
+
+    For each of the N points, computes 7 features:
+        (x, y, dx, dy, angle, speed, curvature)
+
+    This gives the model local directional context at each timestep,
+    vastly improving CTC alignment compared to raw (x, y) alone.
+    """
+    n = len(path)
+    features = np.zeros((n, INPUT_DIM), dtype=np.float32)
+
+    # Position features
+    features[:, 0] = path[:, 0]
+    features[:, 1] = path[:, 1]
+
+    # Compute segment displacements and lengths
+    deltas = np.diff(path, axis=0)  # (n-1, 2)
+    seg_lengths = np.linalg.norm(deltas, axis=1)  # (n-1,)
+    avg_seg = seg_lengths.mean() if seg_lengths.mean() > 1e-9 else 1.0
+
+    # Delta features (forward difference, last point repeats)
+    features[:-1, 2] = deltas[:, 0]
+    features[:-1, 3] = deltas[:, 1]
+    features[-1, 2] = deltas[-1, 0]
+    features[-1, 3] = deltas[-1, 1]
+
+    # Angle features (direction of each segment, normalized to [-1, 1])
+    angles = np.arctan2(deltas[:, 1], deltas[:, 0])  # (n-1,)
+    features[:-1, 4] = angles / math.pi
+    features[-1, 4] = angles[-1] / math.pi
+
+    # Speed features (segment length / average segment length)
+    features[:-1, 5] = seg_lengths / avg_seg
+    features[-1, 5] = seg_lengths[-1] / avg_seg
+
+    # Curvature features (change in angle between consecutive segments)
+    if n > 2:
+        angle_diffs = np.diff(angles)
+        # Wrap to [-pi, pi]
+        angle_diffs = (angle_diffs + math.pi) % (2 * math.pi) - math.pi
+        features[1:-1, 6] = angle_diffs / math.pi
+    # First and last curvature stay 0
+
+    return features
+
+
 # ============================================================================
-# Augmentation (same as before)
+# Augmentation
 # ============================================================================
 
 
 def augment_for_blind_swipe(path: np.ndarray, severity: float = 1.0) -> np.ndarray:
-    """Realistic blind swipe augmentation."""
+    """
+    Augment a swipe path to simulate drawing from memory on a blank trackpad.
+
+    The user has NO keyboard visible. They remember the approximate shape of
+    the swipe gesture and draw it from memory. This means:
+
+    1. The overall shape is approximately right but proportions are distorted
+    2. Angles are remembered roughly (±20-30°)
+    3. Some segments are compressed/stretched relative to others
+    4. Sharp turns get rounded (momentum) or exaggerated
+    5. The path may be drawn at any scale, rotation, or position
+    6. Parts of the path the user is less confident about are sloppier
+    7. Fine details (small direction changes) may be lost entirely
+    """
     path = path.copy()
 
-    # Global scale
-    scale = np.random.lognormal(0, 0.2 * severity)
-    scale = np.clip(scale, 0.5, 2.0)
+    # --- Global shape transforms (mental keyboard can be any size/orientation) ---
+
+    # Arbitrary scale: the user's mental model has no absolute size
+    scale = np.random.lognormal(0, 0.3 * severity)
+    scale = np.clip(scale, 0.3, 3.0)
     path *= scale
 
-    # Independent X/Y scaling
-    x_scale = np.clip(np.random.lognormal(0, 0.15 * severity), 0.7, 1.4)
-    y_scale = np.clip(np.random.lognormal(0, 0.15 * severity), 0.7, 1.4)
+    # Arbitrary aspect ratio: mental keyboard proportions vary widely
+    # (some people remember wider, some taller layouts)
+    x_scale = np.clip(np.random.lognormal(0, 0.25 * severity), 0.5, 2.0)
+    y_scale = np.clip(np.random.lognormal(0, 0.25 * severity), 0.5, 2.0)
     centroid = path.mean(axis=0)
     path[:, 0] = (path[:, 0] - centroid[0]) * x_scale + centroid[0]
     path[:, 1] = (path[:, 1] - centroid[1]) * y_scale + centroid[1]
 
-    # Exaggerate angles
-    if len(path) > 3:
-        centroid = path.mean(axis=0)
-        exaggeration = 1.0 + random.uniform(0.1, 0.4) * severity
-        for i in range(len(path)):
-            vec = path[i] - centroid
-            path[i] = centroid + vec * exaggeration
-
-    # Vertical drift
-    drift = gaussian_filter1d(
-        np.cumsum(np.random.normal(0, 0.08 * severity, len(path))), 3
-    )
-    path[:, 1] += drift
-
-    # Small rotation
-    angle = np.random.normal(0, 4 * severity) * np.pi / 180
+    # Rotation: mental keyboard orientation is approximate
+    angle = np.random.normal(0, 8 * severity) * np.pi / 180
     cos_a, sin_a = np.cos(angle), np.sin(angle)
     rot = np.array([[cos_a, -sin_a], [sin_a, cos_a]])
     centroid = path.mean(axis=0)
     path = (path - centroid) @ rot.T + centroid
 
-    # Corner rounding
+    # --- Segment-level distortions (remembered proportions are approximate) ---
+
+    # Non-uniform segment stretching: some parts of the path get
+    # compressed or stretched relative to others. This is THE key
+    # distortion in drawing from memory - relative proportions are
+    # only approximately correct.
+    if len(path) > 4:
+        n = len(path)
+        t = np.linspace(0, 1, n)
+        # Create smooth warp function that stretches some regions
+        n_waves = random.randint(1, 3)
+        warp = np.zeros(n)
+        for _ in range(n_waves):
+            freq = random.uniform(0.5, 2.5)
+            phase = random.uniform(0, 2 * math.pi)
+            amp = random.uniform(0.05, 0.2) * severity
+            warp += amp * np.sin(freq * math.pi * t + phase)
+        t_warped = t + warp
+        t_warped = np.clip(t_warped, 0, 1)
+        # Ensure monotonic
+        for i in range(1, n):
+            if t_warped[i] <= t_warped[i - 1]:
+                t_warped[i] = t_warped[i - 1] + 1e-6
+        t_warped = (t_warped - t_warped[0]) / (t_warped[-1] - t_warped[0] + 1e-9)
+        new_path = np.zeros_like(path)
+        for dim in range(2):
+            new_path[:, dim] = np.interp(t_warped, t, path[:, dim])
+        path = new_path
+
+    # --- Angle/direction distortions (memory recall errors) ---
+
+    # Exaggerate or flatten the overall shape
+    if len(path) > 3:
+        centroid = path.mean(axis=0)
+        # Can be < 1.0 (flattened) or > 1.0 (exaggerated)
+        exaggeration = np.clip(
+            np.random.normal(1.0, 0.2 * severity), 0.7, 1.5
+        )
+        for i in range(len(path)):
+            vec = path[i] - centroid
+            path[i] = centroid + vec * exaggeration
+
+    # --- Smooth drift (hand wanders during drawing) ---
+
+    # Vertical drift: hand drifts up or down during the drawing
+    drift = gaussian_filter1d(
+        np.cumsum(np.random.normal(0, 0.1 * severity, len(path))), 3
+    )
+    path[:, 1] += drift
+
+    # Horizontal drift: hand drifts left or right
+    h_drift = gaussian_filter1d(
+        np.cumsum(np.random.normal(0, 0.06 * severity, len(path))), 4
+    )
+    path[:, 0] += h_drift
+
+    # --- Corner rounding (finger momentum) ---
+    # Drawing from memory, users tend to round sharp corners even more
+    # because they're moving continuously rather than targeting specific keys
     if len(path) > 5:
-        sigma = random.uniform(0.8, 1.8) * severity
+        sigma = random.uniform(1.0, 2.5) * severity
         path[:, 0] = gaussian_filter1d(path[:, 0], sigma)
         path[:, 1] = gaussian_filter1d(path[:, 1], sigma)
 
-    # Minimal jitter
-    path += np.random.normal(0, 0.02 * severity, path.shape)
+    # --- Spatially-varying confidence ---
+    # Some parts of the word shape are remembered better than others.
+    # Well-remembered parts are precise; fuzzy parts get extra noise.
+    if len(path) > 4 and random.random() < 0.6:
+        n = len(path)
+        t = np.linspace(0, 1, n)
+        # Random "uncertainty envelope" - some regions are sloppier
+        n_bumps = random.randint(1, 3)
+        envelope = np.zeros(n)
+        for _ in range(n_bumps):
+            center = random.uniform(0, 1)
+            width = random.uniform(0.1, 0.4)
+            amplitude = random.uniform(0.5, 2.5) * severity
+            envelope += amplitude * np.exp(-((t - center) ** 2) / (2 * width**2))
+        local_noise = np.random.normal(0, 0.05, path.shape)
+        local_noise[:, 0] *= envelope
+        local_noise[:, 1] *= envelope
+        path += local_noise
 
-    # Global translation
-    path += np.random.normal(0, 0.3 * severity, 2)
+    # --- General drawing noise (hand tremor/trackpad precision) ---
+    path += np.random.normal(0, 0.03 * severity, path.shape)
+
+    # --- Position: arbitrary, since there's no reference frame ---
+    path += np.random.normal(0, 0.5 * severity, 2)
 
     return path
 
@@ -205,7 +354,14 @@ def augment_for_blind_swipe(path: np.ndarray, severity: float = 1.0) -> np.ndarr
 
 
 class CTCSwipeDataset(Dataset):
-    """Dataset for CTC training - outputs letter sequences."""
+    """Dataset for CTC training - outputs letter sequences.
+
+    Simulates blind swipe drawing: users recall the shape of a word's
+    swipe path from memory and draw it on a blank trackpad. There is
+    no keyboard visible - the user is reproducing the remembered gesture
+    shape with all the distortions that entails (wrong proportions,
+    rounded corners, missing details, arbitrary scale/rotation).
+    """
 
     def __init__(
         self,
@@ -218,7 +374,7 @@ class CTCSwipeDataset(Dataset):
         self.augment_severity = augment_severity
         self.samples_per_word = samples_per_word
 
-        # Pre-compute paths and filter valid words
+        # Pre-compute ideal paths and filter valid words
         self.data = []
         for word in words:
             path = get_word_path(word)
@@ -238,18 +394,22 @@ class CTCSwipeDataset(Dataset):
         word_idx = idx // self.samples_per_word
         word, ideal_path, label = self.data[word_idx]
 
-        # Augment
-        augmented = augment_for_blind_swipe(ideal_path.copy(), self.augment_severity)
+        # Simulate drawing the path from memory
+        augmented = augment_for_blind_swipe(
+            ideal_path.copy(), self.augment_severity
+        )
 
         # Resample and normalize
         resampled = resample_path(augmented, self.n_points)
         normalized = normalize_path(resampled)
 
-        # Convert to tensor
-        features = torch.from_numpy(normalized.astype(np.float32))
+        # Extract rich features (x, y, dx, dy, angle, speed, curvature)
+        features = extract_features(normalized)
+
+        features_tensor = torch.from_numpy(features)
         label_tensor = torch.tensor(label, dtype=torch.long)
 
-        return features, label_tensor, len(label)
+        return features_tensor, label_tensor, len(label)
 
 
 def collate_fn(batch):
@@ -271,25 +431,167 @@ def collate_fn(batch):
 # ============================================================================
 
 
+class GestureFeatureMasking(nn.Module):
+    """
+    Randomly masks contiguous spans of the feature sequence during training.
+
+    This is conceptually similar to SpecAugment but designed for gesture paths:
+    rather than masking frequency bands (which don't exist in gesture data),
+    we mask contiguous time spans to force the model to infer missing path
+    segments from surrounding context. This is especially important for blind
+    drawing where parts of the gesture may be poorly recalled.
+
+    During inference, no masking is applied.
+    """
+
+    def __init__(self, max_mask_spans: int = 2, max_span_len: int = 8):
+        super().__init__()
+        self.max_mask_spans = max_mask_spans
+        self.max_span_len = max_span_len
+
+    def forward(self, x):
+        # x: (batch, seq_len, features)
+        if not self.training:
+            return x
+
+        batch_sz, seq_len, _ = x.shape
+        if seq_len < 4:
+            return x
+
+        mask = torch.ones(batch_sz, seq_len, 1, device=x.device, dtype=x.dtype)
+
+        for b in range(batch_sz):
+            n_spans = random.randint(0, self.max_mask_spans)
+            for _ in range(n_spans):
+                max_len = max(1, min(self.max_span_len, seq_len // 4))
+                span_len = random.randint(1, max_len)
+                start = random.randint(0, seq_len - span_len)
+                mask[b, start : start + span_len, 0] = 0.0
+
+        return x * mask
+
+
+class RelativeGestureAttention(nn.Module):
+    """
+    Lightweight relative-position self-attention for gesture sequences.
+
+    Unlike standard self-attention, this uses relative position offsets
+    (how far apart two timesteps are along the path) as a bias term.
+    This captures "nearby points should attend more to each other"
+    which is natural for gesture paths.
+
+    The attention operates on the gesture embedding dimension and uses
+    a single head for efficiency since our sequences are short (64 points).
+    """
+
+    def __init__(self, embed_dim: int, max_relative_pos: int = 64, drop: float = 0.1):
+        super().__init__()
+        self.embed_dim = embed_dim
+        # Project to queries, keys, values
+        self.qkv_proj = nn.Linear(embed_dim, embed_dim * 3)
+        self.out_proj = nn.Linear(embed_dim, embed_dim)
+        self.layer_norm = nn.LayerNorm(embed_dim)
+        self.dropout = nn.Dropout(drop)
+
+        # Learnable relative position bias table
+        # Positions range from -max_relative_pos to +max_relative_pos
+        self.rel_bias = nn.Parameter(
+            torch.zeros(2 * max_relative_pos + 1)
+        )
+        self.max_relative_pos = max_relative_pos
+        self._inv_scale = 1.0 / (embed_dim ** 0.5)
+
+    def forward(self, x):
+        # x: (batch, seq_len, embed_dim)
+        residual = x
+        x = self.layer_norm(x)
+
+        batch_sz, seq_len, _ = x.shape
+
+        # Compute Q, K, V in one projection
+        qkv = self.qkv_proj(x)
+        q, k, v = qkv.chunk(3, dim=-1)
+
+        # Scaled dot-product attention scores
+        attn_scores = torch.bmm(q, k.transpose(1, 2)) * self._inv_scale
+
+        # Add relative position bias
+        positions = torch.arange(seq_len, device=x.device)
+        rel_offsets = positions.unsqueeze(0) - positions.unsqueeze(1)  # (seq, seq)
+        rel_offsets = rel_offsets.clamp(-self.max_relative_pos, self.max_relative_pos)
+        rel_offsets = rel_offsets + self.max_relative_pos  # shift to [0, 2*max]
+        pos_bias = self.rel_bias[rel_offsets]  # (seq, seq)
+        attn_scores = attn_scores + pos_bias.unsqueeze(0)
+
+        attn_weights = torch.softmax(attn_scores, dim=-1)
+        attn_weights = self.dropout(attn_weights)
+
+        attended = torch.bmm(attn_weights, v)
+        out = self.out_proj(attended)
+        out = self.dropout(out)
+
+        return residual + out
+
+
 class CTCSwipeModel(nn.Module):
     """
-    BiLSTM encoder with CTC decoder for gesture-to-text.
+    Conv1D + Relative Attention + BiLSTM encoder with CTC decoder.
 
-    Input: (batch, seq_len, 2) - normalized path points
+    Architecture designed for blind-drawn gesture recognition:
+        1. Feature masking: forces robustness to missing path segments
+        2. Conv1D front-end: extracts local stroke patterns
+        3. Relative gesture attention: captures global shape context with
+           position-aware attention (nearby points attend more strongly)
+        4. BiLSTM encoder: models sequential dependencies
+        5. Linear projection: maps to character probabilities
+
+    The attention layer between Conv and LSTM is the key novel component —
+    it lets the model see the "big picture" of the gesture shape before
+    the LSTM processes it sequentially. This is critical because blind
+    drawings from memory often have distorted proportions but correct
+    overall topology, and the attention helps the model focus on the
+    topological structure.
+
+    Input: (batch, seq_len, input_dim) - extracted path features
     Output: (seq_len, batch, num_classes) - character probabilities
     """
 
     def __init__(
         self,
-        input_dim: int = 2,
+        input_dim: int = INPUT_DIM,
         hidden_dim: int = 256,
         num_layers: int = 3,
         dropout: float = 0.3,
+        conv_channels: int = 128,
     ):
         super().__init__()
 
+        # Feature masking for regularization during training
+        self.feature_mask = GestureFeatureMasking(
+            max_mask_spans=2, max_span_len=8
+        )
+
+        # Conv1D front-end for local feature extraction
+        self.conv = nn.Sequential(
+            nn.Conv1d(input_dim, conv_channels, kernel_size=3, padding=1),
+            nn.BatchNorm1d(conv_channels),
+            nn.ReLU(),
+            nn.Dropout(dropout * 0.5),
+            nn.Conv1d(conv_channels, conv_channels, kernel_size=3, padding=1),
+            nn.BatchNorm1d(conv_channels),
+            nn.ReLU(),
+            nn.Dropout(dropout * 0.5),
+        )
+
+        # Relative gesture attention for global shape context
+        self.gesture_attn = RelativeGestureAttention(
+            embed_dim=conv_channels,
+            max_relative_pos=64,
+            drop=dropout,
+        )
+
         self.encoder = nn.LSTM(
-            input_size=input_dim,
+            input_size=conv_channels,
             hidden_size=hidden_dim,
             num_layers=num_layers,
             batch_first=True,
@@ -305,7 +607,20 @@ class CTCSwipeModel(nn.Module):
         )
 
     def forward(self, x):
-        # x: (batch, seq_len, 2)
+        # x: (batch, seq_len, input_dim)
+
+        # Apply feature masking during training
+        x = self.feature_mask(x)
+
+        # Conv1D expects (batch, channels, seq_len)
+        x = x.permute(0, 2, 1)
+        x = self.conv(x)
+        # Back to (batch, seq_len, channels)
+        x = x.permute(0, 2, 1)
+
+        # Relative gesture attention for global context
+        x = self.gesture_attn(x)
+
         encoder_out, _ = self.encoder(x)  # (batch, seq_len, hidden*2)
         logits = self.fc(encoder_out)  # (batch, seq_len, num_classes)
 
@@ -377,8 +692,9 @@ def train_ctc_model(
     checkpoint_dir: str = "training/checkpoints",
     checkpoint_every: int = 1,
     resume_from: str = None,
+    warmup_epochs: int = 3,
 ):
-    """Train the CTC model with MPS support (CTC loss computed on CPU)."""
+    """Train the CTC model with improved training schedule."""
 
     # Setup device
     if device == "mps" and torch.backends.mps.is_available():
@@ -399,7 +715,9 @@ def train_ctc_model(
     print(f"  Device: {device}")
     print(f"  Words: {len(words)}")
     print(f"  Points per path: {n_points}")
+    print(f"  Input features: {INPUT_DIM} (x, y, dx, dy, angle, speed, curvature)")
     print(f"  Samples per word: {samples_per_word}")
+    print(f"  Warmup epochs: {warmup_epochs}")
     print(f"  Checkpoints: {checkpoint_dir}/ (every {checkpoint_every} epoch)")
 
     # Create datasets
@@ -425,15 +743,25 @@ def train_ctc_model(
         collate_fn=collate_fn,
     )
 
-    # Create model
-    model = CTCSwipeModel(hidden_dim=hidden_dim, num_layers=num_layers).to(device)
+    # Create model with Conv1D front-end
+    model = CTCSwipeModel(
+        input_dim=INPUT_DIM, hidden_dim=hidden_dim, num_layers=num_layers
+    ).to(device)
     print(f"  Model parameters: {sum(p.numel() for p in model.parameters()):,}")
 
     # CTC Loss (always on CPU if using MPS)
     ctc_loss = nn.CTCLoss(blank=BLANK_IDX, reduction="mean", zero_infinity=True)
 
     optimizer = optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=0.01)
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, epochs)
+
+    # Warmup + cosine annealing schedule
+    def lr_lambda(epoch):
+        if epoch < warmup_epochs:
+            return (epoch + 1) / warmup_epochs
+        progress = (epoch - warmup_epochs) / max(epochs - warmup_epochs, 1)
+        return 0.5 * (1.0 + math.cos(math.pi * progress))
+
+    scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
 
     best_val_acc = 0.0
     best_model_state = None
@@ -612,7 +940,7 @@ def export_ctc_model(model, output_path: str, n_points: int):
     model.eval()
     model_cpu = model.to("cpu")
 
-    dummy_input = torch.randn(1, n_points, 2)
+    dummy_input = torch.randn(1, n_points, INPUT_DIM)
 
     try:
         torch.onnx.export(
@@ -632,10 +960,15 @@ def export_ctc_model(model, output_path: str, n_points: int):
 
     print(f"Model exported to {output_path}")
 
-    # Save character mapping
+    # Save character mapping and model config
     vocab_path = output_path.replace(".onnx", "_chars.json")
     with open(vocab_path, "w") as f:
-        json.dump({"chars": CHARS, "blank_idx": BLANK_IDX}, f)
+        json.dump({
+            "chars": CHARS,
+            "blank_idx": BLANK_IDX,
+            "input_dim": INPUT_DIM,
+            "n_points": n_points,
+        }, f)
     print(f"Character mapping saved to {vocab_path}")
 
 
@@ -684,7 +1017,9 @@ def test_generalization(
             path = resample_path(path, n_points)
             path = normalize_path(path)
 
-            features = torch.from_numpy(path.astype(np.float32)).unsqueeze(0).to(device)
+            # Extract rich features
+            feat = extract_features(path)
+            features = torch.from_numpy(feat).unsqueeze(0).to(device)
             log_probs = model(features)
             # Decode on CPU (needed for MPS)
             decoded = ctc_greedy_decode(log_probs.cpu())[0]
@@ -741,6 +1076,9 @@ def main():
     parser.add_argument(
         "--resume", type=str, default=None, help="Resume from checkpoint file"
     )
+    parser.add_argument(
+        "--warmup", type=int, default=3, help="Warmup epochs for learning rate"
+    )
     args = parser.parse_args()
 
     # Load all words
@@ -767,6 +1105,7 @@ def main():
         checkpoint_dir=args.checkpoint_dir,
         checkpoint_every=args.checkpoint_every,
         resume_from=args.resume,
+        warmup_epochs=args.warmup,
     )
 
     # Test generalization

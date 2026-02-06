@@ -106,6 +106,8 @@ struct PathFeatures {
     start_angle: f64,
     _end_angle: f64,
     segment_ratios: Vec<f64>,
+    curvature: Vec<f64>,
+    _path_length: f64,
 }
 
 fn extract_features(path: &[Point], num_shape_points: usize) -> Option<PathFeatures> {
@@ -183,6 +185,20 @@ fn extract_features(path: &[Point], num_shape_points: usize) -> Option<PathFeatu
     let start_angle = angles.first().copied().unwrap_or(0.0);
     let end_angle = angles.last().copied().unwrap_or(0.0);
 
+    // Curvature: absolute turn angle at each detail point, normalized by segment length
+    let curvature: Vec<f64> = turn_angles
+        .iter()
+        .enumerate()
+        .map(|(i, turn)| {
+            let seg = segment_ratios.get(i + 1).copied().unwrap_or(1.0 / detail_points.len() as f64);
+            if seg > 1e-9 {
+                turn.abs() / seg
+            } else {
+                0.0
+            }
+        })
+        .collect();
+
     Some(PathFeatures {
         shape,
         angles,
@@ -196,6 +212,8 @@ fn extract_features(path: &[Point], num_shape_points: usize) -> Option<PathFeatu
         start_angle,
         _end_angle: end_angle,
         segment_ratios,
+        curvature,
+        _path_length: total_len,
     })
 }
 
@@ -283,6 +301,7 @@ fn angle_distance(a: f64, b: f64) -> f64 {
     diff / std::f64::consts::PI
 }
 
+#[allow(dead_code)]
 fn location_distance(input: &[Point], word_path: &[Point], num_points: usize) -> f64 {
     if input.len() < 2 || word_path.len() < 2 {
         return 1.0;
@@ -364,6 +383,168 @@ fn segment_ratio_distance(a: &[f64], b: &[f64]) -> f64 {
     }
 
     total / len as f64
+}
+
+fn curvature_distance(a: &[f64], b: &[f64]) -> f64 {
+    if a.is_empty() && b.is_empty() {
+        return 0.0;
+    }
+    if a.is_empty() || b.is_empty() {
+        return 1.0;
+    }
+
+    let len = a.len().max(b.len());
+    let mut total = 0.0;
+
+    for i in 0..len {
+        let ca = a.get(i).copied().unwrap_or(0.0);
+        let cb = b.get(i).copied().unwrap_or(0.0);
+        total += (ca - cb).abs();
+    }
+
+    total / len as f64
+}
+
+/// Convert a sequence of direction angles into a "turn signature" —
+/// a sequence of relative angle changes (turn rates). This representation
+/// is inherently invariant to translation, scale, and rotation, making it
+/// ideal for comparing blind-drawn gestures to keyboard templates.
+fn angular_signature(angles: &[f64]) -> Vec<f64> {
+    if angles.len() < 2 {
+        return vec![];
+    }
+    let mut sig = Vec::with_capacity(angles.len() - 1);
+    for i in 1..angles.len() {
+        let mut diff = angles[i] - angles[i - 1];
+        while diff > std::f64::consts::PI {
+            diff -= 2.0 * std::f64::consts::PI;
+        }
+        while diff < -std::f64::consts::PI {
+            diff += 2.0 * std::f64::consts::PI;
+        }
+        sig.push(diff);
+    }
+    sig
+}
+
+/// DTW on angular signatures — compares two paths by their turn-by-turn
+/// pattern using Dynamic Time Warping on angle change sequences.
+///
+/// The cost function uses angular distance (wrapping at ±π) to handle
+/// the circular nature of angles. This gives a shape-intrinsic distance
+/// that captures the "rhythm of turns" regardless of where or how large
+/// the gesture was drawn.
+fn angular_signature_dtw(a: &[f64], b: &[f64], window: usize) -> f64 {
+    if a.is_empty() || b.is_empty() {
+        return 1.0;
+    }
+
+    let n = a.len();
+    let m = b.len();
+
+    let len_diff = (n as i64 - m as i64).unsigned_abs() as usize;
+    if len_diff > window {
+        return 1.0;
+    }
+
+    let mut prev = vec![f64::INFINITY; m + 1];
+    let mut curr = vec![f64::INFINITY; m + 1];
+    prev[0] = 0.0;
+
+    for i in 1..=n {
+        curr[0] = f64::INFINITY;
+        let j_start = if i > window { i - window } else { 1 };
+        let j_end = (i + window).min(m);
+
+        if j_start > 1 {
+            curr[j_start - 1] = f64::INFINITY;
+        }
+
+        for j in j_start..=j_end {
+            // Angular distance (wraps at ±π)
+            let mut diff = (a[i - 1] - b[j - 1]).abs();
+            if diff > std::f64::consts::PI {
+                diff = 2.0 * std::f64::consts::PI - diff;
+            }
+            let prev_min = prev[j].min(curr[j - 1]).min(prev[j - 1]);
+            curr[j] = diff + prev_min;
+        }
+
+        std::mem::swap(&mut prev, &mut curr);
+    }
+
+    let total = prev[m];
+    if total.is_infinite() {
+        1.0
+    } else {
+        total / n.max(m) as f64
+    }
+}
+
+/// Procrustes distance: optimally align two point sets (translate, rotate,
+/// scale) and return the residual distance.
+///
+/// This gives the true "shape distance" between two gestures, removing
+/// all the arbitrary transforms that occur in blind drawing from memory.
+/// The input shapes should already be centroid-centered (from normalize_to_shape).
+fn procrustes_distance(a: &[Point], b: &[Point]) -> f64 {
+    if a.is_empty() || b.is_empty() {
+        return 1.0;
+    }
+
+    let n = a.len().min(b.len());
+    if n < 2 {
+        return 1.0;
+    }
+
+    // Both inputs are already centroid-centered from normalize_to_shape.
+    // Step 1: Compute optimal rotation using Kabsch/SVD approach.
+    // For 2D we can solve analytically: θ = atan2(Σ(ax*by - ay*bx), Σ(ax*bx + ay*by))
+    let mut cross_sum = 0.0; // Σ(ax*by - ay*bx)
+    let mut dot_sum = 0.0; // Σ(ax*bx + ay*by)
+    let mut norm_a_sq = 0.0;
+    let mut norm_b_sq = 0.0;
+
+    for i in 0..n {
+        cross_sum += a[i].x * b[i].y - a[i].y * b[i].x;
+        dot_sum += a[i].x * b[i].x + a[i].y * b[i].y;
+        norm_a_sq += a[i].x * a[i].x + a[i].y * a[i].y;
+        norm_b_sq += b[i].x * b[i].x + b[i].y * b[i].y;
+    }
+
+    if norm_a_sq < 1e-12 || norm_b_sq < 1e-12 {
+        return 1.0;
+    }
+
+    // Optimal rotation angle
+    let theta = cross_sum.atan2(dot_sum);
+    let cos_t = theta.cos();
+    let sin_t = theta.sin();
+
+    // Optimal scale: s = Σ(a_rot · b) / Σ(b · b)
+    let mut rot_dot = 0.0;
+    for i in 0..n {
+        let rx = a[i].x * cos_t - a[i].y * sin_t;
+        let ry = a[i].x * sin_t + a[i].y * cos_t;
+        rot_dot += rx * b[i].x + ry * b[i].y;
+    }
+    let scale = if norm_b_sq > 1e-12 {
+        (rot_dot / norm_b_sq).max(0.1).min(10.0)
+    } else {
+        1.0
+    };
+
+    // Compute residual after optimal alignment
+    let mut residual = 0.0;
+    for i in 0..n {
+        let rx = a[i].x * cos_t - a[i].y * sin_t;
+        let ry = a[i].x * sin_t + a[i].y * cos_t;
+        let dx = rx - scale * b[i].x;
+        let dy = ry - scale * b[i].y;
+        residual += (dx * dx + dy * dy).sqrt();
+    }
+
+    residual / n as f64
 }
 
 pub use dtw::{dtw_distance, dtw_distance_fast as dtw_fast};
@@ -495,6 +676,9 @@ impl SwipeEngine {
         let window = 8;
         let mut best_score = f64::INFINITY;
 
+        // Pre-compute angular signature for DTW on angles
+        let input_angular_sig = angular_signature(&input_features.angles);
+
         let mut candidates: Vec<(String, f64, f64, ScoreBreakdown)> = self
             .dictionary
             .words
@@ -508,18 +692,22 @@ impl SwipeEngine {
 
                 let word_features = extract_features(&word_path, num_points)?;
 
+                // --- Shape-intrinsic pre-filters (no absolute position needed) ---
+                // These are invariant to scale, translation, and rotation — critical
+                // for blind drawing from memory where the user has no reference frame.
+
                 let ar_ratio = if word_features.aspect_ratio > 1e-9 {
                     input_features.aspect_ratio / word_features.aspect_ratio
                 } else {
                     1.0
                 };
-                if ar_ratio < 0.33 || ar_ratio > 3.0 {
+                if ar_ratio < 0.25 || ar_ratio > 4.0 {
                     return None;
                 }
 
                 let straight_diff =
                     (input_features.straightness - word_features.straightness).abs();
-                if straight_diff > 0.5 {
+                if straight_diff > 0.6 {
                     return None;
                 }
 
@@ -530,7 +718,7 @@ impl SwipeEngine {
                 } else {
                     1.0
                 };
-                if turn_ratio < 0.3 || turn_ratio > 3.0 {
+                if turn_ratio < 0.2 || turn_ratio > 5.0 {
                     return None;
                 }
 
@@ -544,17 +732,12 @@ impl SwipeEngine {
                 .sqrt();
                 if input_mag > 0.1 && word_mag > 0.1 {
                     let cos_sim = end_dot / (input_mag * word_mag);
-                    if cos_sim < -0.3 {
+                    if cos_sim < -0.5 {
                         return None;
                     }
                 }
 
-                let start_diff =
-                    angle_distance(input_features.start_angle, word_features.start_angle);
-                if start_diff > 0.5 {
-                    return None;
-                }
-
+                // Shape DTW on normalized (centroid + length-scaled) shapes
                 let cutoff = best_score * num_points as f64;
                 let shape_dist =
                     dtw_distance_fast(&input_features.shape, &word_features.shape, window, cutoff);
@@ -565,7 +748,13 @@ impl SwipeEngine {
 
                 let shape_score = shape_dist / num_points as f64;
 
-                let location_dist = location_distance(&simplified, &word_path, 16);
+                // --- Angular Signature DTW ---
+                // Compare direction angle sequences using DTW. This captures the
+                // "turn-by-turn" pattern of the gesture and is inherently invariant
+                // to scale, translation, and rotation — perfect for blind drawing.
+                let word_angular_sig = angular_signature(&word_features.angles);
+                let angular_dtw_dist =
+                    angular_signature_dtw(&input_angular_sig, &word_angular_sig, window);
 
                 let angle_dist =
                     angle_sequence_distance(&input_features.angles, &word_features.angles);
@@ -592,15 +781,40 @@ impl SwipeEngine {
                     &word_features.segment_ratios,
                 );
 
-                let raw_score = shape_score * 0.15
-                    + location_dist * 0.15
-                    + angle_dist * 0.12
-                    + disp_dist * 0.12
-                    + turn_dist * 0.08
-                    + start_angle_dist * 0.15
-                    + seg_ratio_dist * 0.08
-                    + hist_dist * 0.05
-                    + end_dist * 0.10;
+                let curv_dist = curvature_distance(
+                    &input_features.curvature,
+                    &word_features.curvature,
+                );
+
+                // --- Procrustes shape distance ---
+                // Optimally align the two shapes (translate, rotate, scale) before
+                // comparing. This gives a true shape distance that is invariant to
+                // the arbitrary transforms that occur in blind drawing.
+                let procrustes_dist =
+                    procrustes_distance(&input_features.shape, &word_features.shape);
+
+                // Scoring: shape-intrinsic features dominate.
+                // No location_distance (meaningless for blind drawing — user's
+                // raw positions have no relationship to keyboard coordinates).
+                //
+                // Weight distribution optimized for blind drawing:
+                //   - Shape/Procrustes: captures overall geometry (25%)
+                //   - Angular DTW: captures turn-by-turn pattern (20%)
+                //   - Angles/turns/curvature: local direction features (30%)
+                //   - Histogram/end_vector/seg_ratios: global shape descriptors (25%)
+                let complexity = input_features.total_turning.min(10.0) / 10.0;
+
+                let raw_score = procrustes_dist * 0.15
+                    + shape_score * 0.10
+                    + angular_dtw_dist * (0.18 + 0.04 * complexity)
+                    + angle_dist * 0.10
+                    + disp_dist * 0.08
+                    + turn_dist * (0.08 + 0.04 * complexity)
+                    + start_angle_dist * 0.06
+                    + seg_ratio_dist * 0.07
+                    + hist_dist * 0.06
+                    + end_dist * 0.06
+                    + curv_dist * (0.04 + 0.02 * complexity);
 
                 if raw_score < best_score {
                     best_score = raw_score;
@@ -610,7 +824,7 @@ impl SwipeEngine {
 
                 let breakdown = ScoreBreakdown {
                     shape: shape_score,
-                    location: location_dist,
+                    location: procrustes_dist,
                     angles: angle_dist,
                     displacements: disp_dist,
                     turns: turn_dist,
