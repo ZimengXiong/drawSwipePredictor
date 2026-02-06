@@ -6,7 +6,14 @@ This model learns to decode gesture paths into letter sequences,
 allowing it to generalize to ANY word - even words never seen in training.
 
 Architecture:
-    Path points → BiLSTM Encoder → CTC Decoder → Letter sequence
+    Path points → Feature Extraction → Conv1D → BiLSTM Encoder → CTC Decoder
+
+Features per timestep (7 dimensions):
+    - (x, y): normalized position
+    - (dx, dy): delta to next point (local direction)
+    - angle: direction angle (radians / pi, normalized to [-1, 1])
+    - speed: segment length relative to average
+    - curvature: change in direction angle
 
 Example:
     Input: [(x1,y1), (x2,y2), ...] (normalized path for "hello")
@@ -26,6 +33,7 @@ import random
 from scipy.ndimage import gaussian_filter1d
 from tqdm import tqdm
 import os
+import math
 
 # MPS doesn't support CTC loss, so we compute loss on CPU
 # Model runs on MPS (fast), loss on CPU (small overhead)
@@ -142,13 +150,65 @@ def normalize_path(path: np.ndarray) -> np.ndarray:
     return (path - centroid) / total_len
 
 
+# Number of input features per timestep
+INPUT_DIM = 7  # x, y, dx, dy, angle, speed, curvature
+
+
+def extract_features(path: np.ndarray) -> np.ndarray:
+    """
+    Extract rich per-timestep features from a normalized path.
+
+    For each of the N points, computes 7 features:
+        (x, y, dx, dy, angle, speed, curvature)
+
+    This gives the model local directional context at each timestep,
+    vastly improving CTC alignment compared to raw (x, y) alone.
+    """
+    n = len(path)
+    features = np.zeros((n, INPUT_DIM), dtype=np.float32)
+
+    # Position features
+    features[:, 0] = path[:, 0]
+    features[:, 1] = path[:, 1]
+
+    # Compute segment displacements and lengths
+    deltas = np.diff(path, axis=0)  # (n-1, 2)
+    seg_lengths = np.linalg.norm(deltas, axis=1)  # (n-1,)
+    avg_seg = seg_lengths.mean() if seg_lengths.mean() > 1e-9 else 1.0
+
+    # Delta features (forward difference, last point repeats)
+    features[:-1, 2] = deltas[:, 0]
+    features[:-1, 3] = deltas[:, 1]
+    features[-1, 2] = deltas[-1, 0]
+    features[-1, 3] = deltas[-1, 1]
+
+    # Angle features (direction of each segment, normalized to [-1, 1])
+    angles = np.arctan2(deltas[:, 1], deltas[:, 0])  # (n-1,)
+    features[:-1, 4] = angles / math.pi
+    features[-1, 4] = angles[-1] / math.pi
+
+    # Speed features (segment length / average segment length)
+    features[:-1, 5] = seg_lengths / avg_seg
+    features[-1, 5] = seg_lengths[-1] / avg_seg
+
+    # Curvature features (change in angle between consecutive segments)
+    if n > 2:
+        angle_diffs = np.diff(angles)
+        # Wrap to [-pi, pi]
+        angle_diffs = (angle_diffs + math.pi) % (2 * math.pi) - math.pi
+        features[1:-1, 6] = angle_diffs / math.pi
+    # First and last curvature stay 0
+
+    return features
+
+
 # ============================================================================
-# Augmentation (same as before)
+# Augmentation
 # ============================================================================
 
 
 def augment_for_blind_swipe(path: np.ndarray, severity: float = 1.0) -> np.ndarray:
-    """Realistic blind swipe augmentation."""
+    """Realistic blind swipe augmentation with enhanced diversity."""
     path = path.copy()
 
     # Global scale
@@ -177,6 +237,12 @@ def augment_for_blind_swipe(path: np.ndarray, severity: float = 1.0) -> np.ndarr
     )
     path[:, 1] += drift
 
+    # Horizontal drift (people's mental keyboard can shift left/right too)
+    h_drift = gaussian_filter1d(
+        np.cumsum(np.random.normal(0, 0.04 * severity, len(path))), 4
+    )
+    path[:, 0] += h_drift
+
     # Small rotation
     angle = np.random.normal(0, 4 * severity) * np.pi / 180
     cos_a, sin_a = np.cos(angle), np.sin(angle)
@@ -195,6 +261,22 @@ def augment_for_blind_swipe(path: np.ndarray, severity: float = 1.0) -> np.ndarr
 
     # Global translation
     path += np.random.normal(0, 0.3 * severity, 2)
+
+    # Occasional speed warping: non-uniform resampling along path
+    if random.random() < 0.3 * severity:
+        n = len(path)
+        # Create non-uniform parameter
+        t = np.linspace(0, 1, n)
+        warp_freq = random.uniform(1.0, 3.0)
+        warp_amp = random.uniform(0.05, 0.15) * severity
+        t_warped = t + warp_amp * np.sin(warp_freq * np.pi * t)
+        t_warped = np.clip(t_warped, 0, 1)
+        t_warped = (t_warped - t_warped[0]) / (t_warped[-1] - t_warped[0] + 1e-9)
+        # Interpolate path at warped positions
+        new_path = np.zeros_like(path)
+        for dim in range(2):
+            new_path[:, dim] = np.interp(t_warped, t, path[:, dim])
+        path = new_path
 
     return path
 
@@ -245,11 +327,13 @@ class CTCSwipeDataset(Dataset):
         resampled = resample_path(augmented, self.n_points)
         normalized = normalize_path(resampled)
 
-        # Convert to tensor
-        features = torch.from_numpy(normalized.astype(np.float32))
+        # Extract rich features (x, y, dx, dy, angle, speed, curvature)
+        features = extract_features(normalized)
+
+        features_tensor = torch.from_numpy(features)
         label_tensor = torch.tensor(label, dtype=torch.long)
 
-        return features, label_tensor, len(label)
+        return features_tensor, label_tensor, len(label)
 
 
 def collate_fn(batch):
@@ -273,23 +357,43 @@ def collate_fn(batch):
 
 class CTCSwipeModel(nn.Module):
     """
-    BiLSTM encoder with CTC decoder for gesture-to-text.
+    Conv1D + BiLSTM encoder with CTC decoder for gesture-to-text.
 
-    Input: (batch, seq_len, 2) - normalized path points
+    Architecture:
+        1. Conv1D front-end: extracts local patterns (n-gram-like features)
+        2. BiLSTM encoder: captures sequential dependencies
+        3. Linear projection: maps to character probabilities
+
+    Input: (batch, seq_len, input_dim) - extracted path features
     Output: (seq_len, batch, num_classes) - character probabilities
     """
 
     def __init__(
         self,
-        input_dim: int = 2,
+        input_dim: int = INPUT_DIM,
         hidden_dim: int = 256,
         num_layers: int = 3,
         dropout: float = 0.3,
+        conv_channels: int = 128,
     ):
         super().__init__()
 
+        # Conv1D front-end for local feature extraction
+        self.conv = nn.Sequential(
+            # First conv block: input_dim -> conv_channels
+            nn.Conv1d(input_dim, conv_channels, kernel_size=3, padding=1),
+            nn.BatchNorm1d(conv_channels),
+            nn.ReLU(),
+            nn.Dropout(dropout * 0.5),
+            # Second conv block: conv_channels -> conv_channels
+            nn.Conv1d(conv_channels, conv_channels, kernel_size=3, padding=1),
+            nn.BatchNorm1d(conv_channels),
+            nn.ReLU(),
+            nn.Dropout(dropout * 0.5),
+        )
+
         self.encoder = nn.LSTM(
-            input_size=input_dim,
+            input_size=conv_channels,
             hidden_size=hidden_dim,
             num_layers=num_layers,
             batch_first=True,
@@ -305,7 +409,14 @@ class CTCSwipeModel(nn.Module):
         )
 
     def forward(self, x):
-        # x: (batch, seq_len, 2)
+        # x: (batch, seq_len, input_dim)
+
+        # Conv1D expects (batch, channels, seq_len)
+        x = x.permute(0, 2, 1)
+        x = self.conv(x)
+        # Back to (batch, seq_len, channels)
+        x = x.permute(0, 2, 1)
+
         encoder_out, _ = self.encoder(x)  # (batch, seq_len, hidden*2)
         logits = self.fc(encoder_out)  # (batch, seq_len, num_classes)
 
@@ -377,8 +488,9 @@ def train_ctc_model(
     checkpoint_dir: str = "training/checkpoints",
     checkpoint_every: int = 1,
     resume_from: str = None,
+    warmup_epochs: int = 3,
 ):
-    """Train the CTC model with MPS support (CTC loss computed on CPU)."""
+    """Train the CTC model with improved training schedule."""
 
     # Setup device
     if device == "mps" and torch.backends.mps.is_available():
@@ -399,7 +511,9 @@ def train_ctc_model(
     print(f"  Device: {device}")
     print(f"  Words: {len(words)}")
     print(f"  Points per path: {n_points}")
+    print(f"  Input features: {INPUT_DIM} (x, y, dx, dy, angle, speed, curvature)")
     print(f"  Samples per word: {samples_per_word}")
+    print(f"  Warmup epochs: {warmup_epochs}")
     print(f"  Checkpoints: {checkpoint_dir}/ (every {checkpoint_every} epoch)")
 
     # Create datasets
@@ -425,15 +539,25 @@ def train_ctc_model(
         collate_fn=collate_fn,
     )
 
-    # Create model
-    model = CTCSwipeModel(hidden_dim=hidden_dim, num_layers=num_layers).to(device)
+    # Create model with Conv1D front-end
+    model = CTCSwipeModel(
+        input_dim=INPUT_DIM, hidden_dim=hidden_dim, num_layers=num_layers
+    ).to(device)
     print(f"  Model parameters: {sum(p.numel() for p in model.parameters()):,}")
 
     # CTC Loss (always on CPU if using MPS)
     ctc_loss = nn.CTCLoss(blank=BLANK_IDX, reduction="mean", zero_infinity=True)
 
     optimizer = optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=0.01)
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, epochs)
+
+    # Warmup + cosine annealing schedule
+    def lr_lambda(epoch):
+        if epoch < warmup_epochs:
+            return (epoch + 1) / warmup_epochs
+        progress = (epoch - warmup_epochs) / max(epochs - warmup_epochs, 1)
+        return 0.5 * (1.0 + math.cos(math.pi * progress))
+
+    scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
 
     best_val_acc = 0.0
     best_model_state = None
@@ -612,7 +736,7 @@ def export_ctc_model(model, output_path: str, n_points: int):
     model.eval()
     model_cpu = model.to("cpu")
 
-    dummy_input = torch.randn(1, n_points, 2)
+    dummy_input = torch.randn(1, n_points, INPUT_DIM)
 
     try:
         torch.onnx.export(
@@ -632,10 +756,15 @@ def export_ctc_model(model, output_path: str, n_points: int):
 
     print(f"Model exported to {output_path}")
 
-    # Save character mapping
+    # Save character mapping and model config
     vocab_path = output_path.replace(".onnx", "_chars.json")
     with open(vocab_path, "w") as f:
-        json.dump({"chars": CHARS, "blank_idx": BLANK_IDX}, f)
+        json.dump({
+            "chars": CHARS,
+            "blank_idx": BLANK_IDX,
+            "input_dim": INPUT_DIM,
+            "n_points": n_points,
+        }, f)
     print(f"Character mapping saved to {vocab_path}")
 
 
@@ -684,7 +813,9 @@ def test_generalization(
             path = resample_path(path, n_points)
             path = normalize_path(path)
 
-            features = torch.from_numpy(path.astype(np.float32)).unsqueeze(0).to(device)
+            # Extract rich features
+            feat = extract_features(path)
+            features = torch.from_numpy(feat).unsqueeze(0).to(device)
             log_probs = model(features)
             # Decode on CPU (needed for MPS)
             decoded = ctc_greedy_decode(log_probs.cpu())[0]
@@ -741,6 +872,9 @@ def main():
     parser.add_argument(
         "--resume", type=str, default=None, help="Resume from checkpoint file"
     )
+    parser.add_argument(
+        "--warmup", type=int, default=3, help="Warmup epochs for learning rate"
+    )
     args = parser.parse_args()
 
     # Load all words
@@ -767,6 +901,7 @@ def main():
         checkpoint_dir=args.checkpoint_dir,
         checkpoint_every=args.checkpoint_every,
         resume_from=args.resume,
+        warmup_epochs=args.warmup,
     )
 
     # Test generalization

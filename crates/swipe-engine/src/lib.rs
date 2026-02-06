@@ -106,6 +106,8 @@ struct PathFeatures {
     start_angle: f64,
     _end_angle: f64,
     segment_ratios: Vec<f64>,
+    curvature: Vec<f64>,
+    path_length: f64,
 }
 
 fn extract_features(path: &[Point], num_shape_points: usize) -> Option<PathFeatures> {
@@ -183,6 +185,20 @@ fn extract_features(path: &[Point], num_shape_points: usize) -> Option<PathFeatu
     let start_angle = angles.first().copied().unwrap_or(0.0);
     let end_angle = angles.last().copied().unwrap_or(0.0);
 
+    // Curvature: absolute turn angle at each detail point, normalized by segment length
+    let curvature: Vec<f64> = turn_angles
+        .iter()
+        .enumerate()
+        .map(|(i, turn)| {
+            let seg = segment_ratios.get(i + 1).copied().unwrap_or(1.0 / detail_points.len() as f64);
+            if seg > 1e-9 {
+                turn.abs() / seg
+            } else {
+                0.0
+            }
+        })
+        .collect();
+
     Some(PathFeatures {
         shape,
         angles,
@@ -196,6 +212,8 @@ fn extract_features(path: &[Point], num_shape_points: usize) -> Option<PathFeatu
         start_angle,
         _end_angle: end_angle,
         segment_ratios,
+        curvature,
+        path_length: total_len,
     })
 }
 
@@ -366,6 +384,26 @@ fn segment_ratio_distance(a: &[f64], b: &[f64]) -> f64 {
     total / len as f64
 }
 
+fn curvature_distance(a: &[f64], b: &[f64]) -> f64 {
+    if a.is_empty() && b.is_empty() {
+        return 0.0;
+    }
+    if a.is_empty() || b.is_empty() {
+        return 1.0;
+    }
+
+    let len = a.len().max(b.len());
+    let mut total = 0.0;
+
+    for i in 0..len {
+        let ca = a.get(i).copied().unwrap_or(0.0);
+        let cb = b.get(i).copied().unwrap_or(0.0);
+        total += (ca - cb).abs();
+    }
+
+    total / len as f64
+}
+
 pub use dtw::{dtw_distance, dtw_distance_fast as dtw_fast};
 pub use keyboard::{
     euclidean_dist as euclidean_distance, get_keyboard_layout as keyboard_layout,
@@ -492,6 +530,10 @@ impl SwipeEngine {
             None => return vec![],
         };
 
+        // Pre-compute input start/end positions for proximity filtering
+        let input_start = &simplified[0];
+        let input_end = simplified.last().unwrap();
+
         let window = 8;
         let mut best_score = f64::INFINITY;
 
@@ -503,6 +545,37 @@ impl SwipeEngine {
             .filter_map(|w| {
                 let word_path = get_word_path(w, &self.layout);
                 if word_path.len() < 2 {
+                    return None;
+                }
+
+                // Pre-filter: start/end key proximity
+                // Reject words whose first/last keys are far from where the user started/ended
+                let word_start = &word_path[0];
+                let word_end = word_path.last().unwrap();
+                let start_dist = euclidean_dist(input_start, word_start);
+                let end_dist = euclidean_dist(input_end, word_end);
+                if start_dist > 3.0 || end_dist > 3.0 {
+                    return None;
+                }
+
+                // Pre-filter: path length ratio
+                let len_ratio = if input_features.path_length > 1e-9 {
+                    let word_len = {
+                        let mut l = 0.0;
+                        for i in 1..word_path.len() {
+                            l += euclidean_dist(&word_path[i - 1], &word_path[i]);
+                        }
+                        l
+                    };
+                    if word_len > 1e-9 {
+                        input_features.path_length / word_len
+                    } else {
+                        1.0
+                    }
+                } else {
+                    1.0
+                };
+                if len_ratio < 0.25 || len_ratio > 4.0 {
                     return None;
                 }
 
@@ -592,15 +665,30 @@ impl SwipeEngine {
                     &word_features.segment_ratios,
                 );
 
-                let raw_score = shape_score * 0.15
-                    + location_dist * 0.15
+                let curv_dist = curvature_distance(
+                    &input_features.curvature,
+                    &word_features.curvature,
+                );
+
+                // Adaptive weighting: for complex paths (high turning), curvature
+                // and turn features become more discriminative
+                let complexity = input_features.total_turning.min(10.0) / 10.0;
+                let curv_weight = 0.04 + 0.04 * complexity;
+                let turn_weight = 0.06 + 0.04 * complexity;
+                // Slightly reduce other weights to compensate
+                let shape_weight = 0.14 - 0.01 * complexity;
+                let location_weight = 0.14 - 0.01 * complexity;
+
+                let raw_score = shape_score * shape_weight
+                    + location_dist * location_weight
                     + angle_dist * 0.12
                     + disp_dist * 0.12
-                    + turn_dist * 0.08
-                    + start_angle_dist * 0.15
-                    + seg_ratio_dist * 0.08
+                    + turn_dist * turn_weight
+                    + start_angle_dist * 0.14
+                    + seg_ratio_dist * 0.07
                     + hist_dist * 0.05
-                    + end_dist * 0.10;
+                    + end_dist * 0.10
+                    + curv_dist * curv_weight;
 
                 if raw_score < best_score {
                     best_score = raw_score;

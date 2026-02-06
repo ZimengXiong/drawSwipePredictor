@@ -28,10 +28,12 @@ We generalize and score paths on the folowing characteristics:
 
 ## CTC (Connectionist Temporal Classification)
 
-- Neural network (BiLSTM) trained on synthetic gesture-to-letter sequences
+- Neural network (Conv1D + BiLSTM) trained on synthetic gesture-to-letter sequences
+- Rich 7-dimensional input features: position, delta, angle, speed, curvature
+- Conv1D front-end extracts local patterns before BiLSTM
+- Warmup + cosine annealing learning rate schedule
 - Decodes variable-length gestures into letter sequences
 - Generalizes to unseen words
-- Worse performance compared to DTW as of now
 
 ## Usage
 

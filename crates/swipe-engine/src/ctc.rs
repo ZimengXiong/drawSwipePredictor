@@ -55,6 +55,13 @@ impl Default for LexiconConfig {
 struct CtcCharsFile {
     chars: Vec<String>,
     blank_idx: usize,
+    #[serde(default = "default_input_dim")]
+    input_dim: usize,
+}
+
+#[cfg(feature = "neural")]
+fn default_input_dim() -> usize {
+    2
 }
 
 /// Resample a path to N equidistant points.
@@ -141,6 +148,7 @@ fn normalize_path(path: &[Point]) -> Vec<Point> {
 pub struct CtcPredictor {
     session: Mutex<Session>,
     n_points: usize,
+    input_dim: usize,
     blank_idx: usize,
     idx_to_char: Vec<char>,
     out_to_trie: [u8; 27],
@@ -347,6 +355,7 @@ impl CtcPredictor {
         Ok(Self {
             session: Mutex::new(session),
             n_points,
+            input_dim: chars_file.input_dim,
             blank_idx: chars_file.blank_idx,
             idx_to_char,
             out_to_trie,
@@ -400,6 +409,83 @@ impl CtcPredictor {
         out
     }
 
+    /// Extract rich features matching the Python training pipeline.
+    ///
+    /// For each of the N points, computes 7 features:
+    ///   (x, y, dx, dy, angle, speed, curvature)
+    fn extract_rich_features(points: &[Point]) -> Vec<f32> {
+        let n = points.len();
+        let mut features = vec![0.0f32; n * 7];
+
+        // Position features
+        for i in 0..n {
+            features[i * 7] = points[i].x as f32;
+            features[i * 7 + 1] = points[i].y as f32;
+        }
+
+        if n < 2 {
+            return features;
+        }
+
+        // Compute segment deltas and lengths
+        let mut deltas = Vec::with_capacity(n - 1);
+        let mut seg_lengths = Vec::with_capacity(n - 1);
+        let mut total_seg = 0.0f64;
+        for i in 0..(n - 1) {
+            let dx = points[i + 1].x - points[i].x;
+            let dy = points[i + 1].y - points[i].y;
+            let len = (dx * dx + dy * dy).sqrt();
+            deltas.push((dx, dy));
+            seg_lengths.push(len);
+            total_seg += len;
+        }
+        let avg_seg = if total_seg > 1e-9 {
+            total_seg / (n - 1) as f64
+        } else {
+            1.0
+        };
+
+        // Delta features (forward difference, last point repeats)
+        for i in 0..(n - 1) {
+            features[i * 7 + 2] = deltas[i].0 as f32;
+            features[i * 7 + 3] = deltas[i].1 as f32;
+        }
+        features[(n - 1) * 7 + 2] = deltas[n - 2].0 as f32;
+        features[(n - 1) * 7 + 3] = deltas[n - 2].1 as f32;
+
+        // Angle features (direction, normalized to [-1, 1])
+        let pi = std::f64::consts::PI;
+        let mut angles = Vec::with_capacity(n - 1);
+        for i in 0..(n - 1) {
+            let angle = deltas[i].1.atan2(deltas[i].0);
+            angles.push(angle);
+            features[i * 7 + 4] = (angle / pi) as f32;
+        }
+        features[(n - 1) * 7 + 4] = (angles[n - 2] / pi) as f32;
+
+        // Speed features (segment length / average)
+        for i in 0..(n - 1) {
+            features[i * 7 + 5] = (seg_lengths[i] / avg_seg) as f32;
+        }
+        features[(n - 1) * 7 + 5] = (seg_lengths[n - 2] / avg_seg) as f32;
+
+        // Curvature features (change in angle)
+        if n > 2 {
+            for i in 0..(n - 2) {
+                let mut diff = angles[i + 1] - angles[i];
+                // Wrap to [-pi, pi]
+                diff = ((diff + pi) % (2.0 * pi)) - pi;
+                // Handle negative modulo
+                if diff < -pi {
+                    diff += 2.0 * pi;
+                }
+                features[(i + 1) * 7 + 6] = (diff / pi) as f32;
+            }
+        }
+
+        features
+    }
+
     fn template_direction(&self, word: &str) -> Option<(f64, f64)> {
         let raw = get_word_path(word, &self.layout);
         if raw.len() < 2 {
@@ -447,8 +533,8 @@ impl CtcPredictor {
     }
 
     fn decode_word_ids(&self, features: Vec<f32>) -> Option<(usize, Vec<(usize, f32)>)> {
-        // Model expects [batch, seq_len, 2] based on training/export.
-        let input_tensor = Tensor::from_array(([1usize, self.n_points, 2], features)).ok()?;
+        // Model expects [batch, seq_len, input_dim] based on training/export.
+        let input_tensor = Tensor::from_array(([1usize, self.n_points, self.input_dim], features)).ok()?;
 
         let mut session = self.session.lock().ok()?;
         let outputs = session.run(ort::inputs![input_tensor]).ok()?;
@@ -602,7 +688,11 @@ impl CtcPredictor {
             Some(v) => v,
             None => return vec![],
         };
-        let features_fwd = Self::flatten_points(&norm_fwd);
+        let features_fwd = if self.input_dim > 2 {
+            Self::extract_rich_features(&norm_fwd)
+        } else {
+            Self::flatten_points(&norm_fwd)
+        };
 
         let mut best_by_word: HashMap<String, Prediction> = HashMap::new();
 
@@ -633,7 +723,11 @@ impl CtcPredictor {
             let mut raw_rev: Vec<(f64, f64)> = raw_path.to_vec();
             raw_rev.reverse();
             if let Some(norm_rev) = self.preprocess_points(&raw_rev) {
-                let features_rev = Self::flatten_points(&norm_rev);
+                let features_rev = if self.input_dim > 2 {
+                    Self::extract_rich_features(&norm_rev)
+                } else {
+                    Self::flatten_points(&norm_rev)
+                };
                 if let Some((seq_len, cands)) = self.decode_word_ids(features_rev) {
                     for (wid, logp) in cands {
                         let word = self.vocabulary[wid].clone();
