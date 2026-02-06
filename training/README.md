@@ -54,22 +54,47 @@ short letter sequences and transitions.
 
 ## Training Data Generation
 
-**Synthetic data augmentation** simulates realistic blind swipe variations:
+Uses a **two-strategy mixture** for maximum diversity:
 
-1. **Scale variation** (0.5x - 2.0x) - People draw at different sizes
-2. **Rotation** (±25°) - Mental keyboard orientation varies
-3. **Aspect distortion** - Horizontal/vertical stretch
-4. **Point jitter** - Hand tremor and imprecision
-5. **Speed warping** - Non-uniform drawing speed
-6. **Endpoint noise** - Start/end point inaccuracy
-7. **Path simplification** - Occasional letter skipping
-8. **Horizontal drift** - Lateral mental keyboard shift
-9. **Non-uniform speed warping** - Sinusoidal time warping
+### Strategy 1: Realistic Path Generation (~50%)
+
+Simulates how a real finger moves across the keyboard:
+
+| Technique              | Description                                                    |
+|------------------------|----------------------------------------------------------------|
+| Per-key positional noise | Gaussian noise around key centers (fingers miss targets)     |
+| Key neighborhood confusion | Small probability of targeting adjacent key              |
+| Letter skipping        | Fast swipers sometimes skip intermediate keys                  |
+| Curved interpolation   | Bezier-like curves between keys with momentum/overshoot        |
+| Per-key dwell variation | Some keys get lingered on (extra points near key position)    |
+| Finger inertia         | Overshoot at sharp direction changes (momentum simulation)     |
+
+### Strategy 2: Global Augmentation (~50%)
+
+Applies broad geometric transforms to ideal straight-line paths:
+
+| Technique              | Description                                                    |
+|------------------------|----------------------------------------------------------------|
+| Scale variation        | 0.5x–2.0x size (people draw at different sizes)                |
+| Rotation               | ±25° (mental keyboard orientation varies)                      |
+| Aspect distortion      | Independent X/Y stretch (horizontal/vertical bias)             |
+| Vertical drift         | Smooth Y-axis drift (hand wanders)                             |
+| Horizontal drift       | Smooth X-axis drift (lateral keyboard shift)                   |
+| Corner rounding        | Gaussian smoothing (sharp turns become curves)                 |
+| Local deformation      | Spatially-varying noise (some regions sloppier than others)    |
+| Speed warping          | Sinusoidal time warping (non-uniform drawing speed)            |
+| Point jitter           | Gaussian noise (hand tremor and imprecision)                   |
+| Global translation     | Random offset (different drawing positions)                    |
+
+### Pipeline
 
 Each training sample:
 
-- Gets word path from QWERTY layout
-- Applies random augmentations
+- Selects a generation strategy (realistic or classic)
+- Gets word path from QWERTY layout (with or without per-key noise)
+- Interpolates between keys (curved or straight)
+- Applies augmentation transforms
 - Resamples to 64 equidistant points
+- Normalizes: center at centroid, scale by path length
 - Extracts 7 features per point
 - Labels: letter sequence (a-z)

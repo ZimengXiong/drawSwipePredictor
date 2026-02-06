@@ -470,6 +470,9 @@ impl CtcPredictor {
         features[(n - 1) * 7 + 5] = (seg_lengths[n - 2] / avg_seg) as f32;
 
         // Curvature features (change in angle)
+        // NOTE: Wrapping logic must match Python's extract_features() in train_ctc.py.
+        // Rust's f64 `%` is a remainder (can be negative), unlike Python's modulo,
+        // so we need the extra guard for diff < -pi.
         if n > 2 {
             for i in 0..(n - 2) {
                 let mut diff = angles[i + 1] - angles[i];
