@@ -77,14 +77,20 @@ See [the training guide](training/README.md) for the full GPU training, calibrat
 cargo test --workspace --all-targets
 uv run --directory training python -m unittest test_retrieval
 
-# Compare the original and geometry recognizers on identical synthetic gestures.
+# Compare all recognizers on identical synthetic gestures.
 cargo run --release -p swipe-engine --example memory_bench -- \
-  --vocab 10000 --samples 300 --seed 9001 --output /tmp/synthetic-results.json
+  --vocab 10000 --samples 300 --seed 12345 \
+  --model crates/swipe-engine/models/retrieval --output /tmp/synthetic-results.json
 
 # Compare recognizers on real recordings and distorted versions of those traces.
 cargo run --release -p swipe-engine --example real_bench -- \
   --dataset training/data/futo-large/test.jsonl --samples 1000 --vocab 10000 \
   --model crates/swipe-engine/models/retrieval --output /tmp/real-results.json
+
+# Repeat with the full default vocabulary.
+cargo run --release -p swipe-engine --example real_bench -- \
+  --dataset training/data/futo-large/test.jsonl --samples 500 --vocab 60000 \
+  --model crates/swipe-engine/models/retrieval --output /tmp/default-vocabulary-results.json
 
 # Verify native embeddings against the exported PyTorch reference outputs.
 cargo run --release -p swipe-engine --example retrieval_cli -- \

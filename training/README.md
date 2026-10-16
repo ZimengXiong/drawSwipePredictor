@@ -10,7 +10,7 @@ Run these commands from the repository root. Install Rust, Python, and [uv](http
 
 ```sh
 python3 training/fetch_real_swipes.py \
-  --train 150000 --validation 10000 --test 5000 --vocab 30000 \
+  --train 50000 --validation 5000 --test 5000 --vocab 30000 \
   --output-dir training/data/futo-large
 ```
 
@@ -26,7 +26,7 @@ These recordings use visible keyboards. They provide human movement data, but do
 python3 training/generate_memory_data.py
 ```
 
-This creates 18,000 training drawings, 3,000 validation drawings, and 3,000 test drawings in `training/data/memory/`. Target words and writer identities are disjoint across these splits. Each writer draws the same target at clean, loose, and memory difficulty levels within its split.
+This creates 18,000 training drawings, 3,000 validation drawings, and 3,000 test drawings in `training/data/memory/`. Target words and writer identities are disjoint across these dataset files. Online canonical augmentation still covers the deployment vocabulary, so this does not constitute a word holdout for the complete neural training procedure. Each writer draws the same target at clean, loose, and memory difficulty levels within its split.
 
 The generator models persistent errors in remembered key locations and row offsets. Individual attempts add rounded corners, occasional omitted waypoints, endpoint errors, drift, and uneven acquisition speed. Dataset manifests record seeds, target ranges, and file hashes.
 
@@ -57,6 +57,20 @@ uv run --directory training python train_retrieval.py \
   --output checkpoints/retrieval-v2
 ```
 
+Expand the real dataset and train the final pass used by the bundled model:
+
+```sh
+python3 training/fetch_real_swipes.py \
+  --train 150000 --validation 10000 --test 5000 --vocab 30000 \
+  --output-dir training/data/futo-large
+
+uv run --directory training python train_retrieval.py \
+  --init-model checkpoints/retrieval-v2/best.pt \
+  --vocab 60000 --epochs 80 --steps 150 --batch 768 \
+  --validation-samples 2000 --real-fraction 0.5 --learning-rate 0.0001 \
+  --output checkpoints/retrieval-v3
+```
+
 `--init-model` starts a new optimization schedule from learned weights. `--resume` restores the previous optimizer and schedule instead. Each run saves its arguments, source hashes, validation history, and best checkpoint.
 
 ## Calibrate and export
@@ -65,12 +79,12 @@ Calibration combines canonical word vectors with consensus vectors from real tra
 
 ```sh
 uv run --directory training python calibrate_retrieval.py \
-  --checkpoint checkpoints/retrieval-v2/best.pt \
-  --output checkpoints/retrieval-v2/calibration.json
+  --checkpoint checkpoints/retrieval-v3/best.pt --samples 2000 \
+  --output checkpoints/retrieval-v3/calibration.json
 
 uv run --directory training python export_retrieval.py \
-  --checkpoint checkpoints/retrieval-v2/best.pt \
-  --calibration checkpoints/retrieval-v2/calibration.json \
+  --checkpoint checkpoints/retrieval-v3/best.pt \
+  --calibration checkpoints/retrieval-v3/calibration.json \
   --output ../crates/swipe-engine/models/retrieval
 ```
 
