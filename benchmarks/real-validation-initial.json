@@ -1,0 +1,285 @@
+{
+  "dataset": "training/data/futo/validation.jsonl",
+  "limitations": "Recorded data uses visible keyboards. Memory transfer adds synthetic distortions to real traces and does not measure freehand memory accuracy.",
+  "metric_override": null,
+  "results": [
+    {
+      "baseline": {
+        "median_ms": 21.931208,
+        "p95_ms": 24.143375000000002,
+        "top1": 0.4533333333333333,
+        "top5": 0.6966666666666667
+      },
+      "example_errors": [
+        {
+          "predicted": [
+            "beat",
+            "beast",
+            "best",
+            "next",
+            "breast"
+          ],
+          "target": "best"
+        },
+        {
+          "predicted": [
+            "weird",
+            "writers",
+            "eyed",
+            "wired",
+            "whereas"
+          ],
+          "target": "word"
+        },
+        {
+          "predicted": [
+            "arg",
+            "run",
+            "tim",
+            "rim",
+            "fill"
+          ],
+          "target": "will"
+        },
+        {
+          "predicted": [
+            "worn",
+            "superb",
+            "worth",
+            "sign",
+            "with"
+          ],
+          "target": "with"
+        },
+        {
+          "predicted": [
+            "every",
+            "small",
+            "anal",
+            "start",
+            "also"
+          ],
+          "target": "also"
+        },
+        {
+          "predicted": [
+            "comic",
+            "supplies",
+            "supplied",
+            "suppliers",
+            "assumes"
+          ],
+          "target": "supplies"
+        },
+        {
+          "predicted": [
+            "ford",
+            "dies",
+            "died",
+            "floors",
+            "stress"
+          ],
+          "target": "does"
+        },
+        {
+          "predicted": [
+            "ruth",
+            "worn",
+            "storm",
+            "worm",
+            "sperm"
+          ],
+          "target": "with"
+        },
+        {
+          "predicted": [
+            "chubby",
+            "shine",
+            "zone",
+            "anime",
+            "cunt"
+          ],
+          "target": "adult"
+        },
+        {
+          "predicted": [
+            "twenty",
+            "factory",
+            "researcher",
+            "factor",
+            "exempt"
+          ],
+          "target": "rarely"
+        },
+        {
+          "predicted": [
+            "genre",
+            "games",
+            "takes",
+            "tales",
+            "gene"
+          ],
+          "target": "games"
+        },
+        {
+          "predicted": [
+            "just",
+            "list",
+            "phi",
+            "judy",
+            "lost"
+          ],
+          "target": "list"
+        }
+      ],
+      "memory": {
+        "median_ms": 1.465708,
+        "p95_ms": 1.63625,
+        "top1": 0.6366666666666667,
+        "top5": 0.8333333333333334
+      },
+      "mode": "recorded"
+    },
+    {
+      "baseline": {
+        "median_ms": 21.573833,
+        "p95_ms": 23.658541000000003,
+        "top1": 0.25,
+        "top5": 0.4
+      },
+      "example_errors": [
+        {
+          "predicted": [
+            "beat",
+            "beast",
+            "fewer",
+            "breast",
+            "gear"
+          ],
+          "target": "best"
+        },
+        {
+          "predicted": [
+            "weird",
+            "word",
+            "quotes",
+            "adipex",
+            "words"
+          ],
+          "target": "word"
+        },
+        {
+          "predicted": [
+            "aim",
+            "roll",
+            "erik",
+            "tool",
+            "toll"
+          ],
+          "target": "will"
+        },
+        {
+          "predicted": [
+            "worth",
+            "with",
+            "south",
+            "rough",
+            "work"
+          ],
+          "target": "with"
+        },
+        {
+          "predicted": [
+            "start",
+            "star",
+            "also",
+            "stat",
+            "volvo"
+          ],
+          "target": "also"
+        },
+        {
+          "predicted": [
+            "trace",
+            "range",
+            "ranger",
+            "race",
+            "rand"
+          ],
+          "target": "race"
+        },
+        {
+          "predicted": [
+            "metadata",
+            "bears",
+            "needed",
+            "mercedes",
+            "nested"
+          ],
+          "target": "needed"
+        },
+        {
+          "predicted": [
+            "non",
+            "bob",
+            "boob",
+            "noon",
+            "sees"
+          ],
+          "target": "supplies"
+        },
+        {
+          "predicted": [
+            "stress",
+            "high",
+            "vic",
+            "dts",
+            "boc"
+          ],
+          "target": "does"
+        },
+        {
+          "predicted": [
+            "worth",
+            "with",
+            "work",
+            "worn",
+            "align"
+          ],
+          "target": "with"
+        },
+        {
+          "predicted": [
+            "tone",
+            "fund",
+            "rome",
+            "find",
+            "tribe"
+          ],
+          "target": "rome"
+        },
+        {
+          "predicted": [
+            "axis",
+            "export",
+            "waste",
+            "exit",
+            "acid"
+          ],
+          "target": "waste"
+        }
+      ],
+      "memory": {
+        "median_ms": 1.440209,
+        "p95_ms": 1.622792,
+        "top1": 0.5866666666666667,
+        "top5": 0.8
+      },
+      "mode": "memory_transfer"
+    }
+  ],
+  "samples": 300,
+  "sessions": 46,
+  "skipped_oov": 0,
+  "vocabulary": 10000
+}

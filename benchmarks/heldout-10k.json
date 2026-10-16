@@ -1,0 +1,342 @@
+{
+  "eligible_targets": 8800,
+  "results": [
+    {
+      "baseline": {
+        "median_ms": 20.840958,
+        "p95_ms": 23.379375,
+        "top1": 0.8133333333333334,
+        "top5": 0.8966666666666666
+      },
+      "difficulty": "clean",
+      "example_errors": [
+        {
+          "predicted": [
+            "per",
+            "potter",
+            "peer",
+            "port",
+            "las"
+          ],
+          "target": "peer"
+        },
+        {
+          "predicted": [
+            "is",
+            "odds",
+            "isa",
+            "os",
+            "usa"
+          ],
+          "target": "odds"
+        },
+        {
+          "predicted": [
+            "eye",
+            "wow",
+            "tit",
+            "aka",
+            "xnxx"
+          ],
+          "target": "xnxx"
+        },
+        {
+          "predicted": [
+            "scott",
+            "scout",
+            "wage",
+            "acute",
+            "thou"
+          ],
+          "target": "scout"
+        }
+      ],
+      "memory": {
+        "median_ms": 1.0529160000000002,
+        "p95_ms": 1.159709,
+        "top1": 0.9866666666666667,
+        "top5": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "median_ms": 21.986167000000002,
+        "p95_ms": 23.415792,
+        "top1": 0.5266666666666666,
+        "top5": 0.7033333333333334
+      },
+      "difficulty": "loose",
+      "example_errors": [
+        {
+          "predicted": [
+            "willow",
+            "supports",
+            "dvd",
+            "eve",
+            "spa"
+          ],
+          "target": "suits"
+        },
+        {
+          "predicted": [
+            "cells",
+            "crops",
+            "cross",
+            "july",
+            "grow"
+          ],
+          "target": "crops"
+        },
+        {
+          "predicted": [
+            "ma",
+            "le",
+            "lee",
+            "pope",
+            "kw"
+          ],
+          "target": "pope"
+        },
+        {
+          "predicted": [
+            "beta",
+            "meta",
+            "meets",
+            "jets",
+            "meters"
+          ],
+          "target": "beats"
+        },
+        {
+          "predicted": [
+            "technique",
+            "temperature",
+            "wallpaper",
+            "exposure",
+            "temporarily"
+          ],
+          "target": "translator"
+        },
+        {
+          "predicted": [
+            "rooms",
+            "runs",
+            "rome",
+            "wins",
+            "winds"
+          ],
+          "target": "round"
+        },
+        {
+          "predicted": [
+            "huge",
+            "moms",
+            "mins",
+            "minds",
+            "looks"
+          ],
+          "target": "minus"
+        },
+        {
+          "predicted": [
+            "center",
+            "cashiers",
+            "valued",
+            "cakes",
+            "values"
+          ],
+          "target": "cakes"
+        },
+        {
+          "predicted": [
+            "mumbai",
+            "lookup",
+            "binary",
+            "hyundai",
+            "monday"
+          ],
+          "target": "monaco"
+        },
+        {
+          "predicted": [
+            "ellis",
+            "non",
+            "bob",
+            "dod",
+            "boob"
+          ],
+          "target": "wings"
+        },
+        {
+          "predicted": [
+            "vsnet",
+            "canada",
+            "debate",
+            "generate",
+            "cemetery"
+          ],
+          "target": "candidate"
+        },
+        {
+          "predicted": [
+            "hand",
+            "hands",
+            "hans",
+            "rats",
+            "treasure"
+          ],
+          "target": "rats"
+        }
+      ],
+      "memory": {
+        "median_ms": 1.042166,
+        "p95_ms": 1.1395000000000002,
+        "top1": 0.7533333333333333,
+        "top5": 0.87
+      }
+    },
+    {
+      "baseline": {
+        "median_ms": 22.641333,
+        "p95_ms": 24.659833,
+        "top1": 0.28,
+        "top5": 0.46
+      },
+      "difficulty": "memory",
+      "example_errors": [
+        {
+          "predicted": [
+            "dvd",
+            "eve",
+            "role",
+            "willow",
+            "stops"
+          ],
+          "target": "suits"
+        },
+        {
+          "predicted": [
+            "be",
+            "my",
+            "me",
+            "de",
+            "cd"
+          ],
+          "target": "pope"
+        },
+        {
+          "predicted": [
+            "on",
+            "pm",
+            "pc",
+            "rss",
+            "oh"
+          ],
+          "target": "libs"
+        },
+        {
+          "predicted": [
+            "beta",
+            "meta",
+            "jets",
+            "meets",
+            "keys"
+          ],
+          "target": "beats"
+        },
+        {
+          "predicted": [
+            "uses",
+            "used",
+            "here",
+            "mars",
+            "casa"
+          ],
+          "target": "phases"
+        },
+        {
+          "predicted": [
+            "ericsson",
+            "tucson",
+            "education",
+            "symbol",
+            "richardson"
+          ],
+          "target": "thumbnail"
+        },
+        {
+          "predicted": [
+            "keyboard",
+            "keyboards",
+            "motherboard",
+            "property",
+            "proper"
+          ],
+          "target": "motherboard"
+        },
+        {
+          "predicted": [
+            "donation",
+            "salvation",
+            "designation",
+            "fiction",
+            "victim"
+          ],
+          "target": "salvation"
+        },
+        {
+          "predicted": [
+            "technique",
+            "temperature",
+            "exposure",
+            "emperor",
+            "exists"
+          ],
+          "target": "translator"
+        },
+        {
+          "predicted": [
+            "beam",
+            "bdsm",
+            "jewel",
+            "green",
+            "van"
+          ],
+          "target": "break"
+        },
+        {
+          "predicted": [
+            "labs",
+            "usgs",
+            "land",
+            "lands",
+            "java"
+          ],
+          "target": "lands"
+        },
+        {
+          "predicted": [
+            "aruba",
+            "fund",
+            "drums",
+            "sims",
+            "rome"
+          ],
+          "target": "round"
+        }
+      ],
+      "memory": {
+        "median_ms": 1.024291,
+        "p95_ms": 1.142166,
+        "top1": 0.53,
+        "top5": 0.7166666666666667
+      }
+    }
+  ],
+  "samples_per_difficulty": 300,
+  "seed": 9001,
+  "synthetic_only": true,
+  "target_policy": "uniform over 4–12 letter words in target vocabulary",
+  "target_vocabulary_limit": 10000,
+  "vocabulary": 10000
+}

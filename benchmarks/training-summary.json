@@ -1,0 +1,186 @@
+[
+  {
+    "run": "retrieval-v1",
+    "configuration": {
+      "arguments": {
+        "real_dir": "training/data/futo-large",
+        "synthetic_dir": "training/data/memory",
+        "output": "checkpoints/retrieval-v1",
+        "epochs": 40,
+        "steps": 100,
+        "batch": 512,
+        "vocab": 60000,
+        "validation_samples": 1500,
+        "seed": 271828,
+        "resume": null,
+        "device": "mps"
+      },
+      "git_commit": "2953572c2d302b5b18b85d571d097e0753d038cb",
+      "torch": "2.14.1",
+      "device": "mps",
+      "training_recordings": {
+        "real": 50000,
+        "synthetic": 18000
+      },
+      "source_sha256": {
+        "real_train": "d0ca0c46d4fb2cfe72d8633b9d83a86be15642ef6c682e1ee53ec081f0cd8104",
+        "real_validation": "245184d329df23d156544245b8acfe452f3dd3a533317663cc2f4b196e12c30c",
+        "synthetic_train": "01dfb33210ea74027c66b2776141bcc31b75f9b8d01e2840d9bb0a255d922787",
+        "synthetic_validation": "bef6c8f0c8507451c2357015924e13f54b675f3a6ef1f6a0f152b1160454f1ee"
+      },
+      "selection": "mean validation top1 over recorded real, distorted real, and synthetic gestures",
+      "test_data_used": false
+    },
+    "selected_checkpoint": {
+      "epoch": 36,
+      "loss": 0.4406399577856064,
+      "validation": {
+        "real": {
+          "top1": 0.659333348274231,
+          "top5": 0.843999981880188,
+          "samples": 1500
+        },
+        "distorted_real": {
+          "top1": 0.5220000147819519,
+          "top5": 0.7639999985694885,
+          "samples": 1500
+        },
+        "synthetic": {
+          "top1": 0.7400000095367432,
+          "top5": 0.8513333201408386,
+          "samples": 1500
+        }
+      },
+      "score": 0.6404444575309753,
+      "best_score": 0.6404444575309753,
+      "seconds": 2.8499719169922173,
+      "learning_rate": 2.9299261903920834e-05,
+      "improved": true
+    }
+  },
+  {
+    "run": "retrieval-v2",
+    "configuration": {
+      "arguments": {
+        "real_dir": "training/data/futo-large",
+        "synthetic_dir": "training/data/memory",
+        "output": "checkpoints/retrieval-v2",
+        "epochs": 120,
+        "steps": 150,
+        "batch": 512,
+        "vocab": 60000,
+        "validation_samples": 1500,
+        "seed": 271828,
+        "resume": null,
+        "init_model": "checkpoints/retrieval-v1/best.pt",
+        "learning_rate": 0.00015,
+        "real_fraction": 0.5,
+        "device": "mps"
+      },
+      "git_commit": "d97cbaa65e928f8de43a61ed1f9dc5c3423c30e3",
+      "torch": "2.14.1",
+      "device": "mps",
+      "training_recordings": {
+        "real": 50000,
+        "synthetic": 18000
+      },
+      "source_sha256": {
+        "real_train": "d0ca0c46d4fb2cfe72d8633b9d83a86be15642ef6c682e1ee53ec081f0cd8104",
+        "real_validation": "245184d329df23d156544245b8acfe452f3dd3a533317663cc2f4b196e12c30c",
+        "synthetic_train": "01dfb33210ea74027c66b2776141bcc31b75f9b8d01e2840d9bb0a255d922787",
+        "synthetic_validation": "bef6c8f0c8507451c2357015924e13f54b675f3a6ef1f6a0f152b1160454f1ee"
+      },
+      "selection": "mean validation top1 over recorded real, distorted real, and synthetic gestures",
+      "test_data_used": false
+    },
+    "selected_checkpoint": {
+      "epoch": 114,
+      "loss": 0.3688629315296809,
+      "validation": {
+        "real": {
+          "top1": 0.7480000257492065,
+          "top5": 0.8913333415985107,
+          "samples": 1500
+        },
+        "distorted_real": {
+          "top1": 0.628000020980835,
+          "top5": 0.8379999995231628,
+          "samples": 1500
+        },
+        "synthetic": {
+          "top1": 0.7379999756813049,
+          "top5": 0.8433333039283752,
+          "samples": 1500
+        }
+      },
+      "score": 0.7046666741371155,
+      "best_score": 0.7046666741371155,
+      "seconds": 2.8975625000020955,
+      "learning_rate": 2.0800257861316058e-05,
+      "improved": true
+    }
+  },
+  {
+    "run": "retrieval-v3",
+    "configuration": {
+      "arguments": {
+        "real_dir": "training/data/futo-large",
+        "synthetic_dir": "training/data/memory",
+        "output": "checkpoints/retrieval-v3",
+        "epochs": 80,
+        "steps": 150,
+        "batch": 768,
+        "vocab": 60000,
+        "validation_samples": 2000,
+        "seed": 271828,
+        "resume": null,
+        "init_model": "checkpoints/retrieval-v2/best.pt",
+        "learning_rate": 0.0001,
+        "real_fraction": 0.5,
+        "device": "mps"
+      },
+      "git_commit": "33cecded66803e1dbaa4bce92ef46cda94aa8fb2",
+      "torch": "2.14.1",
+      "numpy": "2.5.4",
+      "device": "mps",
+      "training_recordings": {
+        "real": 150000,
+        "synthetic": 18000
+      },
+      "source_sha256": {
+        "real_train": "5d833110127d554d43e9a83843305e90b51f2022bddd880c7e1586c0761693da",
+        "real_validation": "50f20dcbc612f955937da815ae2ea6df4b484cb6e783b610e942d5c2b76f6521",
+        "synthetic_train": "01dfb33210ea74027c66b2776141bcc31b75f9b8d01e2840d9bb0a255d922787",
+        "synthetic_validation": "bef6c8f0c8507451c2357015924e13f54b675f3a6ef1f6a0f152b1160454f1ee"
+      },
+      "selection": "mean validation top1 over recorded real, distorted real, and synthetic gestures",
+      "test_data_used": false
+    },
+    "selected_checkpoint": {
+      "epoch": 80,
+      "loss": 0.4354315094153086,
+      "validation": {
+        "real": {
+          "top1": 0.7620000243186951,
+          "top5": 0.8989999890327454,
+          "samples": 2000
+        },
+        "distorted_real": {
+          "top1": 0.6514999866485596,
+          "top5": 0.8330000042915344,
+          "samples": 2000
+        },
+        "synthetic": {
+          "top1": 0.7275000214576721,
+          "top5": 0.8324999809265137,
+          "samples": 2000
+        }
+      },
+      "score": 0.7136666774749756,
+      "best_score": 0.7136666774749756,
+      "seconds": 3.3582305409945548,
+      "learning_rate": 2e-05,
+      "improved": true
+    }
+  }
+]
