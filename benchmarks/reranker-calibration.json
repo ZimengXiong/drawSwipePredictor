@@ -1,4 +1,7 @@
 {
+  "policy": "Preserve neural matches with cosine distance below 0.08; extend the fallback using validation only",
+  "selection": "Mean top1 across five sources, with clean and canonical accuracy within 0.2 percentage points of baseline",
+  "uncalibrated_ranker_sha256": "fa28069c6c65f3d401f536d1dc73569e346acff9baf1403a6980009069b98a63",
   "baseline": {
     "canonical": {
       "top1": 0.8536666666666667,

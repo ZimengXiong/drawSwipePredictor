@@ -6,16 +6,19 @@ The project now includes a learned route recognizer trained on real human swipe 
 
 ## Measured improvement
 
-On 500 held-out human recordings, using the default 60,000-word vocabulary:
+The latest version adds independent shape retrieval and a learned candidate reranker. On a new test with 879 real recordings from 107 previously unseen donor sessions and 6,000 synthetic drawings, using 60,000 candidate words:
 
-| Input | Original DTW: first choice | Learned: first choice | Learned: top five |
+| Input | Previous learned: first choice | New: first choice | New: top five |
 |---|---:|---:|---:|
-| Real swipe | 44.4% | 86.2% | 96.2% |
-| Real swipe with simulated memory errors | 24.6% | 78.8% | 93.0% |
+| Real swipe | 82.3% | 83.6% | 94.1% |
+| Distorted real swipe | 71.3% | 73.0% | 88.9% |
+| Clean synthetic | 96.5% | 96.5% | 99.8% |
+| Loose synthetic | 66.9% | 70.5% | 84.2% |
+| Hard synthetic memory | 33.9% | 42.8% | 62.2% |
 
-Median recognition time for the distorted traces fell from 132 ms to 3.3 ms on an M4 Max. A separate 1,000-recording comparison with a 10,000-word vocabulary reached 87.9% first-choice accuracy on real swipes and 82.2% on distorted real swipes.
+The hard-memory gain is 8.95 percentage points, with a paired 95% interval of 7.5–10.35 points. The recordings use visible keyboards; distorted and synthetic tests do not establish accuracy for human freehand memory gestures.
 
-The hardest synthetic memory condition still reaches about 52% first-choice accuracy. These tests show a large improvement over the original recognizer, while leaving substantial uncertainty for completely freehand memory gestures. See [the benchmark report](benchmarks/README.md) for all conditions and limits.
+On the earlier 10,000-word synthetic test, hard-memory accuracy improves from 52.3% to 57.3%, while clean accuracy stays at 99.0%. The first learned model already improved substantially over the original DTW recognizer. See [the benchmark report](benchmarks/README.md) for paired results, timing, and limits.
 
 ## Run the app
 
@@ -39,7 +42,7 @@ The app is written to `build/Draw from Memory.app`.
 
 The learned recognizer compares an input gesture with word routes in a learned vector space. Training teaches it which changes in a route should preserve its identity. It uses real recordings together with augmented routes that contain rotated or stretched keyboards, misplaced turns, endpoint errors, and drift. Hard-negative mining adds words with confusingly similar routes to the training comparisons.
 
-At export time, the model combines canonical routes with consensus vectors from real training drawings. Validation selects the combination, the word-frequency prior, and any orientation ensemble. Recognition requires one encoder pass per orientation and a scan of cached word vectors. Python and GPU libraries are only needed for training.
+At export time, the model combines canonical routes with consensus vectors from real training drawings. Validation selects the combination, the word-frequency prior, and any orientation ensemble. Recognition uses one encoder pass per orientation and a scan of cached word vectors. It then combines 32 neural candidates with 32 additional candidates found directly from shape. A small network compares elastic alignment, endpoints, rounding, rotation, and route complexity. Clear neural matches keep their original ranking to protect clean gestures. Python and GPU libraries are only needed for training.
 
 The geometry recognizer offers a separate option without neural weights. It caches sharp and rounded word templates, searches several orientations, and normalizes axis stretch. A shortlist receives elastic alignment that scores positions and directions under the same correspondence. Its ranking weights come from automatic fitting on synthetic examples.
 

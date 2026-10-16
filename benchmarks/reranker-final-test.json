@@ -1,0 +1,147 @@
+{
+  "vocabulary": 60000,
+  "test_manifest": {
+    "seed": 8675309,
+    "fresh_donors": 107,
+    "real_samples": 879,
+    "exclusion": "All donor sessions in every split of the excluded datasets",
+    "excluded_source_sha256": {
+      "futo-large/train.jsonl": "5d833110127d554d43e9a83843305e90b51f2022bddd880c7e1586c0761693da",
+      "futo-large/validation.jsonl": "50f20dcbc612f955937da815ae2ea6df4b484cb6e783b610e942d5c2b76f6521",
+      "futo-large/test.jsonl": "ac2b2f3687c80e19ce78be828cb755c0ab5991d019726bfaf0796e8703e5f810",
+      "futo-fresh/train.jsonl": "cd7e53cb97e2d1a29fa116796ff8426bac97d8f9d1806dc9eb9bc701e0df0602",
+      "futo-fresh/validation.jsonl": "dc52e65f42356896474b6538b5d377af1c29194cc4cf200437ea3d3cd8959bde",
+      "futo-fresh/test.jsonl": "196e924d466a1384d6373fbe9005dedfb0cccd7ee8275b96b914cec5dcdab47b"
+    },
+    "selection": "Up to 10 random records per fresh donor, shuffled and capped at 1000; no model scores used",
+    "sha256": "0dd181dfd6ee8be0c706bfe269504ddd6dbb1e0dc90ed587ebf3ba019ce1a63f",
+    "source_sha256": {
+      "real_test": "f280b23720a1e588a0e1934c1435514d936cb0ce9aee6d6f9940d87c3b178014",
+      "synthetic_test": "b534c26e0be4dde0de78406f0267fe608edfec95f4bf6a7064ebcb7f58ce20ff"
+    },
+    "limitations": "Recorded swipes use visible keyboards. Distorted and synthetic gestures do not establish human freehand-memory accuracy."
+  },
+  "groups": {
+    "distorted_real": {
+      "samples": 879,
+      "clusters": 107,
+      "baseline": {
+        "top1": 0.7133105802047781,
+        "top5": 0.8782707622298066,
+        "median_ms": 3.545916,
+        "p95_ms": 3.8318749999999997
+      },
+      "challenger": {
+        "top1": 0.7303754266211604,
+        "top5": 0.888509670079636,
+        "median_ms": 9.323166,
+        "p95_ms": 22.8628203
+      },
+      "top1_gain": 0.017064846416382253,
+      "cluster_bootstrap_95pct": [
+        0.0011613059152887153,
+        0.03289745092930346
+      ]
+    },
+    "real": {
+      "samples": 879,
+      "clusters": 107,
+      "baseline": {
+        "top1": 0.8225255972696246,
+        "top5": 0.9328782707622298,
+        "median_ms": 3.609083,
+        "p95_ms": 3.9222044999999994
+      },
+      "challenger": {
+        "top1": 0.8361774744027304,
+        "top5": 0.9408418657565415,
+        "median_ms": 7.267,
+        "p95_ms": 9.554929199999998
+      },
+      "top1_gain": 0.013651877133105802,
+      "cluster_bootstrap_95pct": [
+        0.001153303106232351,
+        0.026876453130727784
+      ]
+    },
+    "synthetic_clean": {
+      "samples": 2000,
+      "clusters": 2000,
+      "baseline": {
+        "top1": 0.9645,
+        "top5": 0.9975,
+        "median_ms": 3.549812,
+        "p95_ms": 3.84425835
+      },
+      "challenger": {
+        "top1": 0.9645,
+        "top5": 0.9975,
+        "median_ms": 9.8291045,
+        "p95_ms": 25.168029199999996
+      },
+      "top1_gain": 0.0,
+      "cluster_bootstrap_95pct": [
+        0.0,
+        0.0
+      ]
+    },
+    "synthetic_loose": {
+      "samples": 2000,
+      "clusters": 2000,
+      "baseline": {
+        "top1": 0.669,
+        "top5": 0.819,
+        "median_ms": 3.6981460000000004,
+        "p95_ms": 4.98034375
+      },
+      "challenger": {
+        "top1": 0.705,
+        "top5": 0.8425,
+        "median_ms": 9.658792000000002,
+        "p95_ms": 21.632279199999996
+      },
+      "top1_gain": 0.036,
+      "cluster_bootstrap_95pct": [
+        0.027,
+        0.0455
+      ]
+    },
+    "synthetic_memory": {
+      "samples": 2000,
+      "clusters": 2000,
+      "baseline": {
+        "top1": 0.3385,
+        "top5": 0.5255,
+        "median_ms": 3.722167,
+        "p95_ms": 4.272015199999999
+      },
+      "challenger": {
+        "top1": 0.428,
+        "top5": 0.622,
+        "median_ms": 7.2987915,
+        "p95_ms": 9.507847599999998
+      },
+      "top1_gain": 0.0895,
+      "cluster_bootstrap_95pct": [
+        0.075,
+        0.1035
+      ]
+    }
+  },
+  "models": {
+    "baseline": {
+      "encoder.bin": "9573edad3f1319a491a2e6f3b474c64ef2753d7ab81132284488dfe8b7816ccd",
+      "manifest.json": "77b9c97a5d450d13334667ba682a62b0e3a980eec5fff71c55ef7565b767bfde",
+      "verification.json": "321eafcf69331702a3b766cab4c07aa8167439142c14d4619a4496675e649a4e",
+      "words.bin": "ccbf1e7e5788c5c22eb41d6f3b12592aa28d428a5c728aa5c047919467d446d2"
+    },
+    "challenger": {
+      "encoder.bin": "9573edad3f1319a491a2e6f3b474c64ef2753d7ab81132284488dfe8b7816ccd",
+      "manifest.json": "77b9c97a5d450d13334667ba682a62b0e3a980eec5fff71c55ef7565b767bfde",
+      "reranker-verification.json": "657e2929171d5bed5dbc8855a941962479eb7668821f083e575e68ccce0f2d37",
+      "verification.json": "321eafcf69331702a3b766cab4c07aa8167439142c14d4619a4496675e649a4e",
+      "words.bin": "ccbf1e7e5788c5c22eb41d6f3b12592aa28d428a5c728aa5c047919467d446d2",
+      "reranker.json": "00dae2ba25720c8ea279d60d37a85b7238e6cd6e613fe02a5896ce214d82c917"
+    }
+  }
+}
