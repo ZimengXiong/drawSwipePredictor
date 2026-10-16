@@ -14,13 +14,13 @@ def main() -> None:
     if sys.platform != "darwin":
         raise SystemExit("For other platforms, run cargo run --release --bin swipe-memory")
     subprocess.run(
-        ["cargo", "build", "--release", "-p", "swipe-desktop", "--no-default-features", "--bin", "swipe-memory"],
+        ["cargo", "build", "--release", "-p", "swipe-desktop", "--no-default-features", "--bin", "swipe-learned"],
         cwd=ROOT, check=True,
     )
     contents = ROOT / "build/Draw from Memory.app/Contents"
     executable_dir = contents / "MacOS"
     executable_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(ROOT / "target/release/swipe-memory", executable_dir / "swipe-memory")
+    shutil.copy2(ROOT / "target/release/swipe-learned", executable_dir / "swipe-memory")
     with (contents / "Info.plist").open("wb") as target:
         plistlib.dump({
             "CFBundleExecutable": "swipe-memory",

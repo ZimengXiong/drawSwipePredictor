@@ -2,7 +2,11 @@
 name = "swipe-desktop"
 version.workspace = true
 edition.workspace = true
-default-run = "swipe-memory"
+default-run = "swipe-learned"
+
+[[bin]]
+name = "swipe-learned"
+path = "src/bin/swipe-learned.rs"
 
 [[bin]]
 name = "swipe-memory"

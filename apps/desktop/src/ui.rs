@@ -10,7 +10,7 @@ pub async fn run_app<P: Predictor + Send>(mut predictor: P, backend_name: &str) 
     let mut drawing = false;
     let mut predictions: Vec<Prediction> = Vec::new();
     let mut selected: usize = 0;
-    let mut show_keyboard = backend_name != "Memory";
+    let mut show_keyboard = !matches!(backend_name, "Memory" | "Learned");
 
     loop {
         clear_background(Color::from_rgba(30, 30, 35, 255));
@@ -176,7 +176,7 @@ fn draw_breakdown_panel(pred: &Prediction, backend: &str) {
                 Color::from_rgba(100, 150, 200, 200));
             draw_text(&format!("{:.4}", contribution), box_x + 295.0, y, 12.0, WHITE);
         }
-    } else if backend == "Memory" {
+    } else if matches!(backend, "Memory" | "Learned") {
         let lines = [
             "Draw the motion you remember.",
             "Draw anywhere, at any size.",

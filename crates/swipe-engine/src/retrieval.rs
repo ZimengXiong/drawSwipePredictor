@@ -23,6 +23,16 @@ pub struct RetrievalEngine {
 }
 
 impl RetrievalEngine {
+    /// Load the validated model and word vectors shipped with this crate.
+    pub fn bundled() -> Result<Self, String> {
+        let mut engine = Self::from_bytes(
+            include_bytes!("../models/retrieval/encoder.bin"),
+            include_bytes!("../models/retrieval/words.bin"),
+        )?;
+        engine.configure(include_str!("../models/retrieval/manifest.json"))?;
+        Ok(engine)
+    }
+
     pub fn from_files(directory: impl AsRef<Path>) -> Result<Self, String> {
         let encoder =
             std::fs::read(directory.as_ref().join("encoder.bin")).map_err(|e| e.to_string())?;
