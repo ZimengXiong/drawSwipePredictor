@@ -4,6 +4,10 @@ version.workspace = true
 edition.workspace = true
 
 [[bin]]
+name = "swipe-memory"
+path = "src/bin/swipe-memory.rs"
+
+[[bin]]
 name = "swipe-dtw"
 path = "src/bin/swipe-dtw.rs"
 

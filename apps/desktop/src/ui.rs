@@ -10,6 +10,7 @@ pub async fn run_app<P: Predictor + Send>(mut predictor: P, backend_name: &str) 
     let mut drawing = false;
     let mut predictions: Vec<Prediction> = Vec::new();
     let mut selected: usize = 0;
+    let mut show_keyboard = backend_name != "Memory";
 
     loop {
         clear_background(Color::from_rgba(30, 30, 35, 255));
@@ -36,11 +37,15 @@ pub async fn run_app<P: Predictor + Send>(mut predictor: P, backend_name: &str) 
 
         if drawing && is_mouse_button_released(MouseButton::Left) {
             drawing = false;
+            path.push((mouse_x as f64, mouse_y as f64));
             if path.len() >= 2 {
                 predictions = predictor.predict(&path, 10);
             }
         }
 
+        if is_key_pressed(KeyCode::H) {
+            show_keyboard = !show_keyboard;
+        }
         if is_key_pressed(KeyCode::Space) {
             path.clear();
             predictions.clear();
@@ -74,15 +79,15 @@ pub async fn run_app<P: Predictor + Send>(mut predictor: P, backend_name: &str) 
         let instructions = if drawing {
             "Drawing... release to predict"
         } else if path.is_empty() {
-            "Draw a swipe pattern | Space=clear | Up/Down=select"
+            "Draw a word from memory | Space: clear | H: keyboard"
         } else {
-            "Space=clear | Up/Down=select | Draw again for new word"
+            "Space: clear | Up/Down: alternatives | H: keyboard"
         };
         draw_text(instructions, 20.0, screen_height() - 20.0, 18.0, GRAY);
         draw_text(&format!("Backend: {}", backend_name), 20.0, screen_height() - 40.0, 16.0,
             Color::from_rgba(120, 180, 220, 255));
 
-        draw_keyboard_ghost();
+        if show_keyboard { draw_keyboard_ghost(); }
 
         next_frame().await
     }
@@ -170,6 +175,17 @@ fn draw_breakdown_panel(pred: &Prediction, backend: &str) {
             draw_rectangle(box_x + 210.0, y - 9.0, bar_w, 10.0,
                 Color::from_rgba(100, 150, 200, 200));
             draw_text(&format!("{:.4}", contribution), box_x + 295.0, y, 12.0, WHITE);
+        }
+    } else if backend == "Memory" {
+        let lines = [
+            "Draw the motion you remember.",
+            "Draw anywhere, at any size.",
+            "Use Up/Down to inspect alternatives.",
+            "Lower rating means a closer match.",
+            "Scores are distances, not probabilities.",
+        ];
+        for (i, line) in lines.iter().enumerate() {
+            draw_text(line, box_x + 10.0, box_y + 50.0 + i as f32 * 24.0, 16.0, GRAY);
         }
     } else {
         draw_text("CTC decodes sequence directly; breakdown unavailable.",
