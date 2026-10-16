@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "generator_commit": "3468a6274cfa361edf02a4ab28d6d6b16fcc09d7",
+  "synthetic_only": true,
+  "vocabulary_limit": 60000,
+  "splits": [
+    {
+      "split": "train",
+      "file": "train.jsonl",
+      "samples": 90000,
+      "seed": 101,
+      "sha256": "1a62a17180f0af39f043a8caab1ae77b9fd27473cb72863bda0a68896b2c8550",
+      "bytes": 411674372,
+      "target_offset": 0,
+      "target_vocabulary_limit": 48000
+    },
+    {
+      "split": "validation",
+      "file": "validation.jsonl",
+      "samples": 6000,
+      "seed": 102,
+      "sha256": "c7bf08aecfb4e55f7481f1804c0d844efbcf4dd1bd3e096499727c9582db9741",
+      "bytes": 27756279,
+      "target_offset": 48000,
+      "target_vocabulary_limit": 6000
+    },
+    {
+      "split": "test",
+      "file": "test.jsonl",
+      "samples": 6000,
+      "seed": 9001,
+      "sha256": "0093efeba85c44cfcf9db28bb7c94211e0bff9e6b42b3f03238d969c437bc114",
+      "bytes": 27582175,
+      "target_offset": 54000,
+      "target_vocabulary_limit": 6000
+    }
+  ],
+  "split_policy": "Disjoint target-word ranges and writer seed ranges. Each writer draws the same word at three difficulty levels within its split.",
+  "point_format": "Ordered [x, y] screen coordinates; labels are lowercase ASCII words.",
+  "limitations": "Synthetic writers approximate memory errors. This dataset does not measure human recognition accuracy."
+}

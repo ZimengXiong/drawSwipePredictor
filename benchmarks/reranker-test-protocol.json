@@ -1,0 +1,13 @@
+{
+  "seed": 8675309,
+  "fresh_donors": 191,
+  "real_samples": 1000,
+  "exclusion": "All donor sessions in the previously collected 150k train, 10k validation and 5k test files",
+  "selection": "Up to 10 random records per fresh donor, shuffled and capped at 1000; no model scores used",
+  "sha256": "4a89b90f62151a3124ebcc268f4cb7a96b2711248736e61e7eb97e50c2b7393b",
+  "source_sha256": {
+    "real_test": "196e924d466a1384d6373fbe9005dedfb0cccd7ee8275b96b914cec5dcdab47b",
+    "synthetic_test": "0093efeba85c44cfcf9db28bb7c94211e0bff9e6b42b3f03238d969c437bc114"
+  },
+  "limitations": "Recorded swipes use visible keyboards. Distorted and synthetic gestures do not establish human freehand-memory accuracy."
+}
