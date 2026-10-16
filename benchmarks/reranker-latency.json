@@ -1,0 +1,19 @@
+{
+  "timing_only": true,
+  "samples_per_model": 1500,
+  "warmup": 10,
+  "dataset_sha256": "0dd181dfd6ee8be0c706bfe269504ddd6dbb1e0dc90ed587ebf3ba019ce1a63f",
+  "models": {
+    "baseline": {
+      "median_ms": 3.5174995000000004,
+      "p95_ms": 3.80084585,
+      "encoder_sha256": "9573edad3f1319a491a2e6f3b474c64ef2753d7ab81132284488dfe8b7816ccd"
+    },
+    "challenger": {
+      "median_ms": 6.8959375000000005,
+      "p95_ms": 7.3589798,
+      "encoder_sha256": "9573edad3f1319a491a2e6f3b474c64ef2753d7ab81132284488dfe8b7816ccd",
+      "reranker_sha256": "00dae2ba25720c8ea279d60d37a85b7238e6cd6e613fe02a5896ce214d82c917"
+    }
+  }
+}

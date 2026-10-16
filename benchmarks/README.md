@@ -29,7 +29,7 @@ An initial test exposed a clean-route regression in the unprotected reranker. Th
 
 The corrected model also repeats the earlier 10,000-word test: clean 99.0%, loose 81.0%, and hard memory 57.3% first-choice accuracy. This repeat is a regression comparison, not a fresh test. Its previous learned-model results were 99.0%, 78.7%, and 52.3%.
 
-The reranker adds CPU work. Use `reranker-latency.json` for the separate timing run; accuracy-run timings also include concurrent build and verification load. These intervals describe the sampled cohorts, not the full population of freehand-memory users.
+The reranker adds CPU work: a separate 1,500-query run measured 6.90 ms median and 7.36 ms p95, versus 3.52 ms and 3.80 ms for the previous learned version. Use `reranker-latency.json` for that timing run; accuracy-run timings also include concurrent build and verification load. These intervals describe the sampled cohorts, not the full population of freehand-memory users.
 
 Reports: `reranker-final-test.json`, `reranker-final-test-protocol.json`, `reranker-synthetic-test-10k.json`, `reranker-calibration.json`, and `reranker-union-*`. Reproduction commands are in [the training guide](../training/README.md).
 

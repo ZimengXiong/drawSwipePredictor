@@ -125,13 +125,29 @@ uv run --directory training python train_reranker.py \
 
 The training set contains 96,000 query lists: 24,000 recordings, distorted views of those recordings, 24,000 procedural drawings, and 24,000 augmented canonical routes. Each list has 64 candidate words. Training uses a listwise loss over lists that contain the target; candidate recall is reported separately. The validation set has 2,000 examples from each source. Checkpoint selection averages first-choice accuracy across those four validation groups. No test data enters fitting or selection.
 
-Copy the selected `reranker.json` into the exported model directory. The file includes fingerprints of its encoder and word bank. Loading mismatched files fails. Exporting a new base retriever clears old reranker weights; fit the second stage again afterward.
+Calibrate a conservative fallback before installing the weights. Clear neural matches keep their original ranking. Validation selects how far to extend that fallback, while requiring clean and canonical accuracy to stay within 0.2 percentage points of baseline.
+
+```sh
+uv run --directory training python prepare_reranker.py \
+  --split validation --canonical-only --samples 3000 --workers 4 \
+  --output data/reranker-union/canonical-validation.npz
+uv run --directory training python calibrate_reranker.py \
+  --validation data/reranker-union/validation.npz \
+  --canonical data/reranker-union/canonical-validation.npz \
+  --model checkpoints/reranker-union-v2/reranker.json \
+  --output checkpoints/reranker-union-v2/reranker-calibrated.json
+cp training/checkpoints/reranker-union-v2/reranker-calibrated.json \
+  crates/swipe-engine/models/retrieval/reranker.json
+```
+
+The selected fallback preserves matches with cosine distance below 0.08. The file includes fingerprints of its encoder and word bank. Loading mismatched files fails. Exporting a new base retriever clears old reranker weights; fit the second stage again afterward.
 
 Verify native candidate scoring against PyTorch:
 
 ```sh
 uv run --directory training python verify_reranker.py \
   --model ../crates/swipe-engine/models/retrieval \
+  --extra-dataset data/memory-wide/validation.jsonl \
   --output ../crates/swipe-engine/models/retrieval/reranker-verification.json
 ```
 
@@ -157,7 +173,39 @@ uv run --directory training python evaluate_reranker.py \
   --output ../benchmarks/reranker-fresh-test.json
 ```
 
-The evaluator reports paired accuracy differences and 95% intervals from resampling donor sessions or synthetic writers. Timing includes the complete native prediction path and varies with machine load.
+The initial run exposed a clean-route regression. To keep the final comparison independent, repeat the collection with seed 628320 and exclude the entire initial collection:
+
+```sh
+python3 training/fetch_real_swipes.py \
+  --train 1 --validation 1 --test 8000 --vocab 60000 --seed 628320 \
+  --output-dir training/data/futo-final
+mkdir -p training/data/memory-final
+target/release/examples/memory_bench --export-only \
+  --vocab 60000 --target-offset 54000 --target-vocab 6000 \
+  --samples 2000 --seed 246810 \
+  --dataset training/data/memory-final/test.jsonl \
+  --output training/data/memory-final/test-generation.json
+uv run --directory training python evaluate_reranker.py --freeze \
+  --real-dir data/futo-final --exclude-dir data/futo-fresh \
+  --synthetic-dir data/memory-final --frozen data/reranker/final-test.jsonl
+uv run --directory training python evaluate_reranker.py \
+  --frozen data/reranker/final-test.jsonl \
+  --baseline checkpoints/retrieval-v3-native \
+  --challenger checkpoints/reranker-union-native \
+  --output ../benchmarks/reranker-final-test.json
+```
+
+The final set has 879 recordings from 107 new donor sessions and 6,000 synthetic drawings. The evaluator reports paired accuracy differences and 95% intervals from resampling donor sessions or synthetic writers. Timing includes the complete native prediction path and varies with machine load.
+
+Measure timing separately after other work finishes:
+
+```sh
+uv run --directory training python benchmark_retrieval_latency.py \
+  --dataset data/reranker/final-test.jsonl \
+  --baseline checkpoints/retrieval-v3-native \
+  --challenger checkpoints/reranker-union-native \
+  --output ../benchmarks/reranker-latency.json
+```
 
 ## Keep the original CTC experiment
 

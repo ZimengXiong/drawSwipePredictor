@@ -16,7 +16,7 @@ The latest version adds independent shape retrieval and a learned candidate rera
 | Loose synthetic | 66.9% | 70.5% | 84.2% |
 | Hard synthetic memory | 33.9% | 42.8% | 62.2% |
 
-The hard-memory gain is 8.95 percentage points, with a paired 95% interval of 7.5–10.35 points. The recordings use visible keyboards; distorted and synthetic tests do not establish accuracy for human freehand memory gestures.
+Median native inference takes 6.9 ms on the M4 Max, compared with 3.5 ms for the previous learned version. The hard-memory gain is 8.95 percentage points, with a paired 95% interval of 7.5–10.35 points. The recordings use visible keyboards; distorted and synthetic tests do not establish accuracy for human freehand memory gestures.
 
 On the earlier 10,000-word synthetic test, hard-memory accuracy improves from 52.3% to 57.3%, while clean accuracy stays at 99.0%. The first learned model already improved substantially over the original DTW recognizer. See [the benchmark report](benchmarks/README.md) for paired results, timing, and limits.
 
