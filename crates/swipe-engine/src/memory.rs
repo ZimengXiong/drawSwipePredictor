@@ -178,7 +178,10 @@ impl MemoryEngine {
             return Vec::new();
         }
         if count < coarse.len() {
-            coarse.select_nth_unstable_by(count, |a, b| a.0.total_cmp(&b.0));
+            coarse.select_nth_unstable_by(count, |a, b| {
+                a.0.total_cmp(&b.0)
+                    .then(self.templates[a.1].word.cmp(&self.templates[b.1].word))
+            });
         }
         coarse.truncate(count);
         let mut predictions: Vec<_> = coarse
@@ -313,6 +316,21 @@ mod tests {
             assert!(e.predict_from_path(&raw, 10).is_empty());
         }
         assert!(e.predict_from_path(&[(0.0, 0.0), (1.0, 1.0)], 0).is_empty());
+    }
+
+    #[test]
+    fn scores_remain_finite_at_extreme_coordinate_scales() {
+        let mut e = engine();
+        for scale in [1e-100, 1e100] {
+            let path: Vec<_> = key_vertices("lunchbox")
+                .iter()
+                .map(|p| (p[0] as f64 * scale, p[1] as f64 * scale))
+                .collect();
+            let result = e.predict_from_path(&path, 5);
+            assert_eq!(result[0].word, "lunchbox");
+            assert!(result.iter().all(|p| p.rating.is_finite()));
+        }
+        assert!(e.set_ranking_weights([f32::NAN; 6]).is_err());
     }
 
     #[test]

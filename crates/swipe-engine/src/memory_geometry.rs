@@ -85,13 +85,25 @@ pub(crate) fn prepare(path: &[(f64, f64)]) -> Option<Vec<[f32; 2]>> {
     }
     // Center in f64 before conversion so large screen offsets retain precision.
     let origin = path[0];
-    let points: Vec<_> = path
+    let centered: Vec<_> = path
         .iter()
-        .map(|p| [(p.0 - origin.0) as f32, (p.1 - origin.1) as f32])
+        .map(|p| [p.0 - origin.0, p.1 - origin.1])
         .collect();
-    if points.iter().flatten().any(|x| !x.is_finite()) {
+    if centered.iter().flatten().any(|v| !v.is_finite()) {
         return None;
     }
+    let scale = centered
+        .iter()
+        .flatten()
+        .map(|v| v.abs())
+        .fold(0.0_f64, f64::max);
+    if scale == 0.0 {
+        return None;
+    }
+    let points: Vec<_> = centered
+        .iter()
+        .map(|p| [(p[0] / scale) as f32, (p[1] / scale) as f32])
+        .collect();
     let mut points = resample(&points, 96);
     smooth(&mut points, 2);
     normalize(&points, 0.0)?;
