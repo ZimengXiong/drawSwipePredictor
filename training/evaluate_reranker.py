@@ -18,9 +18,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def freeze(args):
     excluded = set()
-    for split in ["train", "validation", "test"]:
-        with (ROOT / "training/data/futo-large" / f"{split}.jsonl").open() as source:
-            excluded.update(json.loads(line)["session"] for line in source)
+    excluded_hashes = {}
+    for directory in [ROOT / "training/data/futo-large", *args.exclude_dir]:
+        for split in ["train", "validation", "test"]:
+            path = directory / f"{split}.jsonl"
+            excluded_hashes[directory.name + "/" + path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+            with path.open() as source:
+                excluded.update(json.loads(line)["session"] for line in source)
     donors = defaultdict(list)
     with (args.real_dir / "test.jsonl").open() as source:
         for line in source:
@@ -50,7 +54,7 @@ def freeze(args):
         for row in rows:
             output.write(json.dumps(row, separators=(",", ":")) + "\n")
     manifest = {"seed": 8675309, "fresh_donors": len({r["session"] for r in selected}), "real_samples": len(selected),
-                "exclusion": "All donor sessions in the previously collected 150k train, 10k validation and 5k test files",
+                "exclusion": "All donor sessions in every split of the excluded datasets", "excluded_source_sha256": excluded_hashes,
                 "selection": "Up to 10 random records per fresh donor, shuffled and capped at 1000; no model scores used",
                 "sha256": hashlib.sha256(args.frozen.read_bytes()).hexdigest(),
                 "source_sha256": {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in {
@@ -74,6 +78,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--real-dir", type=Path, default=ROOT / "training/data/futo-fresh")
     parser.add_argument("--synthetic-dir", type=Path, default=ROOT / "training/data/memory-wide")
+    parser.add_argument("--exclude-dir", action="append", type=Path, default=[])
     parser.add_argument("--frozen", type=Path, default=ROOT / "training/data/reranker/frozen-test.jsonl")
     parser.add_argument("--freeze", action="store_true")
     parser.add_argument("--baseline", type=Path)

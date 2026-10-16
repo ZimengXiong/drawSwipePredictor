@@ -71,7 +71,9 @@ def main():
     baseline = metrics(base_order)
     trials = []
     best = None
-    for threshold in [0.0, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.15, 0.2, 0.3, 0.4, 0.6, 1.0]:
+    # Keep clear neural matches (cosine similarity above 0.92) unchanged.
+    # Tune only how much farther to extend this conservative region.
+    for threshold in [0.08, 0.10, 0.12, 0.15, 0.2, 0.3, 0.4, 0.6, 1.0]:
         trusted = raw[:, 0, 0].numpy() < threshold
         order = np.where(trusted[:, None], base_order, reranked)
         result = metrics(order)
