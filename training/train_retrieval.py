@@ -88,7 +88,9 @@ def main():
     for name, path in files.items():
         paths, labels = load_recordings(path, word_ids)
         if "validation" in name:
-            paths, labels = paths[:args.validation_samples], labels[:args.validation_samples]
+            chooser = np.random.default_rng(args.seed + len(name))
+            selected = chooser.choice(len(paths), min(len(paths), args.validation_samples), replace=False)
+            paths, labels = paths[selected], labels[selected]
         loaded[name] = (torch.tensor(paths, device=device), torch.tensor(labels, device=device))
     real, real_labels = loaded["real_train"]
     synthetic, synthetic_labels = loaded["synthetic_train"]
@@ -150,6 +152,8 @@ def main():
             torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
             optimizer.step()
             total_loss += loss.item()
+            if (step + 1) % 25 == 0:
+                print(json.dumps({"epoch": epoch + 1, "step": step + 1, "loss": total_loss / (step + 1)}), flush=True)
         scheduler.step()
         model.eval()
         metrics = evaluate(model, bank(model, canonical), datasets)
