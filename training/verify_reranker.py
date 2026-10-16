@@ -35,6 +35,8 @@ def main():
             if i + 1 != len(weights["layers"]):
                 values = values.relu()
         costs = (raw[:, 1] + weights["residual_weight"] * values[:, 0]).numpy()
+        if raw[0, 0].item() < weights.get("trust_distance", 0.0):
+            costs = raw[:, 1].numpy()
         indices = sorted(range(len(costs)), key=lambda i: (float(costs[i]), candidates["candidates"][i]["word"]))[:5]
         expected = [{"word": candidates["candidates"][i]["word"], "rating": float(costs[i])} for i in indices]
         actual = native["predictions"]

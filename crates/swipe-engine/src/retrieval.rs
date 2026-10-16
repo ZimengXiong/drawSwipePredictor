@@ -234,8 +234,27 @@ impl RetrievalEngine {
         if limit == 0 {
             return Vec::new();
         }
-        let mut candidates: Vec<_> = self
-            .ranking_features(path, ranker.shortlist.max(limit))
+        let features = self.ranking_features(path, ranker.shortlist.max(limit));
+        if features
+            .first()
+            .is_some_and(|c| c.features[0] < ranker.trust_distance)
+        {
+            if limit > ranker.shortlist / 2 {
+                return self.retrieve(path, limit, false);
+            }
+            return features
+                .into_iter()
+                .take(limit)
+                .map(|c| Prediction {
+                    word: c.word,
+                    raw_score: c.features[0] as f64,
+                    popularity: c.features[2] as f64,
+                    rating: c.features[1] as f64,
+                    breakdown: ScoreBreakdown::default(),
+                })
+                .collect();
+        }
+        let mut candidates: Vec<_> = features
             .into_iter()
             .map(|candidate| (ranker.score(&candidate.features), candidate))
             .collect();

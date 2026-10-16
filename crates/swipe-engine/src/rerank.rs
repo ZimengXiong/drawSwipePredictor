@@ -145,6 +145,8 @@ pub(crate) struct Ranker {
     pub layers: Vec<Layer>,
     pub residual_weight: f32,
     pub shortlist: usize,
+    #[serde(default)]
+    pub trust_distance: f32,
 }
 
 #[derive(Deserialize)]
@@ -161,6 +163,7 @@ impl Ranker {
             || ranker.scale.len() != FEATURES
             || ranker.mean.iter().any(|x| !x.is_finite())
             || ranker.scale.iter().any(|x| !x.is_finite() || *x <= 0.0)
+            || !(0.0..=2.0).contains(&ranker.trust_distance)
             || !ranker.residual_weight.is_finite()
             || !(5..=128).contains(&ranker.shortlist)
             || ranker.layers.is_empty()

@@ -24,6 +24,7 @@ def main():
     parser.add_argument("--synthetic-dir", type=Path, default=ROOT / "training/data/memory-wide")
     parser.add_argument("--real-dir", type=Path, default=ROOT / "training/data/futo-large")
     parser.add_argument("--model", type=Path, default=ROOT / "crates/swipe-engine/models/retrieval")
+    parser.add_argument("--canonical-only", action="store_true", help="affine reference routes for fallback calibration")
     parser.add_argument("--candidates", type=int, default=64)
     parser.add_argument("--seed", type=int, default=424242)
     parser.add_argument("--workers", type=int, default=4)
@@ -37,7 +38,7 @@ def main():
     words, _, canonical = vocabulary(ROOT / "word_freq.txt", 60000)
     ids = {word: i for i, word in enumerate(words)}
     groups, paths, targets, hashes = [], [], [], {}
-    for name, directory in [("real", args.real_dir), ("synthetic", args.synthetic_dir)]:
+    for name, directory in ([] if args.canonical_only else [("real", args.real_dir), ("synthetic", args.synthetic_dir)]):
         source = directory / f"{args.split}.jsonl"
         hashes[name] = hashlib.sha256(source.read_bytes()).hexdigest()
         curves, labels = load_recordings(source, ids)
@@ -53,9 +54,16 @@ def main():
             targets.extend(labels)
             groups.extend(["distorted_real"] * len(curves))
     labels = chooser.choice(len(words), args.samples, replace=False)
-    paths.append(augment(torch.tensor(canonical[labels], device="mps"), force_memory=True).cpu().numpy())
+    if args.canonical_only:
+        reference = canonical[labels].copy()
+        reference[:, :, 1] *= np.exp(chooser.uniform(-0.4, 0.4, len(labels)))[:, None]
+        angles = chooser.uniform(-0.35, 0.35, len(labels))
+        rotation = np.stack([np.cos(angles), -np.sin(angles), np.sin(angles), np.cos(angles)], axis=1).reshape(-1, 2, 2)
+        paths.append(np.einsum("bpi,bji->bpj", reference, rotation).astype(np.float32))
+    else:
+        paths.append(augment(torch.tensor(canonical[labels], device="mps"), force_memory=True).cpu().numpy())
     targets.extend(labels)
-    groups.extend(["online"] * len(labels))
+    groups.extend(["canonical" if args.canonical_only else "online"] * len(labels))
     paths = np.concatenate(paths)
     targets = np.asarray(targets)
     groups = np.asarray(groups)
