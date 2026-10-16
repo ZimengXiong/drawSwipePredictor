@@ -2,6 +2,7 @@ pub mod retrieval;
 pub use retrieval::RetrievalEngine;
 
 mod rerank;
+pub use rerank::Candidate as RetrievalCandidate;
 mod retrieval_encoder;
 
 pub mod synthetic;

@@ -86,7 +86,7 @@ def main():
         list(executor.map(extract, np.array_split(np.arange(len(paths)), args.workers)))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(args.output, features=features, candidates=candidates, labels=targets, groups=groups)
-    report = {"split": args.split, "seed": seed, "source_sha256": hashes,
+    report = {"arguments": {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()}, "split": args.split, "seed": seed, "source_sha256": hashes,
               "encoder_sha256": hashlib.sha256((args.model / "encoder.bin").read_bytes()).hexdigest(),
               "bank_sha256": hashlib.sha256((args.model / "words.bin").read_bytes()).hexdigest(),
               "test_data_used": False, "candidates": args.candidates, "candidate_policy": "half neural retrieval, half independent geometry retrieval", "samples": len(paths), "candidate_recall": {}}
