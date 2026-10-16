@@ -12,6 +12,11 @@ use std::collections::HashSet;
 const ANGLES: [f32; 5] = [-24.0, -12.0, 0.0, 12.0, 24.0];
 const SHORTLIST: usize = 192;
 
+#[derive(Deserialize)]
+struct Metric {
+    weights: [f32; 6],
+}
+
 struct Template {
     word: String,
     popularity: f64,
@@ -38,7 +43,9 @@ impl MemoryEngine {
     pub fn new() -> Self {
         Self {
             templates: Vec::new(),
-            weights: [1.0, 0.0, 0.0, 0.002, 0.025, 0.0],
+            weights: serde_json::from_str::<Metric>(include_str!("../models/memory-metric.json"))
+                .expect("bundled ranking metric must be valid JSON")
+                .weights,
         }
     }
 

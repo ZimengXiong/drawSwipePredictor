@@ -109,6 +109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     let mut engine = MemoryEngine::new();
     engine.load_dictionary(&dictionary.join("\n"));
+    engine.set_ranking_weights(INITIAL)?;
     let start = Instant::now();
     let train = generate(&engine, &targets, samples, seed);
     let validation = generate(&engine, &targets, samples / 3, seed.wrapping_add(1));

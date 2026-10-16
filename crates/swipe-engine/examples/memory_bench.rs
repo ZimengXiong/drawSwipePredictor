@@ -63,6 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = std::env::args().collect();
     let vocab = value(&args, "--vocab", 10_000)?;
     let samples = value(&args, "--samples", 100)?;
+    let target_vocab = value(&args, "--target-vocab", 10000)?;
     let seed = value(&args, "--seed", 20261015)? as u64;
     if vocab < 10 || samples == 0 {
         return Err("use --vocab >= 10 and --samples > 0".into());
@@ -81,6 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
     let targets: Vec<_> = dictionary
         .iter()
+        .take(target_vocab)
         .filter_map(|line| {
             let word = line.split_once('\t')?.0;
             (4..=12).contains(&word.len()).then_some(word)
@@ -164,7 +166,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     let report = serde_json::json!({
         "seed": seed, "samples_per_difficulty": samples, "vocabulary": dictionary.len(),
-        "target_policy": "uniform over 4–12 letter words in the selected vocabulary",
+        "target_policy": "uniform over 4–12 letter words in target vocabulary",
+        "target_vocabulary_limit": target_vocab, "eligible_targets": targets.len(),
         "synthetic_only": true, "results": results,
     });
     if let Some(path) = filename(&args, "--output")? {

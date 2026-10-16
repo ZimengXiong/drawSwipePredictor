@@ -1,0 +1,51 @@
+{
+  "features": [
+    "elastic",
+    "aspect_strain",
+    "complexity_strain",
+    "rotation_strain",
+    "negative_popularity",
+    "pointwise"
+  ],
+  "fitted_train": [
+    0.7446666666666667,
+    0.8493333333333334,
+    0.9313333333333333
+  ],
+  "fitted_validation": [
+    0.74,
+    0.842,
+    0.942
+  ],
+  "initial_train": [
+    0.736,
+    0.842,
+    0.9313333333333333
+  ],
+  "initial_validation": [
+    0.72,
+    0.838,
+    0.942
+  ],
+  "metric_order": [
+    "top1",
+    "top5",
+    "shortlist_recall"
+  ],
+  "schema_version": 1,
+  "seconds": 2.178165583,
+  "synthetic_only": true,
+  "training_samples": 1500,
+  "training_seed": 101,
+  "validation_samples": 500,
+  "validation_seed": 102,
+  "vocabulary": 10000,
+  "weights": [
+    1.0,
+    0.0010000000474974513,
+    0.4000000059604645,
+    0.05000000074505806,
+    0.05000000074505806,
+    0.05000000074505806
+  ]
+}
