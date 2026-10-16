@@ -25,24 +25,24 @@
     ],
     "predictions": [
       {
-        "word": "help",
-        "rating": 0.39482608437538147
+        "word": "hello",
+        "rating": 0.13479644060134888
       },
       {
-        "word": "hello",
-        "rating": 0.39880844950675964
+        "word": "help",
+        "rating": 0.1674773246049881
       },
       {
         "word": "helo",
-        "rating": 0.4226820170879364
+        "rating": 0.21288377046585083
       },
       {
-        "word": "bali",
-        "rating": 0.7687846422195435
+        "word": "halo",
+        "rating": 0.4854191839694977
       },
       {
-        "word": "valli",
-        "rating": 0.7728296518325806
+        "word": "gallo",
+        "rating": 0.5450602769851685
       }
     ]
   },
@@ -73,23 +73,23 @@
     "predictions": [
       {
         "word": "world",
-        "rating": 0.36821556091308594
-      },
-      {
-        "word": "works",
-        "rating": 0.7686593532562256
+        "rating": 0.09301413595676422
       },
       {
         "word": "queens",
-        "rating": 0.7881168127059937
+        "rating": 0.3147297501564026
+      },
+      {
+        "word": "works",
+        "rating": 0.36909592151641846
       },
       {
         "word": "worlds",
-        "rating": 0.876008152961731
+        "rating": 0.4358338415622711
       },
       {
         "word": "worms",
-        "rating": 0.9000126123428345
+        "rating": 0.45401132106781006
       }
     ]
   },
@@ -132,23 +132,23 @@
     "predictions": [
       {
         "word": "keyboard",
-        "rating": 0.28624045848846436
+        "rating": 0.12928995490074158
       },
       {
         "word": "keyboards",
-        "rating": 0.9125242829322815
-      },
-      {
-        "word": "overboard",
-        "rating": 1.4287323951721191
+        "rating": 0.39807969331741333
       },
       {
         "word": "bernhard",
-        "rating": 1.4575016498565674
+        "rating": 0.710040807723999
+      },
+      {
+        "word": "overboard",
+        "rating": 0.7404917478561401
       },
       {
         "word": "proposed",
-        "rating": 1.4757485389709473
+        "rating": 0.7610555291175842
       }
     ]
   },
@@ -191,23 +191,23 @@
     "predictions": [
       {
         "word": "lunchbox",
-        "rating": 0.5277723670005798
+        "rating": 0.28378942608833313
       },
       {
-        "word": "lightbox",
-        "rating": 1.6534985303878784
+        "word": "the",
+        "rating": 0.8539193272590637
       },
       {
-        "word": "monthly",
-        "rating": 1.667680025100708
+        "word": "overview",
+        "rating": 0.8630081415176392
       },
       {
         "word": "links",
-        "rating": 1.6705985069274902
+        "rating": 0.8630862236022949
       },
       {
-        "word": "movie",
-        "rating": 1.7207545042037964
+        "word": "lightbox",
+        "rating": 0.8674238920211792
       }
     ]
   },
@@ -246,23 +246,23 @@
     "predictions": [
       {
         "word": "alpacas",
-        "rating": 0.43099871277809143
+        "rating": 0.17880091071128845
       },
       {
         "word": "alpaca",
-        "rating": 0.9683266878128052
+        "rating": 0.6643980741500854
       },
       {
         "word": "whoever",
-        "rating": 1.17423677444458
+        "rating": 0.7612541913986206
       },
       {
-        "word": "ampland",
-        "rating": 1.3814281225204468
+        "word": "either",
+        "rating": 0.7790475487709045
       },
       {
-        "word": "specs",
-        "rating": 1.4168856143951416
+        "word": "source",
+        "rating": 0.8396987318992615
       }
     ]
   }

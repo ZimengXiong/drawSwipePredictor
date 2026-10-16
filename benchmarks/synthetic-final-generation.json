@@ -1,0 +1,12 @@
+{
+  "eligible_targets": 5281,
+  "neural_model": null,
+  "results": [],
+  "samples_per_difficulty": 2000,
+  "seed": 246810,
+  "synthetic_only": true,
+  "target_offset": 54000,
+  "target_policy": "uniform over 4–12 letter words in target vocabulary",
+  "target_vocabulary_limit": 6000,
+  "vocabulary": 60000
+}

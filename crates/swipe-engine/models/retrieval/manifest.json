@@ -127,6 +127,46 @@
       },
       "score": 0.75
     },
-    "test_data_used": false
+    "test_data_used": false,
+    "fallback": {
+      "trust_distance": 0.08,
+      "score": 0.7709666666666666,
+      "eligible": true,
+      "validation": {
+        "canonical": {
+          "top1": 0.8563333333333333,
+          "top5": 0.935
+        },
+        "distorted_real": {
+          "top1": 0.74,
+          "top5": 0.904
+        },
+        "online": {
+          "top1": 0.71,
+          "top5": 0.86
+        },
+        "real": {
+          "top1": 0.846,
+          "top5": 0.9495
+        },
+        "synthetic": {
+          "top1": 0.7025,
+          "top5": 0.8245
+        },
+        "synthetic_clean": {
+          "top1": 0.9405646359583952,
+          "top5": 0.9881129271916791
+        },
+        "synthetic_loose": {
+          "top1": 0.7103658536585366,
+          "top5": 0.8445121951219512
+        },
+        "synthetic_memory": {
+          "top1": 0.45603576751117736,
+          "top5": 0.6408345752608048
+        }
+      }
+    },
+    "sha256": "00dae2ba25720c8ea279d60d37a85b7238e6cd6e613fe02a5896ce214d82c917"
   }
 }
