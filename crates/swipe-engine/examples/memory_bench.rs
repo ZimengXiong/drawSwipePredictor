@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::time::Instant;
 use swipe_engine::synthetic::{Difficulty, Random, SyntheticWriter};
-use swipe_engine::{MemoryEngine, SwipeEngine};
+use swipe_engine::{MemoryEngine, RetrievalEngine, SwipeEngine};
 
 const WORDS: &str = include_str!("../../../word_freq.txt");
 
@@ -119,6 +119,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             start.elapsed().as_secs_f64()
         );
     }
+    let mut neural = filename(&args, "--model")?
+        .map(RetrievalEngine::from_files)
+        .transpose()?;
+    if let Some(engine) = &mut neural {
+        if engine.word_count() < dictionary.len() {
+            return Err("neural bank does not cover the benchmark vocabulary".into());
+        }
+        engine.truncate_vocabulary(dictionary.len());
+    }
     let mut results = Vec::new();
     for difficulty in [Difficulty::Clean, Difficulty::Loose, Difficulty::Memory] {
         // Reuse targets and writer identities across difficulty levels so the
@@ -126,6 +135,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut random = Random::new(seed);
         let mut old_metrics = Metrics::default();
         let mut new_metrics = Metrics::default();
+        let mut neural_metrics = Metrics::default();
         let mut failures = Vec::new();
         for i in 0..samples {
             let target = targets[random.index(targets.len())];
@@ -138,6 +148,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let start = Instant::now();
                 let new = memory.predict_from_path(&points, 5);
                 new_metrics.add(target, &new, start.elapsed().as_secs_f64() * 1000.0);
+                if let Some(engine) = &neural {
+                    let start = Instant::now();
+                    let learned = engine.predict_from_path(&points, 5);
+                    neural_metrics.add(target, &learned, start.elapsed().as_secs_f64() * 1000.0);
+                }
                 if new.first().is_none_or(|p| p.word != target) && failures.len() < 12 {
                     failures.push(serde_json::json!({"target": target, "predicted": new.iter().map(|p| &p.word).collect::<Vec<_>>() }));
                 }
@@ -161,7 +176,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if !export_only {
             let result = serde_json::json!({
                 "difficulty": difficulty, "baseline": old_metrics.summary(samples),
-                "memory": new_metrics.summary(samples), "example_errors": failures,
+                "memory": new_metrics.summary(samples),
+                "neural": neural.as_ref().map(|_| neural_metrics.summary(samples)), "example_errors": failures,
             });
             eprintln!("{}", serde_json::to_string(&result)?);
             results.push(result);
@@ -175,7 +191,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "target_policy": "uniform over 4–12 letter words in target vocabulary",
         "target_vocabulary_limit": target_vocab, "target_offset": target_offset,
         "eligible_targets": targets.len(),
-        "synthetic_only": true, "results": results,
+        "synthetic_only": true, "neural_model": filename(&args, "--model")?, "results": results,
     });
     if let Some(path) = filename(&args, "--output")? {
         std::fs::write(path, serde_json::to_string_pretty(&report)? + "\n")?;

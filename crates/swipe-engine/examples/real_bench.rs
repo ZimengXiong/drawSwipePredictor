@@ -123,6 +123,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(RetrievalEngine::from_files)
         .transpose()?;
     if let Some(engine) = &mut neural {
+        if engine.word_count() < dictionary.len() {
+            return Err("neural bank does not cover the benchmark vocabulary".into());
+        }
         engine.truncate_vocabulary(vocab);
     }
     let backends = if neural.is_some() { 3 } else { 2 };

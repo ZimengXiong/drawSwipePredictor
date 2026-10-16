@@ -118,6 +118,9 @@ def main():
         "checkpoint_sha256": hashlib.sha256(args.checkpoint.read_bytes()).hexdigest(),
         "real_training_samples": len(train_paths), "empirical_word_prototypes": int((seen > 0).sum().item()),
         "samples_per_validation_group": args.samples, "test_data_used": False,
+        "source_sha256": {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in {
+            "real_train": args.real_dir / "train.jsonl", "real_validation": args.real_dir / "validation.jsonl",
+            "synthetic_validation": args.synthetic_dir / "validation.jsonl"}.items()},
     }
     args.output.write_text(json.dumps(report, indent=2) + "\n")
 

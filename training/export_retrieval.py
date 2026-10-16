@@ -101,6 +101,8 @@ def main():
         "tta_degrees": calibration["selected"]["tta_degrees"] if calibration else 0.0,
         "adaptive_prior": calibration["selected"].get("prior_form") == "adaptive" if calibration else False,
         "calibration": calibration["selected"] if calibration else None,
+        "calibration_sources": calibration.get("source_sha256") if calibration else None,
+        "word_frequency_sha256": hashlib.sha256((ROOT / "word_freq.txt").read_bytes()).hexdigest(),
     }
     (args.output / "manifest.json").write_text(json.dumps(report, indent=2) + "\n")
     print(f"Exported {len(words):,} word routes and {len(encoded):,} bytes of encoder weights")
