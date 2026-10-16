@@ -31,6 +31,7 @@ def main():
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--vocab", type=int)
+    parser.add_argument("--calibration", type=Path)
     parser.add_argument("--device", default="mps" if torch.backends.mps.is_available() else "cpu")
     args = parser.parse_args()
     torch.set_num_threads(8)
@@ -59,6 +60,15 @@ def main():
             values = torch.tensor(paths[start:start + 1024], device=args.device)
             vectors.append(model(features(values)).cpu().numpy())
     vectors = np.concatenate(vectors)
+    calibration = None
+    if args.calibration:
+        calibration = json.loads(args.calibration.read_text())
+        if calibration["checkpoint_sha256"] != hashlib.sha256(args.checkpoint.read_bytes()).hexdigest():
+            raise ValueError("calibration belongs to a different checkpoint")
+        saved = np.load(args.calibration.with_suffix(".npz"), allow_pickle=False)
+        if saved["words"].tolist() != words:
+            raise ValueError("calibrated vocabulary differs from exported vocabulary")
+        vectors = saved["vectors"]
     bank = bytearray(b"SWPBK001")
     bank.extend(struct.pack("<QII", fingerprint(encoded), len(words), vectors.shape[1]))
     popularity = np.log1p(counts) / np.log1p(counts.max())
@@ -86,7 +96,10 @@ def main():
         "checkpoint_epoch": checkpoint["epoch"] + 1, "validation_score": checkpoint["best_score"],
         "encoder_sha256": hashlib.sha256(encoded).hexdigest(),
         "words_sha256": hashlib.sha256(bank).hexdigest(),
-        "training": checkpoint["metadata"], "prior_weight": 0.025,
+        "training": checkpoint["metadata"],
+        "prior_weight": calibration["selected"]["prior"] if calibration else 0.025,
+        "tta_degrees": calibration["selected"]["tta_degrees"] if calibration else 0.0,
+        "calibration": calibration["selected"] if calibration else None,
     }
     (args.output / "manifest.json").write_text(json.dumps(report, indent=2) + "\n")
     print(f"Exported {len(words):,} word routes and {len(encoded):,} bytes of encoder weights")

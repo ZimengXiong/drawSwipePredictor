@@ -18,6 +18,7 @@ pub struct RetrievalEngine {
     words: Vec<Word>,
     vectors: Vec<[f32; DIM]>,
     prior_weight: f32,
+    tta_degrees: f32,
 }
 
 impl RetrievalEngine {
@@ -26,7 +27,13 @@ impl RetrievalEngine {
             std::fs::read(directory.as_ref().join("encoder.bin")).map_err(|e| e.to_string())?;
         let bank =
             std::fs::read(directory.as_ref().join("words.bin")).map_err(|e| e.to_string())?;
-        Self::from_bytes(&encoder, &bank)
+        let mut engine = Self::from_bytes(&encoder, &bank)?;
+        match std::fs::read_to_string(directory.as_ref().join("manifest.json")) {
+            Ok(json) => engine.configure(&json)?,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error.to_string()),
+        }
+        Ok(engine)
     }
 
     pub fn from_bytes(model: &[u8], bank: &[u8]) -> Result<Self, String> {
@@ -96,7 +103,27 @@ impl RetrievalEngine {
             words,
             vectors,
             prior_weight: 0.025,
+            tta_degrees: 0.0,
         })
+    }
+
+    /// Apply the validation-selected prior and orientation ensemble settings.
+    pub fn configure(&mut self, json: &str) -> Result<(), String> {
+        #[derive(serde::Deserialize)]
+        struct Settings {
+            prior_weight: f32,
+            #[serde(default)]
+            tta_degrees: f32,
+        }
+        let settings: Settings = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        if !(0.0..=0.5).contains(&settings.prior_weight)
+            || !(0.0..=24.0).contains(&settings.tta_degrees)
+        {
+            return Err("invalid route ranking settings".into());
+        }
+        self.prior_weight = settings.prior_weight;
+        self.tta_degrees = settings.tta_degrees;
+        Ok(())
     }
 
     pub fn word_count(&self) -> usize {
@@ -124,9 +151,34 @@ impl RetrievalEngine {
         if limit == 0 {
             return Vec::new();
         }
-        let Some(query) = self.encoder.embed(path) else {
+        let Some(mut query) = self.encoder.embed(path) else {
             return Vec::new();
         };
+        if self.tta_degrees > 0.0 {
+            for sign in [-1.0_f64, 1.0] {
+                let angle = sign * (self.tta_degrees as f64).to_radians();
+                let (sin, cos) = angle.sin_cos();
+                let origin = path[0];
+                let rotated: Vec<_> = path
+                    .iter()
+                    .map(|p| {
+                        let x = p.0 - origin.0;
+                        let y = p.1 - origin.1;
+                        (cos * x - sin * y, sin * x + cos * y)
+                    })
+                    .collect();
+                let Some(vector) = self.encoder.embed(&rotated) else {
+                    return Vec::new();
+                };
+                for (a, b) in query.iter_mut().zip(vector) {
+                    *a += b;
+                }
+            }
+            let norm = query.iter().map(|v| v * v).sum::<f32>().sqrt().max(1e-12);
+            for value in &mut query {
+                *value /= norm;
+            }
+        }
         let mut ranked: Vec<_> = self
             .vectors
             .iter()
