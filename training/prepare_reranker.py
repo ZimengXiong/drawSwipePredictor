@@ -53,7 +53,7 @@ def main():
             paths.append(distorted)
             targets.extend(labels)
             groups.extend(["distorted_real"] * len(curves))
-    labels = chooser.choice(len(words), args.samples, replace=False)
+    labels = chooser.choice(len(words), args.samples, replace=args.samples > len(words))
     if args.canonical_only:
         reference = canonical[labels].copy()
         reference[:, :, 1] *= np.exp(chooser.uniform(-0.4, 0.4, len(labels)))[:, None]
