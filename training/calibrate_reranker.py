@@ -36,6 +36,13 @@ def main():
     cost = raw[:, :, 1] + config["residual_weight"] * x[:, :, 0]
     candidates, labels, groups = combined["candidates"], combined["labels"], combined["groups"]
     metadata = json.loads(args.validation.with_suffix(".json").read_text())
+    canonical_metadata = json.loads(args.canonical.with_suffix(".json").read_text())
+    for record in [metadata, canonical_metadata]:
+        if record["split"] != "validation" or record["test_data_used"]:
+            raise ValueError("fallback calibration requires validation candidates only")
+    for key in ["encoder_sha256", "bank_sha256"]:
+        if metadata[key] != canonical_metadata[key]:
+            raise ValueError("canonical and recording candidates belong to different models")
     count = int((groups == "real").sum())
     words, _, _ = vocabulary(ROOT / "word_freq.txt", 60000)
     ids = {word: i for i, word in enumerate(words)}
@@ -88,7 +95,10 @@ def main():
         raise ValueError("no fallback preserves clean validation accuracy")
     config["trust_distance"] = best["trust_distance"]
     args.output.write_text(json.dumps(config, separators=(",", ":")) + "\n")
-    report = {"baseline": baseline, "selected": best, "trials": trials, "test_data_used": False,
+    report = {"policy": "Preserve neural matches with cosine distance below 0.08; extend the fallback using validation only",
+              "selection": "Mean top1 across five sources, with clean and canonical accuracy within 0.2 percentage points of baseline",
+              "uncalibrated_ranker_sha256": hashlib.sha256(args.model.read_bytes()).hexdigest(),
+              "baseline": baseline, "selected": best, "trials": trials, "test_data_used": False,
               "validation_sha256": hashlib.sha256(args.validation.read_bytes()).hexdigest(),
               "canonical_sha256": hashlib.sha256(args.canonical.read_bytes()).hexdigest()}
     args.output.with_suffix(".calibration.json").write_text(json.dumps(report, indent=2) + "\n")
