@@ -79,7 +79,7 @@ def main():
     def export(metrics, epoch):
         layers = [{"weights": layer.weight.detach().cpu().tolist(), "bias": layer.bias.detach().cpu().tolist()} for layer in model.layers if isinstance(layer, nn.Linear)]
         model_json = {"schema_version": 1, "encoder_tag": encoder_tag, "bank_tag": bank_tag, "mean": mean.cpu().tolist(), "scale": scale.cpu().tolist(), "layers": layers,
-                      "residual_weight": -0.1, "shortlist": 32}
+                      "residual_weight": -0.1, "shortlist": int(raw.shape[1])}
         (args.output / "reranker.json").write_text(json.dumps(model_json, separators=(",", ":")) + "\n")
         (args.output / "metrics.json").write_text(json.dumps({"epoch": epoch, "baseline": baseline, "validation": metrics, "score": best}, indent=2) + "\n")
     export(baseline, 0)
@@ -108,7 +108,7 @@ def main():
             best = score
             export(metrics, epoch + 1)
     report = {"seed": args.seed, "epochs": args.epochs, "test_data_used": False,
-              "selection": "mean top1 across four validation sources; shortlist fixed at 32",
+              "selection": "mean top1 across four validation sources; shortlist fixed by native feature preparation",
               "source_sha256": {"train": hashlib.sha256(args.train.read_bytes()).hexdigest(), "validation": hashlib.sha256(args.validation.read_bytes()).hexdigest()},
               "native_sources": {name: json.loads(path.with_suffix(".json").read_text()) for name, path in [("train", args.train), ("validation", args.validation)]}}
     (args.output / "run.json").write_text(json.dumps(report, indent=2) + "\n")

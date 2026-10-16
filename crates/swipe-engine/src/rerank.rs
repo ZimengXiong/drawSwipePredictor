@@ -47,6 +47,21 @@ impl Query {
         })
     }
 
+    pub(crate) fn coarse(&self, geometry: &Geometry) -> f32 {
+        self.shapes
+            .iter()
+            .flat_map(|query| {
+                geometry.shapes.iter().map(move |shape| {
+                    (0..N)
+                        .step_by(4)
+                        .map(|i| distance(query[i], shape[i]))
+                        .sum::<f32>()
+                        / 8.0
+                })
+            })
+            .fold(f32::INFINITY, f32::min)
+    }
+
     pub(crate) fn features(&self, geometry: &Geometry, neural: [f32; 4]) -> [f32; FEATURES] {
         let mut best = f32::INFINITY;
         let mut result = [0.0; FEATURES];

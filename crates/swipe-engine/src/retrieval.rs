@@ -197,7 +197,7 @@ impl RetrievalEngine {
 
     /// Extract the same candidate features used during deployed reranking.
     pub fn ranking_features(&self, path: &[(f64, f64)], limit: usize) -> Vec<Candidate> {
-        let predictions = self.retrieve(path, limit);
+        let predictions = self.retrieve(path, limit, true);
         let Some(query) = Query::new(path) else {
             return Vec::new();
         };
@@ -224,7 +224,7 @@ impl RetrievalEngine {
 
     pub fn predict_from_path(&self, path: &[(f64, f64)], limit: usize) -> Vec<Prediction> {
         let Some(ranker) = &self.ranker else {
-            return self.retrieve(path, limit);
+            return self.retrieve(path, limit, false);
         };
         if limit == 0 {
             return Vec::new();
@@ -248,7 +248,7 @@ impl RetrievalEngine {
             .collect()
     }
 
-    fn retrieve(&self, path: &[(f64, f64)], limit: usize) -> Vec<Prediction> {
+    fn retrieve(&self, path: &[(f64, f64)], limit: usize, geometry_union: bool) -> Vec<Prediction> {
         if limit == 0 {
             return Vec::new();
         }
@@ -303,6 +303,23 @@ impl RetrievalEngine {
         let count = limit.min(ranked.len());
         if count < ranked.len() {
             ranked.select_nth_unstable_by(count, compare);
+        }
+        if geometry_union && count >= 2 && count < ranked.len() {
+            let neural_count = count / 2;
+            ranked[..count].select_nth_unstable_by(neural_count, compare);
+            let selected: HashSet<_> = ranked[..neural_count].iter().map(|p| p.1).collect();
+            let query = Query::new(path).unwrap();
+            let mut geometry: Vec<_> = self
+                .words
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| !selected.contains(i))
+                .map(|(i, w)| (query.coarse(&w.geometry), i))
+                .collect();
+            let extra = count - neural_count;
+            geometry.select_nth_unstable_by(extra, |a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+            let extra_ids: HashSet<_> = geometry[..extra].iter().map(|p| p.1).collect();
+            ranked.retain(|p| selected.contains(&p.1) || extra_ids.contains(&p.1));
         }
         ranked.truncate(count);
         ranked.sort_by(compare);

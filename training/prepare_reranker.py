@@ -24,6 +24,7 @@ def main():
     parser.add_argument("--synthetic-dir", type=Path, default=ROOT / "training/data/memory-wide")
     parser.add_argument("--real-dir", type=Path, default=ROOT / "training/data/futo-large")
     parser.add_argument("--model", type=Path, default=ROOT / "crates/swipe-engine/models/retrieval")
+    parser.add_argument("--candidates", type=int, default=64)
     parser.add_argument("--seed", type=int, default=424242)
     parser.add_argument("--workers", type=int, default=4)
     args = parser.parse_args()
@@ -59,19 +60,19 @@ def main():
     targets = np.asarray(targets)
     groups = np.asarray(groups)
     binary = ROOT / "target/release/examples/retrieval_cli"
-    features = np.zeros((len(paths), 32, 20), dtype=np.float32)
-    candidates = np.full((len(paths), 32), -1, dtype=np.int32)
+    features = np.zeros((len(paths), args.candidates, 20), dtype=np.float32)
+    candidates = np.full((len(paths), args.candidates), -1, dtype=np.int32)
 
     def extract(indices):
         with tempfile.TemporaryFile(mode="w+") as inputs:
             for i in indices:
                 inputs.write(json.dumps({"word": words[targets[i]], "points": paths[i].tolist()}) + "\n")
             inputs.seek(0)
-            process = subprocess.Popen([str(binary), "--model", str(args.model), "--features", "--candidates", "32"], stdin=inputs, stdout=subprocess.PIPE, text=True)
+            process = subprocess.Popen([str(binary), "--model", str(args.model), "--features", "--candidates", str(args.candidates)], stdin=inputs, stdout=subprocess.PIPE, text=True)
             received = 0
             for i, line in zip(indices, process.stdout):
                 result = json.loads(line)["candidates"]
-                if len(result) != 32:
+                if len(result) != args.candidates:
                     raise RuntimeError("native retrieval returned an incomplete shortlist")
                 features[i] = [c["features"] for c in result]
                 candidates[i] = [ids[c["word"]] for c in result]
@@ -88,7 +89,7 @@ def main():
     report = {"split": args.split, "seed": seed, "source_sha256": hashes,
               "encoder_sha256": hashlib.sha256((args.model / "encoder.bin").read_bytes()).hexdigest(),
               "bank_sha256": hashlib.sha256((args.model / "words.bin").read_bytes()).hexdigest(),
-              "test_data_used": False, "samples": len(paths), "candidate_recall": {}}
+              "test_data_used": False, "candidates": args.candidates, "candidate_policy": "half neural retrieval, half independent geometry retrieval", "samples": len(paths), "candidate_recall": {}}
     for name in np.unique(groups):
         mask = groups == name
         report["candidate_recall"][name] = float((candidates[mask] == targets[mask, None]).any(axis=1).mean())
