@@ -4,6 +4,19 @@ Draw the motion of swipe typing from memory and get word suggestions. The drawin
 
 The project now includes a learned route recognizer trained on real human swipe recordings and distorted drawings. Its native Rust runtime uses a small convolutional encoder and cached word vectors. The original DTW and CTC experiments remain available for comparison.
 
+## Measured improvement
+
+On 500 held-out human recordings, using the default 60,000-word vocabulary:
+
+| Input | Original DTW: first choice | Learned: first choice | Learned: top five |
+|---|---:|---:|---:|
+| Real swipe | 44.4% | 86.2% | 96.2% |
+| Real swipe with simulated memory errors | 24.6% | 78.8% | 93.0% |
+
+Median recognition time for the distorted traces fell from 132 ms to 3.3 ms on an M4 Max. A separate 1,000-recording comparison with a 10,000-word vocabulary reached 87.9% first-choice accuracy on real swipes and 82.2% on distorted real swipes.
+
+The hardest synthetic memory condition still reaches about 52% first-choice accuracy. These tests show a large improvement over the original recognizer, while leaving substantial uncertainty for completely freehand memory gestures. See [the benchmark report](benchmarks/README.md) for all conditions and limits.
+
 ## Run the app
 
 Install Rust, then run:
@@ -53,6 +66,8 @@ python3 training/fetch_real_swipes.py \
   --train 150000 --validation 10000 --test 5000 --vocab 30000 \
   --output-dir training/data/futo-large
 ```
+
+![Human recordings and simulated memory errors](benchmarks/augmentation-examples.png)
 
 See [the training guide](training/README.md) for the full GPU training, calibration, and export workflow. No manual recording or labeling is required. Generated data and training checkpoints remain local; source manifests and benchmark reports are tracked.
 

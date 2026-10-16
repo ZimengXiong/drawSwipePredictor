@@ -1,0 +1,372 @@
+{
+  "eligible_targets": 8800,
+  "neural_model": "crates/swipe-engine/models/retrieval",
+  "results": [
+    {
+      "baseline": {
+        "median_ms": 19.644417,
+        "p95_ms": 22.602791,
+        "top1": 0.8,
+        "top5": 0.9066666666666666
+      },
+      "difficulty": "clean",
+      "example_errors": [
+        {
+          "predicted": [
+            "except",
+            "excerpt",
+            "receipt",
+            "exterior",
+            "accept"
+          ],
+          "target": "excerpt"
+        },
+        {
+          "predicted": [
+            "pet",
+            "poet",
+            "power",
+            "gas",
+            "has"
+          ],
+          "target": "poet"
+        },
+        {
+          "predicted": [
+            "neutral",
+            "neural",
+            "brutal",
+            "natural",
+            "bridal"
+          ],
+          "target": "neural"
+        },
+        {
+          "predicted": [
+            "glen",
+            "glenn",
+            "staff",
+            "clan",
+            "fish"
+          ],
+          "target": "glenn"
+        },
+        {
+          "predicted": [
+            "floor",
+            "flour",
+            "cloud",
+            "slow",
+            "cliff"
+          ],
+          "target": "flour"
+        }
+      ],
+      "memory": {
+        "median_ms": 1.10175,
+        "p95_ms": 1.197625,
+        "top1": 0.9833333333333333,
+        "top5": 1.0
+      },
+      "neural": {
+        "median_ms": 1.397916,
+        "p95_ms": 1.4989999999999999,
+        "top1": 0.99,
+        "top5": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "median_ms": 21.186875,
+        "p95_ms": 22.862458,
+        "top1": 0.49,
+        "top5": 0.6533333333333333
+      },
+      "difficulty": "loose",
+      "example_errors": [
+        {
+          "predicted": [
+            "wish",
+            "spank",
+            "cock",
+            "welsh",
+            "quest"
+          ],
+          "target": "approach"
+        },
+        {
+          "predicted": [
+            "shadow",
+            "shake",
+            "shape",
+            "andale",
+            "event"
+          ],
+          "target": "advance"
+        },
+        {
+          "predicted": [
+            "gulf",
+            "time",
+            "drums",
+            "fund",
+            "sega"
+          ],
+          "target": "tumor"
+        },
+        {
+          "predicted": [
+            "newest",
+            "mercy",
+            "next",
+            "levy",
+            "lazy"
+          ],
+          "target": "mercy"
+        },
+        {
+          "predicted": [
+            "apr",
+            "spot",
+            "sport",
+            "super",
+            "adapter"
+          ],
+          "target": "shape"
+        },
+        {
+          "predicted": [
+            "phi",
+            "merry",
+            "ist",
+            "bet",
+            "pay"
+          ],
+          "target": "last"
+        },
+        {
+          "predicted": [
+            "kitty",
+            "load",
+            "kurt",
+            "loads",
+            "grass"
+          ],
+          "target": "load"
+        },
+        {
+          "predicted": [
+            "glen",
+            "glenn",
+            "clan",
+            "staff",
+            "clean"
+          ],
+          "target": "clan"
+        },
+        {
+          "predicted": [
+            "abuse",
+            "flight",
+            "slight",
+            "another",
+            "advise"
+          ],
+          "target": "flight"
+        },
+        {
+          "predicted": [
+            "combination",
+            "confirmation",
+            "huntington",
+            "conservation",
+            "conjunction"
+          ],
+          "target": "confirmation"
+        },
+        {
+          "predicted": [
+            "application",
+            "sixth",
+            "allocation",
+            "council",
+            "addiction"
+          ],
+          "target": "spectrum"
+        },
+        {
+          "predicted": [
+            "vhs",
+            "now",
+            "hire",
+            "joe",
+            "note"
+          ],
+          "target": "hire"
+        }
+      ],
+      "memory": {
+        "median_ms": 1.083666,
+        "p95_ms": 1.162042,
+        "top1": 0.77,
+        "top5": 0.86
+      },
+      "neural": {
+        "median_ms": 1.390292,
+        "p95_ms": 1.440125,
+        "top1": 0.7866666666666666,
+        "top5": 0.8866666666666667
+      }
+    },
+    {
+      "baseline": {
+        "median_ms": 21.025875,
+        "p95_ms": 22.889833,
+        "top1": 0.22666666666666666,
+        "top5": 0.38
+      },
+      "difficulty": "memory",
+      "example_errors": [
+        {
+          "predicted": [
+            "lifetime",
+            "locations",
+            "member",
+            "latina",
+            "latinas"
+          ],
+          "target": "locations"
+        },
+        {
+          "predicted": [
+            "welsh",
+            "wish",
+            "quest",
+            "dock",
+            "stock"
+          ],
+          "target": "approach"
+        },
+        {
+          "predicted": [
+            "whale",
+            "shadow",
+            "shape",
+            "anchor",
+            "analyses"
+          ],
+          "target": "advance"
+        },
+        {
+          "predicted": [
+            "fox",
+            "fix",
+            "jon",
+            "rolls",
+            "told"
+          ],
+          "target": "dolls"
+        },
+        {
+          "predicted": [
+            "pipe",
+            "luke",
+            "kills",
+            "like",
+            "kyle"
+          ],
+          "target": "purple"
+        },
+        {
+          "predicted": [
+            "guild",
+            "gulf",
+            "sega",
+            "hunt",
+            "jimmy"
+          ],
+          "target": "tumor"
+        },
+        {
+          "predicted": [
+            "left",
+            "least",
+            "leader",
+            "past",
+            "pest"
+          ],
+          "target": "mercy"
+        },
+        {
+          "predicted": [
+            "assists",
+            "apparatus",
+            "sister",
+            "assisted",
+            "departure"
+          ],
+          "target": "deposit"
+        },
+        {
+          "predicted": [
+            "computers",
+            "completed",
+            "computed",
+            "complex",
+            "colored"
+          ],
+          "target": "completed"
+        },
+        {
+          "predicted": [
+            "spot",
+            "apr",
+            "adopt",
+            "air",
+            "sport"
+          ],
+          "target": "shape"
+        },
+        {
+          "predicted": [
+            "myrtle",
+            "keys",
+            "keeps",
+            "beta",
+            "lewis"
+          ],
+          "target": "vegas"
+        },
+        {
+          "predicted": [
+            "cream",
+            "crack",
+            "seat",
+            "crap",
+            "hugo"
+          ],
+          "target": "delay"
+        }
+      ],
+      "memory": {
+        "median_ms": 1.061041,
+        "p95_ms": 1.1582910000000002,
+        "top1": 0.5466666666666666,
+        "top5": 0.68
+      },
+      "neural": {
+        "median_ms": 1.404334,
+        "p95_ms": 1.4493749999999999,
+        "top1": 0.5233333333333333,
+        "top5": 0.7266666666666667
+      }
+    }
+  ],
+  "samples_per_difficulty": 300,
+  "seed": 12345,
+  "synthetic_only": true,
+  "target_offset": 0,
+  "target_policy": "uniform over 4–12 letter words in target vocabulary",
+  "target_vocabulary_limit": 10000,
+  "vocabulary": 10000
+}

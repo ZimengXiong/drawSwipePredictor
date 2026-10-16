@@ -1,0 +1,298 @@
+{
+  "dataset": "training/data/futo-large/test.jsonl",
+  "limitations": "Recorded data uses visible keyboards. Memory transfer adds synthetic distortions to real traces and does not measure freehand memory accuracy.",
+  "metric_override": null,
+  "neural_model": "crates/swipe-engine/models/retrieval",
+  "results": [
+    {
+      "baseline": {
+        "median_ms": 133.671875,
+        "p95_ms": 145.22858399999998,
+        "top1": 0.444,
+        "top5": 0.638
+      },
+      "example_errors": [
+        {
+          "predicted": [
+            "bunny",
+            "cunt",
+            "chime",
+            "xine",
+            "holy"
+          ],
+          "target": "built"
+        },
+        {
+          "predicted": [
+            "chaser",
+            "char",
+            "chat",
+            "chart",
+            "bleu"
+          ],
+          "target": "blast"
+        },
+        {
+          "predicted": [
+            "resent",
+            "easterly",
+            "earthly",
+            "early",
+            "rarely"
+          ],
+          "target": "early"
+        },
+        {
+          "predicted": [
+            "strike",
+            "stroke",
+            "guilt",
+            "gilt",
+            "stoke"
+          ],
+          "target": "style"
+        },
+        {
+          "predicted": [
+            "lord",
+            "lies",
+            "kites",
+            "litres",
+            "lites"
+          ],
+          "target": "lies"
+        },
+        {
+          "predicted": [
+            "bootcut",
+            "durst",
+            "shearer",
+            "strasse",
+            "skyway"
+          ],
+          "target": "first"
+        },
+        {
+          "predicted": [
+            "debuted",
+            "denied",
+            "denies",
+            "denoted",
+            "denotes"
+          ],
+          "target": "denied"
+        },
+        {
+          "predicted": [
+            "kwan",
+            "kean",
+            "peak",
+            "pram",
+            "jean"
+          ],
+          "target": "peak"
+        },
+        {
+          "predicted": [
+            "headway",
+            "leadership",
+            "newsdesk",
+            "pacheco",
+            "okavango"
+          ],
+          "target": "leadership"
+        },
+        {
+          "predicted": [
+            "competent",
+            "cognizant",
+            "company",
+            "competency",
+            "coincident"
+          ],
+          "target": "company"
+        },
+        {
+          "predicted": [
+            "curry",
+            "cory",
+            "duet",
+            "steer",
+            "corry"
+          ],
+          "target": "city"
+        },
+        {
+          "predicted": [
+            "tony",
+            "songs",
+            "dongs",
+            "doings",
+            "ging"
+          ],
+          "target": "songs"
+        }
+      ],
+      "memory": {
+        "median_ms": 3.9783340000000003,
+        "p95_ms": 4.4085410000000005,
+        "top1": 0.458,
+        "top5": 0.696
+      },
+      "mode": "recorded",
+      "neural": {
+        "median_ms": 3.285166,
+        "p95_ms": 3.5527919999999997,
+        "top1": 0.862,
+        "top5": 0.962
+      }
+    },
+    {
+      "baseline": {
+        "median_ms": 132.374625,
+        "p95_ms": 143.49141600000002,
+        "top1": 0.246,
+        "top5": 0.414
+      },
+      "example_errors": [
+        {
+          "predicted": [
+            "vinny",
+            "cunt",
+            "nomi",
+            "bunny",
+            "zine"
+          ],
+          "target": "built"
+        },
+        {
+          "predicted": [
+            "blau",
+            "gust",
+            "char",
+            "blast",
+            "chat"
+          ],
+          "target": "blast"
+        },
+        {
+          "predicted": [
+            "warrior",
+            "warmly",
+            "earthly",
+            "wait",
+            "rely"
+          ],
+          "target": "early"
+        },
+        {
+          "predicted": [
+            "chrome",
+            "crime",
+            "cringe",
+            "crooks",
+            "crimes"
+          ],
+          "target": "style"
+        },
+        {
+          "predicted": [
+            "bootcut",
+            "coached",
+            "durst",
+            "corsair",
+            "fluidity"
+          ],
+          "target": "first"
+        },
+        {
+          "predicted": [
+            "yeah",
+            "pecl",
+            "oreck",
+            "publ",
+            "peck"
+          ],
+          "target": "peak"
+        },
+        {
+          "predicted": [
+            "mkv",
+            "more",
+            "moz",
+            "moore",
+            "mod"
+          ],
+          "target": "more"
+        },
+        {
+          "predicted": [
+            "tycho",
+            "tyco",
+            "yugo",
+            "west",
+            "wear"
+          ],
+          "target": "west"
+        },
+        {
+          "predicted": [
+            "cognizant",
+            "company",
+            "believable",
+            "xinjiang",
+            "chronologically"
+          ],
+          "target": "company"
+        },
+        {
+          "predicted": [
+            "steer",
+            "ster",
+            "dirty",
+            "duet",
+            "curry"
+          ],
+          "target": "city"
+        },
+        {
+          "predicted": [
+            "moxie",
+            "movie",
+            "bodie",
+            "boxscore",
+            "noxious"
+          ],
+          "target": "movie"
+        },
+        {
+          "predicted": [
+            "ging",
+            "doings",
+            "dongs",
+            "songs",
+            "subs"
+          ],
+          "target": "songs"
+        }
+      ],
+      "memory": {
+        "median_ms": 3.8912080000000002,
+        "p95_ms": 4.332,
+        "top1": 0.43,
+        "top5": 0.65
+      },
+      "mode": "memory_transfer",
+      "neural": {
+        "median_ms": 3.3111669999999997,
+        "p95_ms": 3.533208,
+        "top1": 0.788,
+        "top5": 0.93
+      }
+    }
+  ],
+  "samples": 500,
+  "sessions": 136,
+  "skipped_oov": 0,
+  "vocabulary": 60000
+}

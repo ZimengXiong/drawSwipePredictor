@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main() -> None:
     if sys.platform != "darwin":
-        raise SystemExit("For other platforms, run cargo run --release --bin swipe-memory")
+        raise SystemExit("For other platforms, run cargo run --release")
     subprocess.run(
         ["cargo", "build", "--release", "-p", "swipe-desktop", "--no-default-features", "--bin", "swipe-learned"],
         cwd=ROOT, check=True,
