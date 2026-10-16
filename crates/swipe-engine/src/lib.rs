@@ -1,3 +1,5 @@
+mod memory_geometry;
+
 pub mod ctc;
 pub mod dtw;
 pub mod keyboard;
