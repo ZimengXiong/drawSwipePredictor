@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use std::io::{BufRead, BufReader};
 use std::time::Instant;
 use swipe_engine::synthetic::Random;
-use swipe_engine::{MemoryEngine, SwipeEngine};
+use swipe_engine::{MemoryEngine, RetrievalEngine, SwipeEngine};
 
 #[derive(Deserialize)]
 struct Sample {
@@ -119,10 +119,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let metric: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path)?)?;
         memory.set_ranking_weights(serde_json::from_value(metric["weights"].clone())?)?;
     }
+    let mut neural = option(&args, "--model")
+        .map(RetrievalEngine::from_files)
+        .transpose()?;
+    if let Some(engine) = &mut neural {
+        engine.truncate_vocabulary(vocab);
+    }
+    let backends = if neural.is_some() { 3 } else { 2 };
     let mut results = Vec::new();
     for mode in ["recorded", "memory_transfer"] {
-        let mut counts = [[0_usize; 2]; 2];
-        let mut times = [Vec::new(), Vec::new()];
+        let mut counts = [[0_usize; 2]; 3];
+        let mut times = [Vec::new(), Vec::new(), Vec::new()];
         let mut errors = Vec::new();
         for (i, sample) in data.iter().enumerate() {
             let points = if mode == "recorded" {
@@ -130,12 +137,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 transfer(sample)
             };
-            for backend in 0..2 {
+            for backend in 0..backends {
                 let start = Instant::now();
                 let predictions = if backend == 0 {
                     old.predict_from_path(&points, 5)
-                } else {
+                } else if backend == 1 {
                     memory.predict_from_path(&points, 5)
+                } else {
+                    neural.as_ref().unwrap().predict_from_path(&points, 5)
                 };
                 times[backend].push(start.elapsed().as_secs_f64() * 1000.0);
                 counts[backend][0] +=
@@ -155,7 +164,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         let result = serde_json::json!({
             "mode": mode, "baseline": summary(counts[0][0], counts[0][1], &mut times[0]),
-            "memory": summary(counts[1][0], counts[1][1], &mut times[1]), "example_errors": errors,
+            "memory": summary(counts[1][0], counts[1][1], &mut times[1]),
+            "neural": if backends == 3 { Some(summary(counts[2][0], counts[2][1], &mut times[2])) } else { None },
+            "example_errors": errors,
         });
         eprintln!("{}", serde_json::to_string(&result)?);
         results.push(result);
@@ -163,7 +174,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let report = serde_json::json!({
         "dataset": dataset, "samples": data.len(), "vocabulary": dictionary.len(), "skipped_oov": skipped,
         "sessions": data.iter().map(|s| &s.session).collect::<HashSet<_>>().len(),
-        "metric_override": option(&args, "--metric"), "results": results,
+        "metric_override": option(&args, "--metric"), "neural_model": option(&args, "--model"), "results": results,
         "limitations": "Recorded data uses visible keyboards. Memory transfer adds synthetic distortions to real traces and does not measure freehand memory accuracy.",
     });
     std::fs::write(output, serde_json::to_string_pretty(&report)? + "\n")?;
