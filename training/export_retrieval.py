@@ -50,7 +50,6 @@ def main():
         encoded.extend(floats(model.head[i].weight))
         encoded.extend(floats(model.head[i].bias))
     args.output.mkdir(parents=True, exist_ok=True)
-    (args.output / "encoder.bin").write_bytes(encoded)
     limit = args.vocab or len(checkpoint["words"])
     words, counts, paths = vocabulary(ROOT / "word_freq.txt", limit)
     model = model.to(args.device)
@@ -78,7 +77,6 @@ def main():
         bank.extend(name)
         bank.extend(struct.pack("<f", float(pop)))
         bank.extend(vector.astype("<f4").tobytes())
-    (args.output / "words.bin").write_bytes(bank)
     verification = []
     with torch.no_grad():
         for word in ["hello", "world", "keyboard", "lunchbox", "alpacas"]:
@@ -89,7 +87,6 @@ def main():
             raw = raw * 75 + [420, 190]
             expected = model(features(torch.tensor(curve(raw)[None], device=args.device))).cpu().tolist()[0]
             verification.append({"word": word, "points": raw.tolist(), "embedding": expected})
-    (args.output / "verification.json").write_text(json.dumps(verification, indent=2) + "\n")
     training_metadata = json.loads(json.dumps(checkpoint["metadata"]).replace(str(ROOT) + "/", ""))
     report = {
         "schema_version": 1, "architecture": "conv-48-64-96-128-dense-256-128",
@@ -107,7 +104,16 @@ def main():
         "data_license": "MIT",
         "word_frequency_sha256": hashlib.sha256((ROOT / "word_freq.txt").read_bytes()).hexdigest(),
     }
-    (args.output / "manifest.json").write_text(json.dumps(report, indent=2) + "\n")
+    # A new export is a base retriever. Candidate weights require a separate fit.
+    for filename in ["reranker.json", "reranker-verification.json"]:
+        (args.output / filename).unlink(missing_ok=True)
+    outputs = {"encoder.bin": bytes(encoded), "words.bin": bytes(bank),
+               "verification.json": (json.dumps(verification, indent=2) + "\n").encode(),
+               "manifest.json": (json.dumps(report, indent=2) + "\n").encode()}
+    for filename, content in outputs.items():
+        temporary = args.output / (filename + ".tmp")
+        temporary.write_bytes(content)
+        temporary.replace(args.output / filename)
     print(f"Exported {len(words):,} word routes and {len(encoded):,} bytes of encoder weights")
 
 
