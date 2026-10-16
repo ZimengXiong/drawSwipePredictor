@@ -90,18 +90,21 @@ def main():
             expected = model(features(torch.tensor(curve(raw)[None], device=args.device))).cpu().tolist()[0]
             verification.append({"word": word, "points": raw.tolist(), "embedding": expected})
     (args.output / "verification.json").write_text(json.dumps(verification, indent=2) + "\n")
+    training_metadata = json.loads(json.dumps(checkpoint["metadata"]).replace(str(ROOT) + "/", ""))
     report = {
         "schema_version": 1, "architecture": "conv-48-64-96-128-dense-256-128",
         "points": 64, "channels": 8, "embedding": 128, "vocabulary": len(words),
         "checkpoint_epoch": checkpoint["epoch"] + 1, "validation_score": checkpoint["best_score"],
         "encoder_sha256": hashlib.sha256(encoded).hexdigest(),
         "words_sha256": hashlib.sha256(bank).hexdigest(),
-        "training": checkpoint["metadata"],
+        "training": training_metadata,
         "prior_weight": calibration["selected"]["prior"] if calibration else 0.025,
         "tta_degrees": calibration["selected"]["tta_degrees"] if calibration else 0.0,
         "adaptive_prior": calibration["selected"].get("prior_form") == "adaptive" if calibration else False,
         "calibration": calibration["selected"] if calibration else None,
         "calibration_sources": calibration.get("source_sha256") if calibration else None,
+        "data_source": "https://huggingface.co/datasets/futo-org/swipe.futo.org",
+        "data_license": "MIT",
         "word_frequency_sha256": hashlib.sha256((ROOT / "word_freq.txt").read_bytes()).hexdigest(),
     }
     (args.output / "manifest.json").write_text(json.dumps(report, indent=2) + "\n")
