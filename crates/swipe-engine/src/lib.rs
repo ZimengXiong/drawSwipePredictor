@@ -1,3 +1,6 @@
+pub mod memory;
+pub use memory::MemoryEngine;
+
 mod memory_geometry;
 
 pub mod ctc;
