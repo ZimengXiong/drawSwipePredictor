@@ -60,8 +60,6 @@ def load_recordings(path: Path, word_ids: dict[str, int]):
     with path.open() as source:
         for line in source:
             sample = json.loads(line)
-            if sample["word"] not in word_ids:
-                continue
             try:
                 paths.append(curve(sample["points"]))
                 names.append(sample["word"])
@@ -71,7 +69,8 @@ def load_recordings(path: Path, word_ids: dict[str, int]):
         raise ValueError(f"no valid in-vocabulary recordings in {path}")
     paths = np.stack(paths)
     np.savez_compressed(cache, curves=paths, words=np.asarray(names))
-    return paths, np.asarray([word_ids[w] for w in names], dtype=np.int64)
+    valid = [i for i, name in enumerate(names) if name in word_ids]
+    return paths[valid], np.asarray([word_ids[names[i]] for i in valid], dtype=np.int64)
 
 
 def features(paths: torch.Tensor) -> torch.Tensor:
