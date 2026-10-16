@@ -64,10 +64,15 @@ def main():
     parser.add_argument("--validation-samples", type=int, default=1500)
     parser.add_argument("--seed", type=int, default=271828)
     parser.add_argument("--resume", type=Path)
+    parser.add_argument("--init-model", type=Path)
+    parser.add_argument("--learning-rate", type=float, default=0.0004)
+    parser.add_argument("--real-fraction", type=float, default=0.25)
     parser.add_argument("--device", default="mps" if torch.backends.mps.is_available() else "cpu")
     args = parser.parse_args()
     if min(args.epochs, args.steps, args.batch, args.vocab, args.validation_samples) <= 0 or args.batch < 8:
         parser.error("counts must be positive and batch size must be at least 8")
+    if not 0.0 < args.real_fraction < 0.75 or args.learning_rate <= 0:
+        parser.error("real fraction must be in (0, 0.75) and learning rate must be positive")
     torch.set_num_threads(8)
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
@@ -101,7 +106,9 @@ def main():
         "synthetic": loaded["synthetic_validation"],
     }
     model = GestureEncoder().to(device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=0.0004, weight_decay=0.0001)
+    if args.init_model:
+        model.load_state_dict(torch.load(args.init_model, map_location=device, weights_only=False)["model"])
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=0.0001)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=0.00002)
     args.output.mkdir(parents=True, exist_ok=True)
     start_epoch, best = 0, -1.0
@@ -130,7 +137,7 @@ def main():
         model.train()
         total_loss = 0.0
         for step in range(args.steps):
-            n_real, n_synthetic = args.batch // 4, args.batch // 4
+            n_real, n_synthetic = int(args.batch * args.real_fraction), args.batch // 4
             n_online = args.batch - n_real - n_synthetic
             real_indices = torch.randint(len(real), (n_real,), device=device)
             syn_indices = torch.randint(len(synthetic), (n_synthetic,), device=device)
