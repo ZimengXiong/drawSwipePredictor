@@ -28,8 +28,10 @@ impl Encoder {
             let end = position + count * 4;
             let data = bytes.get(position..end).ok_or("truncated route encoder")?;
             let values: Vec<_> = data
-                .chunks_exact(4)
-                .map(|b| f32::from_le_bytes(b.try_into().unwrap()))
+                .as_chunks::<4>()
+                .0
+                .iter()
+                .map(|b| f32::from_le_bytes(*b))
                 .collect();
             if values.iter().any(|v| !v.is_finite()) {
                 return Err("route encoder contains nonfinite weights".into());

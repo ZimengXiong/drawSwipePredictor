@@ -77,8 +77,10 @@ impl RetrievalEngine {
                 .get(position..position + (DIM + 1) * 4)
                 .ok_or("truncated word-bank vector")?;
             let values: Vec<_> = values
-                .chunks_exact(4)
-                .map(|v| f32::from_le_bytes(v.try_into().unwrap()))
+                .as_chunks::<4>()
+                .0
+                .iter()
+                .map(|v| f32::from_le_bytes(*v))
                 .collect();
             if values.iter().any(|v| !v.is_finite()) || !(0.0..=1.0).contains(&values[0]) {
                 return Err("invalid word-bank values".into());
@@ -220,4 +222,38 @@ fn fingerprint(data: &[u8]) -> u64 {
     data.iter().fold(0xcbf29ce484222325, |value, byte| {
         (value ^ *byte as u64).wrapping_mul(0x100000001b3)
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn validates_bank_identity_and_values() {
+        let mut model = vec![0_u8; 8 + 405072 * 4];
+        model[..8].copy_from_slice(b"SWPRT001");
+        let mut bank = b"SWPBK001".to_vec();
+        bank.extend(fingerprint(&model).to_le_bytes());
+        bank.extend(1_u32.to_le_bytes());
+        bank.extend((DIM as u32).to_le_bytes());
+        bank.extend(5_u16.to_le_bytes());
+        bank.extend(b"hello");
+        bank.extend(0.5_f32.to_le_bytes());
+        bank.extend(1.0_f32.to_le_bytes());
+        bank.extend(vec![0_u8; (DIM - 1) * 4]);
+        let mut engine = RetrievalEngine::from_bytes(&model, &bank).unwrap();
+        assert_eq!(engine.word_count(), 1);
+        assert!(engine.predict_from_path(&[(1.0, 1.0); 5], 5).is_empty());
+        assert!(engine
+            .configure(r#"{"prior_weight":0.1,"tta_degrees":10}"#)
+            .is_ok());
+        assert!(engine.configure(r#"{"prior_weight":-1}"#).is_err());
+        let mut mismatched = bank.clone();
+        mismatched[8] ^= 1;
+        assert!(RetrievalEngine::from_bytes(&model, &mismatched).is_err());
+        assert!(RetrievalEngine::from_bytes(&model, &bank[..bank.len() - 1]).is_err());
+        let start = bank.len() - DIM * 4;
+        bank[start..start + 4].copy_from_slice(&f32::NAN.to_le_bytes());
+        assert!(RetrievalEngine::from_bytes(&model, &bank).is_err());
+    }
 }

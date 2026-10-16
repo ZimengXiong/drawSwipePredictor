@@ -128,9 +128,11 @@ def main() -> None:
             raise RuntimeError(f"only found {len(selected)} valid {split} records; lower the requested count")
         randomizer.shuffle(selected)
         path = output / f"{split}.jsonl"
-        with path.open("w") as target:
+        temporary = path.with_suffix(".jsonl.tmp")
+        with temporary.open("w") as target:
             for sample in selected:
                 target.write(json.dumps(sample, separators=(",", ":")) + "\n")
+        temporary.replace(path)
         sessions[split] = {row["session"] for row in selected}
         metadata.append({
             "split": split, "samples": count, "sessions": len(sessions[split]),
@@ -145,7 +147,7 @@ def main() -> None:
         with urllib.request.urlopen(f"{BASE}/{filename}", timeout=60) as response:
             (output / f"FUTO-{filename}").write_bytes(response.read())
     manifest = {
-        "schema_version": 1, "source": SOURCE, "revision": REVISION, "license": "MIT",
+        "schema_version": 1, "sampler_version": 2, "source": SOURCE, "revision": REVISION, "license": "MIT",
         "seed": args.seed, "vocabulary_limit": args.vocab, "splits": metadata,
         "sampling": "Random byte windows, then shuffled complete records; not a uniform sample of all rows.",
         "filters": "4–12 ASCII letters, in vocabulary, >=6 points, finite moving paths and monotone timestamps. No distance-score filter.",
