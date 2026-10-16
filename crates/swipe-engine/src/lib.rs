@@ -1,3 +1,5 @@
+mod retrieval_encoder;
+
 pub mod synthetic;
 
 pub mod memory;
