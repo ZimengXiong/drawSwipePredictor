@@ -99,6 +99,7 @@ def main():
         "training": checkpoint["metadata"],
         "prior_weight": calibration["selected"]["prior"] if calibration else 0.025,
         "tta_degrees": calibration["selected"]["tta_degrees"] if calibration else 0.0,
+        "adaptive_prior": calibration["selected"].get("prior_form") == "adaptive" if calibration else False,
         "calibration": calibration["selected"] if calibration else None,
     }
     (args.output / "manifest.json").write_text(json.dumps(report, indent=2) + "\n")

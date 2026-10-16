@@ -19,6 +19,7 @@ pub struct RetrievalEngine {
     vectors: Vec<[f32; DIM]>,
     prior_weight: f32,
     tta_degrees: f32,
+    adaptive_prior: bool,
 }
 
 impl RetrievalEngine {
@@ -106,6 +107,7 @@ impl RetrievalEngine {
             vectors,
             prior_weight: 0.025,
             tta_degrees: 0.0,
+            adaptive_prior: false,
         })
     }
 
@@ -116,15 +118,18 @@ impl RetrievalEngine {
             prior_weight: f32,
             #[serde(default)]
             tta_degrees: f32,
+            #[serde(default)]
+            adaptive_prior: bool,
         }
         let settings: Settings = serde_json::from_str(json).map_err(|e| e.to_string())?;
-        if !(0.0..=0.5).contains(&settings.prior_weight)
+        if !(0.0..=2.0).contains(&settings.prior_weight)
             || !(0.0..=24.0).contains(&settings.tta_degrees)
         {
             return Err("invalid route ranking settings".into());
         }
         self.prior_weight = settings.prior_weight;
         self.tta_degrees = settings.tta_degrees;
+        self.adaptive_prior = settings.adaptive_prior;
         Ok(())
     }
 
@@ -140,7 +145,7 @@ impl RetrievalEngine {
 
     pub fn set_prior_weight(&mut self, weight: f32) {
         if weight.is_finite() {
-            self.prior_weight = weight.clamp(0.0, 0.5);
+            self.prior_weight = weight.clamp(0.0, 2.0);
         }
     }
 
@@ -188,11 +193,13 @@ impl RetrievalEngine {
             .map(|(index, vector)| {
                 let similarity: f32 = query.iter().zip(vector).map(|(a, b)| a * b).sum();
                 let distance = (1.0 - similarity).max(0.0);
-                (
-                    distance - self.prior_weight * self.words[index].popularity,
-                    index,
-                    distance,
-                )
+                let popularity = self.words[index].popularity;
+                let rating = if self.adaptive_prior {
+                    distance + self.prior_weight * (1.0 - popularity) * distance.sqrt()
+                } else {
+                    distance - self.prior_weight * popularity
+                };
+                (rating, index, distance)
             })
             .collect();
         let compare = |a: &(f32, usize, f32), b: &(f32, usize, f32)| {

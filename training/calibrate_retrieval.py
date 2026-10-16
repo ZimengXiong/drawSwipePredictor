@@ -56,6 +56,8 @@ def main():
         datasets[name] = (paths, labels)
         if name == "real":
             datasets["distorted_real"] = (augment(paths, force_memory=True), labels)
+    canonical_ids = torch.tensor(chooser.choice(len(words), min(args.samples, len(words)), replace=False), device=args.device)
+    datasets["canonical"] = (torch.tensor(canonical_array, device=args.device)[canonical_ids], canonical_ids)
     best = None
     trials = []
     for tta in [0.0, 10.0]:
@@ -72,19 +74,20 @@ def main():
         for alpha in [0.0, 0.25, 0.5, 0.75, 1.0]:
             weight = alpha * confidence
             prototypes = F.normalize(canonical * (1 - weight) + means * weight, dim=1)
-            metrics = {prior: {} for prior in [0.0, 0.025, 0.05, 0.1, 0.2, 0.35]}
+            metrics = {(form, prior): {} for form, grid in [("linear", [0.0, 0.025, 0.05, 0.1, 0.2, 0.35]), ("adaptive", [0.1, 0.25, 0.5, 1.0, 2.0])] for prior in grid}
             for name, vectors in embeddings.items():
                 labels = datasets[name][1]
                 scores = vectors @ prototypes.T
-                for prior in metrics:
-                    top = (scores + prior * popularity).topk(5, dim=1).indices
-                    metrics[prior][name] = {
+                for form, prior in metrics:
+                    ranked = scores + prior * popularity if form == "linear" else scores - prior * (1 - popularity) * (1 - scores).clamp_min(0).sqrt()
+                    top = ranked.topk(5, dim=1).indices
+                    metrics[(form, prior)][name] = {
                         "top1": (top[:, 0] == labels).float().mean().item(),
                         "top5": (top == labels[:, None]).any(dim=1).float().mean().item(),
                     }
-            for prior, accuracy in metrics.items():
+            for (form, prior), accuracy in metrics.items():
                 score = sum(m["top1"] + 0.05 * m["top5"] for m in accuracy.values()) / len(accuracy)
-                trial = {"alpha": alpha, "prior": prior, "tta_degrees": tta, "score": score, "validation": accuracy}
+                trial = {"alpha": alpha, "prior": prior, "prior_form": form, "tta_degrees": tta, "score": score, "validation": accuracy}
                 trials.append(trial)
                 if best is None or score > best["score"]:
                     best = trial
