@@ -98,6 +98,67 @@ cargo run --release -p swipe-engine --example retrieval_cli -- \
   --verify crates/swipe-engine/models/retrieval/verification.json
 ```
 
+## Train the geometry reranker
+
+The second stage combines 32 neural candidates with 32 additional candidates from an independent shape search. It measures each candidate using elastic alignment at five rotations, sharp and rounded templates, endpoints, and route complexity. A small residual network learns how to combine these measurements with the neural distance and word-frequency prior.
+
+Generate a wider pool of memory drawings, then extract features with the native runtime:
+
+```sh
+python3 training/generate_memory_data.py \
+  --train 30000 --validation 2000 --test 2000 --vocab 60000 \
+  --output-dir training/data/memory-wide
+cargo build --release -p swipe-engine --example retrieval_cli
+
+uv run --directory training python prepare_reranker.py \
+  --split train --samples 24000 --workers 8 \
+  --output data/reranker-union/train.npz
+uv run --directory training python prepare_reranker.py \
+  --split validation --samples 2000 --workers 2 \
+  --output data/reranker-union/validation.npz
+
+uv run --directory training python train_reranker.py \
+  --train data/reranker-union/train.npz \
+  --validation data/reranker-union/validation.npz \
+  --output checkpoints/reranker-union-v2 --epochs 100
+```
+
+The training set contains 96,000 query lists: 24,000 recordings, distorted views of those recordings, 24,000 procedural drawings, and 24,000 augmented canonical routes. Each list has 64 candidate words. Training uses a listwise loss over lists that contain the target; candidate recall is reported separately. The validation set has 2,000 examples from each source. Checkpoint selection averages first-choice accuracy across those four validation groups. No test data enters fitting or selection.
+
+Copy the selected `reranker.json` into the exported model directory. The file includes fingerprints of its encoder and word bank. Loading mismatched files fails. Exporting a new base retriever clears old reranker weights; fit the second stage again afterward.
+
+Verify native candidate scoring against PyTorch:
+
+```sh
+uv run --directory training python verify_reranker.py \
+  --model ../crates/swipe-engine/models/retrieval \
+  --output ../crates/swipe-engine/models/retrieval/reranker-verification.json
+```
+
+## Freeze a new donor test
+
+The second-stage experiment reserves donors absent from every file in the earlier real dataset, including its test file. The comparison uses the full 60,000-word vocabulary.
+
+```sh
+python3 training/fetch_real_swipes.py \
+  --train 1 --validation 1 --test 8000 --vocab 60000 --seed 628319 \
+  --output-dir training/data/futo-fresh
+uv run --directory training python evaluate_reranker.py --freeze
+```
+
+Freeze the test before inspecting predictions. The freeze command takes up to ten recordings per new donor, shuffles them, and caps the set at 1,000 recordings. It adds fixed distorted versions of those traces and 6,000 synthetic test drawings. It refuses to overwrite an existing frozen test.
+
+Keep a copy of the base model directory without `reranker.json`, then compare it with the directory containing the selected ranker:
+
+```sh
+uv run --directory training python evaluate_reranker.py \
+  --baseline checkpoints/retrieval-v3-native \
+  --challenger checkpoints/reranker-union-native \
+  --output ../benchmarks/reranker-fresh-test.json
+```
+
+The evaluator reports paired accuracy differences and 95% intervals from resampling donor sessions or synthetic writers. Timing includes the complete native prediction path and varies with machine load.
+
 ## Keep the original CTC experiment
 
 The original letter-decoding model remains available:
