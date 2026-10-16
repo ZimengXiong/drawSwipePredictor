@@ -1,6 +1,7 @@
 pub mod retrieval;
 pub use retrieval::RetrievalEngine;
 
+mod rerank;
 mod retrieval_encoder;
 
 pub mod synthetic;

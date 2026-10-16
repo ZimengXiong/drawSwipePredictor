@@ -1,12 +1,15 @@
 //! Word retrieval using a neural embedding learned from real and synthetic swipes.
 use crate::retrieval_encoder::{dot, Encoder, DIM};
 use crate::{Prediction, ScoreBreakdown};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
+
+use crate::rerank::{Candidate, Geometry, Query, Ranker};
 
 struct Word {
     text: String,
     popularity: f32,
+    geometry: Geometry,
 }
 
 /// Native neural recognizer. Load matching exported encoder and word-bank files.
@@ -16,10 +19,12 @@ struct Word {
 pub struct RetrievalEngine {
     encoder: Encoder,
     words: Vec<Word>,
+    word_ids: HashMap<String, usize>,
     vectors: Vec<[f32; DIM]>,
     prior_weight: f32,
     tta_degrees: f32,
     adaptive_prior: bool,
+    ranker: Option<Ranker>,
 }
 
 impl RetrievalEngine {
@@ -41,6 +46,12 @@ impl RetrievalEngine {
         let mut engine = Self::from_bytes(&encoder, &bank)?;
         match std::fs::read_to_string(directory.as_ref().join("manifest.json")) {
             Ok(json) => engine.configure(&json)?,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error.to_string()),
+        }
+        let ranker = directory.as_ref().join("reranker.json");
+        match std::fs::read_to_string(ranker) {
+            Ok(json) => engine.ranker = Some(Ranker::parse(&json)?),
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
             Err(error) => return Err(error.to_string()),
         }
@@ -101,7 +112,11 @@ impl RetrievalEngine {
             if !(0.99..=1.01).contains(&norm) {
                 return Err("word-bank vector is not normalized".into());
             }
+            if text.bytes().all(|b| b == text.as_bytes()[0]) {
+                return Err("stationary word-bank route".into());
+            }
             words.push(Word {
+                geometry: Geometry::new(&text),
                 text,
                 popularity: values[0],
             });
@@ -113,11 +128,17 @@ impl RetrievalEngine {
         }
         Ok(Self {
             encoder,
+            word_ids: words
+                .iter()
+                .enumerate()
+                .map(|(i, w)| (w.text.clone(), i))
+                .collect(),
             words,
             vectors,
             prior_weight: 0.025,
             tta_degrees: 0.0,
             adaptive_prior: false,
+            ranker: None,
         })
     }
 
@@ -164,7 +185,61 @@ impl RetrievalEngine {
         self.encoder.embed(path)
     }
 
+    /// Extract the same candidate features used during deployed reranking.
+    pub fn ranking_features(&self, path: &[(f64, f64)], limit: usize) -> Vec<Candidate> {
+        let predictions = self.retrieve(path, limit);
+        let Some(query) = Query::new(path) else {
+            return Vec::new();
+        };
+        let best = predictions.first().map_or(0.0, |p| p.rating as f32);
+        predictions
+            .into_iter()
+            .map(|p| {
+                let index = self.word_ids[&p.word];
+                Candidate {
+                    features: query.features(
+                        &self.words[index].geometry,
+                        [
+                            p.raw_score as f32,
+                            p.rating as f32,
+                            p.popularity as f32,
+                            p.rating as f32 - best,
+                        ],
+                    ),
+                    word: p.word,
+                }
+            })
+            .collect()
+    }
+
     pub fn predict_from_path(&self, path: &[(f64, f64)], limit: usize) -> Vec<Prediction> {
+        let Some(ranker) = &self.ranker else {
+            return self.retrieve(path, limit);
+        };
+        if limit == 0 {
+            return Vec::new();
+        }
+        let mut candidates = self.ranking_features(path, ranker.shortlist.max(limit));
+        candidates.sort_by(|a, b| {
+            ranker
+                .score(&a.features)
+                .total_cmp(&ranker.score(&b.features))
+                .then(a.word.cmp(&b.word))
+        });
+        candidates
+            .into_iter()
+            .take(limit)
+            .map(|c| Prediction {
+                word: c.word,
+                raw_score: c.features[0] as f64,
+                popularity: c.features[2] as f64,
+                rating: ranker.score(&c.features) as f64,
+                breakdown: ScoreBreakdown::default(),
+            })
+            .collect()
+    }
+
+    fn retrieve(&self, path: &[(f64, f64)], limit: usize) -> Vec<Prediction> {
         if limit == 0 {
             return Vec::new();
         }

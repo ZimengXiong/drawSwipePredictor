@@ -49,6 +49,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let value: serde_json::Value = serde_json::from_str(&line?)?;
         let points: Vec<(f64, f64)> = serde_json::from_value(value["points"].clone())?;
         let start = std::time::Instant::now();
+        if args.iter().any(|a| a == "--features") {
+            let count = option(&args, "--candidates").unwrap_or("32").parse()?;
+            println!(
+                "{}",
+                serde_json::json!({"word": value["word"], "candidates": engine.ranking_features(&points, count)})
+            );
+            continue;
+        }
         let predictions = engine.predict_from_path(&points, 5);
         println!(
             "{}",
