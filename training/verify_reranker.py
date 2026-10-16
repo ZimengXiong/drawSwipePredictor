@@ -15,10 +15,21 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", type=Path, required=True)
+    parser.add_argument("--extra-dataset", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     weights = json.loads((args.model / "reranker.json").read_text())
     cases = json.loads((args.model / "verification.json").read_text())
+    if args.extra_dataset:
+        with args.extra_dataset.open() as source:
+            extra = 0
+            for line in source:
+                row = json.loads(line)
+                if row.get("difficulty", "").lower() == "memory":
+                    cases.append(row)
+                    extra += 1
+                    if extra == 5:
+                        break
     inputs = "".join(json.dumps({"points": case["points"]}) + "\n" for case in cases)
     binary = ROOT / "target/release/examples/retrieval_cli"
     def run(extra):
@@ -45,7 +56,7 @@ def main():
         error = np.max(np.abs([a["rating"] - e["rating"] for a, e in zip(actual, expected)]))
         if error > 1e-5:
             raise ValueError(f"native score error {error}")
-        exported.append({"word": case["word"], "points": case["points"], "predictions": expected})
+        exported.append({"word": case["word"], "points": case["points"], "predictions": expected, "reranked": raw[0, 0].item() >= weights.get("trust_distance", 0.0)})
         print(f"{case['word']}: maximum native ranker error {error:.8f}")
     args.output.write_text(json.dumps(exported, indent=2) + "\n")
 

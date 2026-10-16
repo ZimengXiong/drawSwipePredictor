@@ -398,6 +398,7 @@ mod tests {
         struct RankedCase {
             points: Vec<(f64, f64)>,
             predictions: Vec<Expected>,
+            reranked: bool,
         }
         #[derive(serde::Deserialize)]
         struct Expected {
@@ -408,6 +409,8 @@ mod tests {
             "../models/retrieval/reranker-verification.json"
         ))
         .unwrap();
+        assert!(ranked.iter().any(|c| c.reranked));
+        assert!(ranked.iter().any(|c| !c.reranked));
         for case in ranked {
             let actual = engine.predict_from_path(&case.points, 5);
             assert_eq!(actual.len(), case.predictions.len());
