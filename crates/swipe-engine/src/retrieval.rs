@@ -1,5 +1,5 @@
 //! Word retrieval using a neural embedding learned from real and synthetic swipes.
-use crate::retrieval_encoder::{Encoder, DIM};
+use crate::retrieval_encoder::{dot, Encoder, DIM};
 use crate::{Prediction, ScoreBreakdown};
 use std::collections::HashSet;
 use std::path::Path;
@@ -191,7 +191,7 @@ impl RetrievalEngine {
             .iter()
             .enumerate()
             .map(|(index, vector)| {
-                let similarity: f32 = query.iter().zip(vector).map(|(a, b)| a * b).sum();
+                let similarity = dot(&query, vector);
                 let distance = (1.0 - similarity).max(0.0);
                 let popularity = self.words[index].popularity;
                 let rating = if self.adaptive_prior {

@@ -69,18 +69,25 @@ impl Encoder {
             let stride = if stage == 0 { 1 } else { 2 };
             let next_length = (length + 4 - 5) / stride + 1;
             let mut output = vec![0.0; layer.outputs * next_length];
-            for channel in 0..layer.outputs {
-                for t in 0..next_length {
-                    let mut sum = layer.bias[channel];
-                    for input in 0..layer.inputs {
-                        for k in 0..5 {
-                            let position = (t * stride + k) as isize - 2;
-                            if position >= 0 && (position as usize) < length {
-                                let w = layer.weights[(channel * layer.inputs + input) * 5 + k];
-                                sum += w * values[input * length + position as usize];
-                            }
-                        }
+            let width = layer.inputs * 5;
+            let mut patch = vec![0.0; width];
+            for t in 0..next_length {
+                for input in 0..layer.inputs {
+                    for k in 0..5 {
+                        let position = (t * stride + k) as isize - 2;
+                        patch[input * 5 + k] = if position >= 0 && (position as usize) < length {
+                            values[input * length + position as usize]
+                        } else {
+                            0.0
+                        };
                     }
+                }
+                for channel in 0..layer.outputs {
+                    let sum = layer.bias[channel]
+                        + dot(
+                            &patch,
+                            &layer.weights[channel * width..(channel + 1) * width],
+                        );
                     output[channel * next_length + t] = sum.max(0.0);
                 }
             }
@@ -90,12 +97,10 @@ impl Encoder {
         for (stage, layer) in self.dense.iter().enumerate() {
             let mut output = layer.bias.clone();
             for (channel, sum) in output.iter_mut().enumerate() {
-                for (value, weight) in values
-                    .iter()
-                    .zip(&layer.weights[channel * layer.inputs..(channel + 1) * layer.inputs])
-                {
-                    *sum += value * weight;
-                }
+                *sum += dot(
+                    &values,
+                    &layer.weights[channel * layer.inputs..(channel + 1) * layer.inputs],
+                );
                 if stage == 0 {
                     *sum = sum.max(0.0);
                 }
@@ -109,6 +114,20 @@ impl Encoder {
         }
         vector.try_into().ok()
     }
+}
+
+/// Independent accumulators allow vectorization without architecture-specific code.
+pub(crate) fn dot(a: &[f32], b: &[f32]) -> f32 {
+    debug_assert_eq!(a.len(), b.len());
+    let (a_blocks, a_tail) = a.as_chunks::<4>();
+    let (b_blocks, b_tail) = b.as_chunks::<4>();
+    let mut sums = [0.0; 4];
+    for (a, b) in a_blocks.iter().zip(b_blocks) {
+        for i in 0..4 {
+            sums[i] += a[i] * b[i];
+        }
+    }
+    sums.iter().sum::<f32>() + a_tail.iter().zip(b_tail).map(|(a, b)| a * b).sum::<f32>()
 }
 
 fn prepare_features(raw: &[(f64, f64)]) -> Option<Vec<f32>> {
