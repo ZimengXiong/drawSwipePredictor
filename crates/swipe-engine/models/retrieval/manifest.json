@@ -78,5 +78,55 @@
   },
   "data_source": "https://huggingface.co/datasets/futo-org/swipe.futo.org",
   "data_license": "MIT",
-  "word_frequency_sha256": "51df159fd3de12b20e403c108f526e96dbd723d9cabdd5f17955cdc16059e690"
+  "word_frequency_sha256": "51df159fd3de12b20e403c108f526e96dbd723d9cabdd5f17955cdc16059e690",
+  "reranker": {
+    "architecture": "20-64-32-1 residual MLP",
+    "shortlist": {
+      "neural": 32,
+      "geometry": 32
+    },
+    "training_queries": 96000,
+    "validation_queries": 8000,
+    "selection": {
+      "epoch": 56,
+      "baseline": {
+        "distorted_real": {
+          "top1": 0.7250000238418579,
+          "top5": 0.8985000252723694
+        },
+        "online": {
+          "top1": 0.6434999704360962,
+          "top5": 0.828000009059906
+        },
+        "real": {
+          "top1": 0.8355000019073486,
+          "top5": 0.9455000162124634
+        },
+        "synthetic": {
+          "top1": 0.640500009059906,
+          "top5": 0.7889999747276306
+        }
+      },
+      "validation": {
+        "distorted_real": {
+          "top1": 0.7400000095367432,
+          "top5": 0.9035000205039978
+        },
+        "online": {
+          "top1": 0.7124999761581421,
+          "top5": 0.8615000247955322
+        },
+        "real": {
+          "top1": 0.847000002861023,
+          "top5": 0.9495000243186951
+        },
+        "synthetic": {
+          "top1": 0.7005000114440918,
+          "top5": 0.8230000138282776
+        }
+      },
+      "score": 0.75
+    },
+    "test_data_used": false
+  }
 }

@@ -15,7 +15,8 @@ struct Word {
 /// Native neural recognizer. Load matching exported encoder and word-bank files.
 ///
 /// The encoder maps a gesture to a unit vector. Word vectors are cached at
-/// export time, so inference needs one encoder pass and a vocabulary scan.
+/// export time. Optional reranking combines neural retrieval with independent
+/// shape retrieval and a learned comparison of their candidates.
 pub struct RetrievalEngine {
     encoder: Encoder,
     words: Vec<Word>,
@@ -35,6 +36,11 @@ impl RetrievalEngine {
             include_bytes!("../models/retrieval/words.bin"),
         )?;
         engine.configure(include_str!("../models/retrieval/manifest.json"))?;
+        engine.load_ranker(
+            include_str!("../models/retrieval/reranker.json"),
+            include_bytes!("../models/retrieval/encoder.bin"),
+            include_bytes!("../models/retrieval/words.bin"),
+        )?;
         Ok(engine)
     }
 
@@ -51,21 +57,20 @@ impl RetrievalEngine {
         }
         let ranker = directory.as_ref().join("reranker.json");
         match std::fs::read_to_string(ranker) {
-            Ok(json) => {
-                let ranker = Ranker::parse(&json)?;
-                if ranker.encoder_tag != fingerprint(&encoder)
-                    || ranker.bank_tag != fingerprint(&bank)
-                {
-                    return Err(
-                        "candidate ranker belongs to a different encoder or word bank".into(),
-                    );
-                }
-                engine.ranker = Some(ranker);
-            }
+            Ok(json) => engine.load_ranker(&json, &encoder, &bank)?,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
             Err(error) => return Err(error.to_string()),
         }
         Ok(engine)
+    }
+
+    fn load_ranker(&mut self, json: &str, encoder: &[u8], bank: &[u8]) -> Result<(), String> {
+        let ranker = Ranker::parse(json)?;
+        if ranker.encoder_tag != fingerprint(encoder) || ranker.bank_tag != fingerprint(bank) {
+            return Err("candidate ranker belongs to a different encoder or word bank".into());
+        }
+        self.ranker = Some(ranker);
+        Ok(())
     }
 
     pub fn from_bytes(model: &[u8], bank: &[u8]) -> Result<Self, String> {
@@ -369,6 +374,28 @@ mod tests {
             let predictions = engine.predict_from_path(&case.points, 5);
             assert_eq!(predictions[0].word, case.word);
             assert!(predictions.iter().all(|p| p.rating.is_finite()));
+        }
+        #[derive(serde::Deserialize)]
+        struct RankedCase {
+            points: Vec<(f64, f64)>,
+            predictions: Vec<Expected>,
+        }
+        #[derive(serde::Deserialize)]
+        struct Expected {
+            word: String,
+            rating: f64,
+        }
+        let ranked: Vec<RankedCase> = serde_json::from_str(include_str!(
+            "../models/retrieval/reranker-verification.json"
+        ))
+        .unwrap();
+        for case in ranked {
+            let actual = engine.predict_from_path(&case.points, 5);
+            assert_eq!(actual.len(), case.predictions.len());
+            for (actual, expected) in actual.iter().zip(case.predictions) {
+                assert_eq!(actual.word, expected.word);
+                assert!((actual.rating - expected.rating).abs() < 1e-5);
+            }
         }
     }
 
