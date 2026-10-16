@@ -51,7 +51,17 @@ impl RetrievalEngine {
         }
         let ranker = directory.as_ref().join("reranker.json");
         match std::fs::read_to_string(ranker) {
-            Ok(json) => engine.ranker = Some(Ranker::parse(&json)?),
+            Ok(json) => {
+                let ranker = Ranker::parse(&json)?;
+                if ranker.encoder_tag != fingerprint(&encoder)
+                    || ranker.bank_tag != fingerprint(&bank)
+                {
+                    return Err(
+                        "candidate ranker belongs to a different encoder or word bank".into(),
+                    );
+                }
+                engine.ranker = Some(ranker);
+            }
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
             Err(error) => return Err(error.to_string()),
         }
@@ -219,21 +229,20 @@ impl RetrievalEngine {
         if limit == 0 {
             return Vec::new();
         }
-        let mut candidates = self.ranking_features(path, ranker.shortlist.max(limit));
-        candidates.sort_by(|a, b| {
-            ranker
-                .score(&a.features)
-                .total_cmp(&ranker.score(&b.features))
-                .then(a.word.cmp(&b.word))
-        });
+        let mut candidates: Vec<_> = self
+            .ranking_features(path, ranker.shortlist.max(limit))
+            .into_iter()
+            .map(|candidate| (ranker.score(&candidate.features), candidate))
+            .collect();
+        candidates.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.word.cmp(&b.1.word)));
         candidates
             .into_iter()
             .take(limit)
-            .map(|c| Prediction {
+            .map(|(rating, c)| Prediction {
                 word: c.word,
                 raw_score: c.features[0] as f64,
                 popularity: c.features[2] as f64,
-                rating: ranker.score(&c.features) as f64,
+                rating: rating as f64,
                 breakdown: ScoreBreakdown::default(),
             })
             .collect()

@@ -46,6 +46,7 @@ def main():
     parser.add_argument("--train", type=Path, required=True)
     parser.add_argument("--validation", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--model", type=Path, default=Path(__file__).resolve().parents[1] / "crates/swipe-engine/models/retrieval")
     parser.add_argument("--epochs", type=int, default=60)
     parser.add_argument("--seed", type=int, default=20261016)
     args = parser.parse_args()
@@ -68,9 +69,16 @@ def main():
     baseline = evaluate(model, validation, groups, mean, scale)
     best = sum(m["top1"] for m in baseline.values()) / len(baseline)
     args.output.mkdir(parents=True, exist_ok=True)
+    def fingerprint(path):
+        value = 0xcbf29ce484222325
+        for byte in path.read_bytes():
+            value = ((value ^ byte) * 0x100000001b3) & ((1 << 64) - 1)
+        return value
+    encoder_tag = fingerprint(args.model / "encoder.bin")
+    bank_tag = fingerprint(args.model / "words.bin")
     def export(metrics, epoch):
         layers = [{"weights": layer.weight.detach().cpu().tolist(), "bias": layer.bias.detach().cpu().tolist()} for layer in model.layers if isinstance(layer, nn.Linear)]
-        model_json = {"schema_version": 1, "mean": mean.cpu().tolist(), "scale": scale.cpu().tolist(), "layers": layers,
+        model_json = {"schema_version": 1, "encoder_tag": encoder_tag, "bank_tag": bank_tag, "mean": mean.cpu().tolist(), "scale": scale.cpu().tolist(), "layers": layers,
                       "residual_weight": -0.1, "shortlist": 32}
         (args.output / "reranker.json").write_text(json.dumps(model_json, separators=(",", ":")) + "\n")
         (args.output / "metrics.json").write_text(json.dumps({"epoch": epoch, "baseline": baseline, "validation": metrics, "score": best}, indent=2) + "\n")

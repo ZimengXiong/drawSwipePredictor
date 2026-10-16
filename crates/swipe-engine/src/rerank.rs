@@ -123,6 +123,8 @@ pub struct Candidate {
 #[derive(Deserialize)]
 pub(crate) struct Ranker {
     pub schema_version: u32,
+    pub encoder_tag: u64,
+    pub bank_tag: u64,
     pub mean: Vec<f32>,
     pub scale: Vec<f32>,
     pub layers: Vec<Layer>,
