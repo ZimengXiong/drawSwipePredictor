@@ -6,6 +6,7 @@ use crate::memory_geometry::{
     distance, elastic, key_vertices, normalize, prepare, resample, smooth, Shape, N,
 };
 use crate::{Prediction, ScoreBreakdown};
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
 const ANGLES: [f32; 5] = [-24.0, -12.0, 0.0, 12.0, 24.0];
@@ -15,6 +16,7 @@ struct Template {
     word: String,
     popularity: f64,
     shapes: [Shape; 2],
+    stats: [[f32; 2]; 2],
 }
 
 /// Cached, training-free recognizer that treats drawing geometry as uncertain.
@@ -23,7 +25,7 @@ struct Template {
 /// Scores are distances, not calibrated probabilities. Lower scores are better.
 pub struct MemoryEngine {
     templates: Vec<Template>,
-    prior_weight: f32,
+    weights: [f32; 6],
 }
 
 impl Default for MemoryEngine {
@@ -36,7 +38,7 @@ impl MemoryEngine {
     pub fn new() -> Self {
         Self {
             templates: Vec::new(),
-            prior_weight: 0.025,
+            weights: [1.0, 0.0, 0.0, 0.002, 0.025, 0.0],
         }
     }
 
@@ -68,12 +70,14 @@ impl MemoryEngine {
                 let mut path = resample(&vertices, 96);
                 smooth(&mut path, 2);
                 let sharp = normalize(&path, 0.0)?;
+                let sharp_stats = statistics(&path, 0.0);
                 smooth(&mut path, 20);
                 let rounded = normalize(&path, 0.0)?;
                 Some(Template {
                     word,
                     popularity: log_count / max_log,
                     shapes: [sharp, rounded],
+                    stats: [sharp_stats, statistics(&path, 0.0)],
                 })
             })
             .collect();
@@ -86,11 +90,42 @@ impl MemoryEngine {
     /// Control the weak word-frequency prior. Zero gives geometry-only ranking.
     pub fn set_prior_weight(&mut self, weight: f32) {
         if weight.is_finite() {
-            self.prior_weight = weight.clamp(0.0, 0.2);
+            self.weights[4] = weight.clamp(0.0, 0.2);
         }
     }
 
+    /// Apply a metric fitted with the synthetic calibration tool.
+    pub fn set_ranking_weights(&mut self, weights: [f32; 6]) -> Result<(), &'static str> {
+        if weights.iter().any(|w| !w.is_finite() || *w < 0.0) || weights[0] <= 0.0 {
+            return Err(
+                "ranking weights must be finite and nonnegative, with positive shape weight",
+            );
+        }
+        self.weights = weights;
+        Ok(())
+    }
+
     pub fn predict_from_path(&self, raw: &[(f64, f64)], limit: usize) -> Vec<Prediction> {
+        self.ranking_candidates(raw, limit)
+            .into_iter()
+            .map(|candidate| {
+                let rating = candidate.score(&self.weights) as f64;
+                Prediction {
+                    word: candidate.word,
+                    raw_score: candidate.features[0] as f64,
+                    popularity: -candidate.features[4] as f64,
+                    rating,
+                    breakdown: ScoreBreakdown {
+                        shape: candidate.features[0] as f64,
+                        ..Default::default()
+                    },
+                }
+            })
+            .collect()
+    }
+
+    /// Return auditable features for synthetic hard-negative metric fitting.
+    pub fn ranking_candidates(&self, raw: &[(f64, f64)], limit: usize) -> Vec<MemoryCandidate> {
         if limit == 0 {
             return Vec::new();
         }
@@ -104,6 +139,10 @@ impl MemoryEngine {
         if queries.len() != ANGLES.len() {
             return Vec::new();
         }
+        let query_statistics: Vec<_> = ANGLES
+            .iter()
+            .map(|a| statistics(&path, a.to_radians()))
+            .collect();
         // Keep all candidates until retrieval. Hard aspect or turn filters can
         // exclude precisely the words that a memory gesture distorts most.
         let mut coarse: Vec<_> = self
@@ -124,11 +163,7 @@ impl MemoryEngine {
                         }
                     }
                 }
-                (
-                    best.0 - self.prior_weight * t.popularity as f32,
-                    index,
-                    best.1,
-                )
+                (best.0 - 0.025 * t.popularity as f32, index, best.1)
             })
             .collect();
         let count = SHORTLIST.max(limit).min(coarse.len());
@@ -144,33 +179,93 @@ impl MemoryEngine {
             .map(|(_, index, rotation)| {
                 let template = &self.templates[index];
                 let mut best = f32::INFINITY;
+                let mut features = [0.0; 6];
                 // Refine neighboring rotations too: coarse pointwise alignment can
                 // choose a different angle from the elastic alignment.
                 for (r, query) in queries.iter().enumerate() {
                     if r.abs_diff(rotation) > 1 {
                         continue;
                     }
-                    for shape in &template.shapes {
-                        let score = elastic(query, shape) + 0.002 * (ANGLES[r] / 24.0).powi(2);
-                        best = best.min(score);
+                    for (variant, shape) in template.shapes.iter().enumerate() {
+                        let shape_cost = elastic(query, shape);
+                        let query_stats = query_statistics[r];
+                        let stats = template.stats[variant];
+                        let candidate_features = [
+                            shape_cost,
+                            (query_stats[0] - stats[0]).abs().min(2.0),
+                            (query_stats[1] - stats[1]).abs().min(2.0),
+                            (ANGLES[r] / 24.0).powi(2),
+                            -template.popularity as f32,
+                            coarse_distance(query, shape),
+                        ];
+                        let score = dot(&candidate_features, &self.weights);
+                        if score < best {
+                            best = score;
+                            features = candidate_features;
+                        }
                     }
                 }
-                Prediction {
+                MemoryCandidate {
                     word: template.word.clone(),
-                    raw_score: best as f64,
-                    popularity: template.popularity,
-                    rating: best as f64 - self.prior_weight as f64 * template.popularity,
-                    breakdown: ScoreBreakdown {
-                        shape: best as f64,
-                        ..Default::default()
-                    },
+                    features,
                 }
             })
             .collect();
-        predictions.sort_by(|a, b| a.rating.total_cmp(&b.rating).then(a.word.cmp(&b.word)));
+        predictions.sort_by(|a, b| {
+            a.score(&self.weights)
+                .total_cmp(&b.score(&self.weights))
+                .then(a.word.cmp(&b.word))
+        });
         predictions.truncate(limit);
         predictions
     }
+}
+
+/// Lower feature scores indicate a closer match; popularity is a negative cost.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct MemoryCandidate {
+    pub word: String,
+    /// Elastic distance, aspect strain, complexity strain, rotation strain,
+    /// negative log-frequency, and pointwise distance.
+    pub features: [f32; 6],
+}
+
+impl MemoryCandidate {
+    pub fn score(&self, weights: &[f32; 6]) -> f32 {
+        dot(&self.features, weights)
+    }
+}
+
+fn dot(a: &[f32; 6], b: &[f32; 6]) -> f32 {
+    a.iter().zip(b).map(|(x, y)| x * y).sum()
+}
+
+fn coarse_distance(a: &Shape, b: &Shape) -> f32 {
+    (0..N).step_by(3).map(|i| distance(a[i], b[i])).sum::<f32>() / 11.0
+}
+
+fn statistics(path: &[[f32; 2]], angle: f32) -> [f32; 2] {
+    let (sin, cos) = angle.sin_cos();
+    let mut mean = [0.0; 2];
+    let rotated: Vec<_> = path
+        .iter()
+        .map(|p| [cos * p[0] - sin * p[1], sin * p[0] + cos * p[1]])
+        .collect();
+    for p in &rotated {
+        for a in 0..2 {
+            mean[a] += p[a] / path.len() as f32;
+        }
+    }
+    let mut variance = [0.0; 2];
+    for p in &rotated {
+        for a in 0..2 {
+            variance[a] += (p[a] - mean[a]).powi(2) / path.len() as f32;
+        }
+    }
+    let rms = (variance[0] + variance[1]).sqrt().max(1e-6);
+    let aspect = (variance[0].sqrt().max(rms * 0.1) / variance[1].sqrt().max(rms * 0.1)).ln();
+    let length: f32 = path.windows(2).map(|p| distance(p[0], p[1]).sqrt()).sum();
+    [aspect, (length / rms).max(1e-6).ln()]
 }
 
 #[cfg(test)]
