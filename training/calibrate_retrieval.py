@@ -37,9 +37,11 @@ def main():
     model.load_state_dict(checkpoint["model"])
     words, counts, canonical_array = vocabulary(ROOT / "word_freq.txt", len(checkpoint["words"]))
     ids = {word: i for i, word in enumerate(words)}
-    canonical = encode(model, torch.tensor(canonical_array, device=args.device))
+    canonical_paths = torch.tensor(canonical_array, device=args.device)
+    canonical = encode(model, canonical_paths)
     train_paths, train_labels = load_recordings(args.real_dir / "train.jsonl", ids)
-    train_vectors = encode(model, torch.tensor(train_paths, device=args.device))
+    train_paths_gpu = torch.tensor(train_paths, device=args.device)
+    train_vectors = encode(model, train_paths_gpu)
     train_labels = torch.tensor(train_labels, device=args.device)
     totals = torch.zeros_like(canonical).index_add_(0, train_labels, train_vectors)
     seen = torch.bincount(train_labels, minlength=len(words)).float().unsqueeze(1)
@@ -71,6 +73,20 @@ def main():
                     vectors += encode(model, paths @ rotation)
                 vectors = F.normalize(vectors, dim=1)
             embeddings[name] = vectors
+        if tta:
+            # Use the same orientation ensemble for queries and stored routes.
+            # Otherwise even an ideal route can differ from its own prototype.
+            for source, name in [(canonical_paths, "canonical"), (train_paths_gpu, "train")]:
+                combined = encode(model, source)
+                for sign in [-1, 1]:
+                    rotation = torch.tensor([[np.cos(angle), -sign * np.sin(angle)], [sign * np.sin(angle), np.cos(angle)]], dtype=torch.float32, device=args.device)
+                    combined += encode(model, source @ rotation)
+                combined = F.normalize(combined, dim=1)
+                if name == "canonical":
+                    canonical = combined
+                else:
+                    totals = torch.zeros_like(canonical).index_add_(0, train_labels, combined)
+                    means = F.normalize(totals, dim=1)
         for alpha in [0.0, 0.25, 0.5, 0.75, 1.0]:
             weight = alpha * confidence
             prototypes = F.normalize(canonical * (1 - weight) + means * weight, dim=1)
