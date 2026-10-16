@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Fetch a bounded, reproducible sample of FUTO's MIT-licensed real swipe data."""
 
+from concurrent.futures import ThreadPoolExecutor
 import argparse
 import hashlib
 import json
@@ -78,17 +79,33 @@ def main() -> None:
             vocabulary.append(word)
         if len(vocabulary) == args.vocab:
             break
+    vocabulary_set = set(vocabulary)
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
+    cache = output / ".windows"
+    cache.mkdir(exist_ok=True)
     metadata = []
     sessions = {}
     for index, split in enumerate(FILES):
         randomizer = random.Random(args.seed + index)
         count = getattr(args, split)
         selected, seen, windows = [], set(), []
-        for _ in range(128):
-            start = randomizer.randrange(0, SIZES[split] - 1024 * 1024)
+        starts = [randomizer.randrange(0, SIZES[split] - 1024 * 1024) for _ in range(max(128, count // 50))]
+
+        def cached_window(start: int) -> bytes:
+            cached = cache / f"{split}-{start}.jsonl"
+            if cached.exists():
+                return cached.read_bytes()
             data = fetch_window(split, start, 1024 * 1024)
+            cached.write_bytes(data)
+            return data
+
+        def window_stream():
+            with ThreadPoolExecutor(max_workers=4) as pool:
+                for batch in range(0, len(starts), 4):
+                    yield from zip(starts[batch:batch + 4], pool.map(cached_window, starts[batch:batch + 4]))
+
+        for start, data in window_stream():
             windows.append(start)
             # Discard partial records at both ends of the byte window.
             lines = data.split(b"\n")[1:-1]
@@ -98,11 +115,13 @@ def main() -> None:
                 if row["id"] in seen:
                     continue
                 seen.add(row["id"])
-                sample = convert(row, set(vocabulary), split)
+                sample = convert(row, vocabulary_set, split)
                 if sample:
                     selected.append(sample)
                 if len(selected) == count:
                     break
+            if len(windows) % 10 == 0:
+                print(f"{split}: {len(selected)}/{count} recordings from {len(windows)} windows", flush=True)
             if len(selected) == count:
                 break
         if len(selected) != count:
