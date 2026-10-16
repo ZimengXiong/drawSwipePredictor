@@ -214,3 +214,45 @@ impl Ranker {
         features[1] + self.residual_weight * values[0]
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn independent_geometry_search_preserves_direction_and_shape() {
+        let geometry = Geometry::new("lunchbox");
+        let path: Vec<_> = key_vertices("lunchbox")
+            .iter()
+            .map(|p| (p[0] as f64 * 80.0 + 500.0, p[1] as f64 * 120.0 - 30.0))
+            .collect();
+        let query = Query::new(&path).unwrap();
+        assert!(query.coarse(&geometry) < query.coarse(&Geometry::new("world")));
+        let features = query.features(&geometry, [0.1, 0.2, 0.3, 0.0]);
+        assert!(features.iter().all(|x| x.is_finite()));
+        let reversed: Vec<_> = path.into_iter().rev().collect();
+        assert!(
+            features[4]
+                < Query::new(&reversed)
+                    .unwrap()
+                    .features(&geometry, [0.1, 0.2, 0.3, 0.0])[4]
+        );
+    }
+
+    #[test]
+    fn rejects_invalid_ranker_dimensions_and_scales() {
+        let valid = serde_json::json!({
+            "schema_version": 1, "encoder_tag": 0, "bank_tag": 0,
+            "mean": vec![0.0; FEATURES], "scale": vec![1.0; FEATURES],
+            "residual_weight": -0.1, "shortlist": 64,
+            "layers": [{"weights": [vec![0.0; FEATURES]], "bias": [0.0]}]
+        });
+        assert!(Ranker::parse(&valid.to_string()).is_ok());
+        let mut invalid = valid.clone();
+        invalid["scale"][0] = serde_json::json!(0.0);
+        assert!(Ranker::parse(&invalid.to_string()).is_err());
+        invalid = valid;
+        invalid["layers"][0]["weights"][0] = serde_json::json!([0.0]);
+        assert!(Ranker::parse(&invalid.to_string()).is_err());
+    }
+}
