@@ -246,6 +246,32 @@ mod tests {
     use super::*;
 
     #[test]
+    fn bundled_model_matches_pytorch_and_recognizes_reference_routes() {
+        #[derive(serde::Deserialize)]
+        struct Case {
+            word: String,
+            points: Vec<(f64, f64)>,
+            embedding: Vec<f32>,
+        }
+        let engine = RetrievalEngine::bundled().unwrap();
+        assert_eq!(engine.word_count(), 60000);
+        let cases: Vec<Case> =
+            serde_json::from_str(include_str!("../models/retrieval/verification.json")).unwrap();
+        for case in cases {
+            let actual = engine.embedding(&case.points).unwrap();
+            let error = actual
+                .iter()
+                .zip(&case.embedding)
+                .map(|(a, b)| (a - b).abs())
+                .fold(0.0_f32, f32::max);
+            assert!(error < 0.0001, "native embedding differs for {}", case.word);
+            let predictions = engine.predict_from_path(&case.points, 5);
+            assert_eq!(predictions[0].word, case.word);
+            assert!(predictions.iter().all(|p| p.rating.is_finite()));
+        }
+    }
+
+    #[test]
     fn validates_bank_identity_and_values() {
         let mut model = vec![0_u8; 8 + 405072 * 4];
         model[..8].copy_from_slice(b"SWPRT001");

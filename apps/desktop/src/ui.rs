@@ -154,12 +154,13 @@ fn draw_breakdown_panel(pred: &Prediction, backend: &str) {
     if backend == "DTW" {
         let b = &pred.breakdown;
         let items = [
-            ("Shape (20%)", b.shape, 0.20),
-            ("Angles (15%)", b.angles, 0.15),
-            ("Displacements (15%)", b.displacements, 0.15),
+            ("Shape (15%)", b.shape, 0.15),
+            ("Location (15%)", b.location, 0.15),
+            ("Angles (12%)", b.angles, 0.12),
+            ("Displacements (12%)", b.displacements, 0.12),
             ("Start Angle (15%)", b.start_angle, 0.15),
-            ("Turns (10%)", b.turns, 0.10),
-            ("Seg Ratios (10%)", b.segment_ratios, 0.10),
+            ("Turns (8%)", b.turns, 0.08),
+            ("Seg Ratios (8%)", b.segment_ratios, 0.08),
             ("Histogram (5%)", b.histogram, 0.05),
             ("End Vector (10%)", b.end_vector, 0.10),
         ];
