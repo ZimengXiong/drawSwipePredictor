@@ -47,5 +47,6 @@
     0.05000000074505806,
     0.05000000074505806,
     0.05000000074505806
-  ]
+  ],
+  "fit_policy": "coordinate search over cached initial-metric alignments; runtime reselects alignments"
 }

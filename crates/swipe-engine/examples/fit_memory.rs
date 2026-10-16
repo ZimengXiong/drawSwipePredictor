@@ -140,6 +140,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Validation chooses a checkpoint. Final benchmark seeds must be different.
     let report = serde_json::json!({
         "schema_version": 1, "weights": best_validation,
+        "fit_policy": "coordinate search over cached initial-metric alignments; runtime reselects alignments",
         "features": ["elastic", "aspect_strain", "complexity_strain", "rotation_strain", "negative_popularity", "pointwise"],
         "training_seed": seed, "validation_seed": seed.wrapping_add(1),
         "training_samples": samples, "validation_samples": samples / 3,

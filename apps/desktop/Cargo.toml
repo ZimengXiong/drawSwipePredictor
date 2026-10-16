@@ -2,6 +2,7 @@
 name = "swipe-desktop"
 version.workspace = true
 edition.workspace = true
+default-run = "swipe-memory"
 
 [[bin]]
 name = "swipe-memory"
@@ -29,7 +30,7 @@ name = "jagged"
 path = "src/bin/jagged.rs"
 
 [features]
-default = ["neural"]
+default = []
 neural = ["swipe-engine/neural"]
 
 [dependencies]
