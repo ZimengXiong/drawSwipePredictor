@@ -1,3 +1,6 @@
+pub mod retrieval;
+pub use retrieval::RetrievalEngine;
+
 mod retrieval_encoder;
 
 pub mod synthetic;
