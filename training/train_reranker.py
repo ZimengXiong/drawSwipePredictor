@@ -50,12 +50,25 @@ def main():
     parser.add_argument("--epochs", type=int, default=60)
     parser.add_argument("--seed", type=int, default=20261016)
     args = parser.parse_args()
+    if args.epochs < 1:
+        parser.error("epochs must be positive")
+    provenance = {name: json.loads(path.with_suffix(".json").read_text()) for name, path in [("train", args.train), ("validation", args.validation)]}
+    for name, record in provenance.items():
+        if record["split"] != name or record["test_data_used"]:
+            raise ValueError("candidate data must preserve train and validation roles")
+        for source, filename in [("encoder_sha256", "encoder.bin"), ("bank_sha256", "words.bin")]:
+            if record[source] != hashlib.sha256((args.model / filename).read_bytes()).hexdigest():
+                raise ValueError("candidate features belong to a different retrieval model")
     torch.set_num_threads(8)
     torch.manual_seed(args.seed)
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     train, _ = load(args.train, device)
     validation, groups = load(args.validation, device)
     raw = train["features"]
+    if raw.ndim != 3 or raw.shape[2] != 20 or raw.shape[1:] != validation["features"].shape[1:]:
+        raise ValueError("training and validation candidate dimensions must match")
+    if not torch.isfinite(raw).all() or not torch.isfinite(validation["features"]).all():
+        raise ValueError("candidate features must be finite")
     # Statistics use training candidates only, including difficult negatives.
     mean = raw.mean(dim=(0, 1))
     scale = raw.std(dim=(0, 1)).clamp_min(0.01)
@@ -110,7 +123,7 @@ def main():
     report = {"seed": args.seed, "epochs": args.epochs, "test_data_used": False,
               "selection": "mean top1 across four validation sources; shortlist fixed by native feature preparation",
               "source_sha256": {"train": hashlib.sha256(args.train.read_bytes()).hexdigest(), "validation": hashlib.sha256(args.validation.read_bytes()).hexdigest()},
-              "native_sources": {name: json.loads(path.with_suffix(".json").read_text()) for name, path in [("train", args.train), ("validation", args.validation)]}}
+              "native_sources": provenance}
     (args.output / "run.json").write_text(json.dumps(report, indent=2) + "\n")
 
 
