@@ -61,6 +61,7 @@ def main():
     canonical_ids = torch.tensor(chooser.choice(len(words), min(args.samples, len(words)), replace=False), device=args.device)
     datasets["canonical"] = (torch.tensor(canonical_array, device=args.device)[canonical_ids], canonical_ids)
     best = None
+    best_vectors = None
     trials = []
     for tta in [0.0, 10.0]:
         embeddings = {}
@@ -107,9 +108,9 @@ def main():
                 trials.append(trial)
                 if best is None or score > best["score"]:
                     best = trial
+                    best_vectors = prototypes.detach().clone()
             print(json.dumps({"tta": tta, "alpha": alpha, "best": best}), flush=True)
-    weight = best["alpha"] * confidence
-    prototypes = F.normalize(canonical * (1 - weight) + means * weight, dim=1)
+    prototypes = best_vectors
     args.output.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(args.output.with_suffix(".npz"), vectors=prototypes.cpu().numpy(), words=np.asarray(words))
     report = {
