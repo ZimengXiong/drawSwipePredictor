@@ -121,7 +121,7 @@ def main():
     metadata = {
         "arguments": {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
         "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
-        "torch": torch.__version__, "device": str(device),
+        "torch": torch.__version__, "numpy": np.__version__, "device": str(device),
         "training_recordings": {"real": len(real), "synthetic": len(synthetic)},
         "source_sha256": {name: digest(path) for name, path in files.items()},
         "selection": "mean validation top1 over recorded real, distorted real, and synthetic gestures",
