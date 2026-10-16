@@ -1,3 +1,5 @@
+pub mod synthetic;
+
 pub mod memory;
 pub use memory::MemoryEngine;
 
