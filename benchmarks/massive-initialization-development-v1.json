@@ -1,0 +1,148 @@
+{
+  "kind": "36-million-parameter encoder initialization and training configuration",
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "encoder_parameters": 36236176,
+  "word_vector_parameters": 7680000,
+  "initial_checkpoint_sha256": "e502d8e87e1b92ba699a7e01c00feab37ab9f026130b159787c837f178426007",
+  "source_checkpoint_sha256": "b86c9d1cab7d56cd50b23bc8cf38f6a47824427ab36c4a145a049b1951064156",
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "initial_validation": {
+    "clean": {
+      "samples": 1200,
+      "top1": 0.9641666412353516,
+      "top5": 0.9991666674613953
+    },
+    "loose": {
+      "samples": 2400,
+      "top1": 0.8695833086967468,
+      "top5": 0.9595833420753479
+    },
+    "memory": {
+      "samples": 8400,
+      "top1": 0.7232142686843872,
+      "top5": 0.8885714411735535
+    }
+  },
+  "initial_validation_evidence": "Full MPS initialization evaluation printed the same counts as the frozen source. The architecture expansion test also verifies output preservation and gradients in added channels.",
+  "training": {
+    "train": "/Users/xzm/Projects/drawSwipePredictor/training/data/memory-proxy/train.bin",
+    "extra_train": [
+      "data/memory-proxy/train-700011.bin",
+      "data/memory-proxy/train-700012.bin",
+      "data/memory-proxy/train-700013.bin",
+      "data/memory-proxy/train-700014.bin",
+      "data/memory-proxy/train-700015.bin",
+      "data/memory-proxy/train-700016.bin",
+      "data/memory-proxy/train-700017.bin",
+      "data/memory-proxy/train-700018.bin",
+      "data/memory-proxy/train-700019.bin",
+      "data/memory-proxy/train-700020.bin",
+      "data/memory-proxy-exact-v2/train-700021.bin",
+      "data/memory-proxy-exact-v2/train-700022.bin",
+      "data/memory-proxy-exact-v2/train-700023.bin",
+      "data/memory-proxy-exact-v2/train-700024.bin",
+      "data/memory-proxy-exact-v2/train-700025.bin",
+      "data/memory-proxy-exact-v2/train-700026.bin",
+      "data/memory-proxy-exact-v2/train-700027.bin",
+      "data/memory-proxy-exact-v2/train-700028.bin",
+      "data/memory-proxy-exact-v2/train-700029.bin",
+      "data/memory-proxy-exact-v2/train-700030.bin",
+      "data/memory-proxy-exact-v2/train-700031.bin",
+      "data/memory-proxy-exact-v2/train-700032.bin",
+      "data/memory-proxy-exact-v2/train-700033.bin",
+      "data/memory-proxy-exact-v2/train-700034.bin",
+      "data/memory-proxy-exact-v2/train-700035.bin",
+      "data/memory-proxy-exact-v2/train-700036.bin",
+      "data/memory-proxy-exact-v2/train-700037.bin",
+      "data/memory-proxy-exact-v2/train-700038.bin",
+      "data/memory-proxy-exact-v2/train-700039.bin",
+      "data/memory-proxy-exact-v2/train-700040.bin"
+    ],
+    "stream_corpus": true,
+    "balance_real": true,
+    "freeze_proxies": false,
+    "validation": "/Users/xzm/Projects/drawSwipePredictor/training/data/memory-proxy/validation.bin",
+    "init_model": "checkpoints/balanced-averaging-source-v1.pt",
+    "output": "checkpoints/proxy-massive-exact-v1",
+    "epochs": 300,
+    "steps": 400,
+    "batch": 128,
+    "learning_rate": 1e-05,
+    "proxy_learning_rate": 1e-05,
+    "seed": 900577,
+    "architecture": "massive",
+    "centers": 1,
+    "proxy_init": null,
+    "fresh_fraction": 0.0,
+    "resume": null,
+    "device": "mps"
+  },
+  "cached_training_writers": 31000000,
+  "train_shard_sha256": [
+    "557eb33b55d76c7c0b27b792f26b17b163006ca1ba13435a9a4e62436d6ce235",
+    "0d91bdd336343ee335f602485e29b16b9b279bd1a3cc8da667f5b204e83c3a13",
+    "5e39835d5841fc998ca26bac8a5607b6c77b882c147f9cbec58e0f70c8d7a466",
+    "981b463e94de836a0e55b8c08de99c5ebfe008eddbc505e032bdc34a3355b5b2",
+    "3a9c0f9ebfd76c32349491f0be34375337eae6a56c79c60848f7b9fbfcd1f13c",
+    "cfc9d0626aa407ee56669450c628ae8785ae71b2f00e265ca5a659319ef440cf",
+    "57db41ac3cc96903bf60598a72941818e92b6d6460643d72d66f09b7706fc730",
+    "54299022c791b81aa93b1defe556ae42093024781061da84a0ea9a62d9b74c74",
+    "7434c5face1e4328d7d59b93c77bfc3b3f6ad2dba478d071c70ad8869b61258f",
+    "097413b791e4a7e26f6ce12f690b2125016e9bf3a06cc260c47cf4ce684f61c7",
+    "137f01942c269ee7d029e74ad50ce9ad613e39589d46ffeab58a27efd9c88fe6",
+    "17b8a8d8cfad1cf15d22b8b1a8e4f1db8939c9ae169a6682a5e0f044177c6ac7",
+    "8c6b12466685eaac6159d6bcff4d7f6878de946f1011abeda07e5f9c736afab3",
+    "2cc4c5b4a7ba792ce867ff63eb0c0cbf687a9dd20d6164cd743be1ee5df6df47",
+    "e61d9e8b9039ce6e43ba60343c288497c53a30f46ec74cf00f0f5886b241f925",
+    "7e446223af471b35356a55a24435e287da14fd06ec07deb5c41dd3e514f0e88e",
+    "6d4f1dd05e9eb08236e3bd7087a8b632383aa31f8a1411d6948659b3ef886678",
+    "f670cd37d8cc8f2e1bf51107015b5ded90c1babc36c0c2609f9bb0c1e748cb16",
+    "e69948ea9a868e81a87c9f50f75c178f16d0ad209b890c97a8d3117321aab2d5",
+    "37638de7e17a95f26184612211d2121c56f27537777a15ee09f680e095bf8185",
+    "5dbd495dfb90f876985778f4d86cf8a94fa2d322bd59f92e8b7b9a13c3a584ff",
+    "52c9585124ec1bdbaec0712e492b1cdd622d62a6434b2e49b99a21825a0bf3dc",
+    "1e88ef73ef9bb797be80b244fb614c011200566b475735ec1403ccea3b77ad1a",
+    "8d444418be6b223db91c8cc46cdc9c63149118403e8be0be4755f3017ce63d22",
+    "c12058b184c2c76fd2fece355ce4c48a0724591166a506d5ff3c0347df16ec96",
+    "dc3d2eba722174928a5728528921b81463cc7674fdc3674881d46e3b10387749",
+    "bac79de5ebd00e55167707d6b4e9b5ac9518f326a7b3eae75aa4fd667191fe08",
+    "f207de086ec47864a4ab68f4a055684878f09f018120bb46390a1394c290619b",
+    "8ee337b4553b38653e2e3fc94e6775bf8bac882ddc69e4bfdfcaaa0942f7999a",
+    "58281ad429dd467e164c6e64fbc94f53fb74a0f1fb00dbd54142f836811cf1e9",
+    "f56091991ffcbf2824dc4d420bf2b80d25679f490faee68b0d9b09253f04d5e7"
+  ],
+  "smoke": {
+    "epoch": 1,
+    "loss": 0.7726974487304688,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9649999737739563,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8679166436195374,
+        "top5": 0.9591666460037231
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7234523892402649,
+        "top5": 0.8883333206176758
+      }
+    },
+    "best_score": 0.7234523892402649,
+    "seconds": 28.70092066700454,
+    "improved": true
+  },
+  "native_export": "Explicitly rejected until implemented. The native spelling export is a different, already selected system.",
+  "limits": "Initialization and a two-update smoke test do not establish a larger-model recognition gain. Full training is live. Architecture, batch size, and updates per epoch differ from the smaller exact-data control. No benchmark or confirmation evaluation."
+}
