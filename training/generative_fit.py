@@ -97,17 +97,22 @@ class MotorFitter:
         sizes = lengths[:, None] - (skipped[None] > 0).long()
         return expanded.reshape(-1, width), sizes.reshape(-1), valid, width - 1
 
-    def fit(self, query, candidates, steps=80, learning_rate=0.08, regularization=0.0002):
+    def fit(self, query, candidates, steps=80, learning_rate=0.08, regularization=0.0002, initializer=None):
         """Return fit errors and parameter penalties for exact candidate lists."""
         keys, lengths, valid, variants = self.hypotheses(candidates)
         keep = valid.reshape(-1)
         keys, lengths = keys[keep], lengths[keep]
         repeated = query[:, None, None].expand(-1, candidates.shape[1], variants, -1, -1).reshape(-1, 64, 2)[keep]
-        parameters = torch.zeros(len(keys), 70 + keys.shape[1] - 2, device=self.device, requires_grad=True)
+        if initializer is None:
+            parameters = torch.zeros(len(keys), 70 + keys.shape[1] - 2, device=self.device, requires_grad=True)
+        else:
+            with torch.no_grad():
+                suggested = initializer(repeated, keys, lengths, self)
+            parameters = suggested.detach().clone().requires_grad_(True)
         optimizer = torch.optim.Adam([parameters], lr=learning_rate)
         best = torch.full((len(keys),), torch.inf, device=self.device)
         best_error, best_penalty = best.clone(), best.clone()
-        for step in range(steps):
+        for step in range(max(steps, 1)):
             path = self.render(keys, lengths, parameters)
             error = (path - repeated).square().mean((1, 2))
             penalty = parameters.tanh().square().mean(1)
@@ -117,9 +122,10 @@ class MotorFitter:
                 best_error = torch.where(improved, error, best_error)
                 best_penalty = torch.where(improved, penalty, best_penalty)
                 best = torch.minimum(best, objective)
-            optimizer.zero_grad(set_to_none=True)
-            objective.sum().backward()
-            optimizer.step()
+            if steps > 0:
+                optimizer.zero_grad(set_to_none=True)
+                objective.sum().backward()
+                optimizer.step()
         shape = (*candidates.shape, variants)
         errors = torch.full((keep.numel(),), torch.inf, device=self.device)
         penalties = torch.zeros_like(errors)

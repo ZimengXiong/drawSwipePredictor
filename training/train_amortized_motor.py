@@ -58,7 +58,8 @@ def main():
     schedule = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=0.00001)
     rows, validation = corpus(ROOT / "training/data/memory-proxy/validation.bin")
     protocol = json.loads((ROOT / "benchmarks/target-80-protocol.json").read_text())
-    if validation["seed"] != protocol["development"]["validation_seed"]:
+    audit = json.loads((ROOT / "benchmarks/target-80-data-audit.json").read_text())
+    if validation["seed"] != protocol["development"]["validation_seed"] or validation["sha256"] != audit["corpora"]["validation"]["sha256"] or validation["vocabulary"] != len(words):
         raise ValueError("motor diagnostics require the declared development writers")
     selected = np.flatnonzero(rows["difficulty"] == 2)[:256]
     val_paths = torch.tensor(np.array(rows["points"][selected]), device="mps")

@@ -20,14 +20,15 @@ def main():
     parser.add_argument("--data", type=Path, default=Path("data/memory-proxy/validation.bin"))
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--samples", type=int, default=256)
+    parser.add_argument("--initializer", type=Path)
     parser.add_argument("--offset", type=int, default=0)
     parser.add_argument("--fixed-calibration", type=Path)
     parser.add_argument("--candidates", type=int, default=32)
     parser.add_argument("--steps", type=int, default=80)
     parser.add_argument("--batch", type=int, default=2)
     args = parser.parse_args()
-    if min(args.samples, args.batch, args.steps) < 1 or args.offset < 0:
-        parser.error("use positive counts and a nonnegative development offset")
+    if min(args.samples, args.batch) < 1 or min(args.offset, args.steps) < 0:
+        parser.error("use positive sample and batch counts; offset and steps may be zero")
     torch.set_num_threads(4)
     saved = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     rows, info = corpus(args.data)
@@ -51,13 +52,25 @@ def main():
     encoder.requires_grad_(False)
     proxies = saved["proxies"].to("mps")
     fitter = MotorFitter(saved["words"])
+    initializer, initializer_hash = None, None
+    if args.initializer:
+        from amortized_motor import AmortizedMotor
+        from train_joint import load_checkpoint
+        initial, initializer_hash = load_checkpoint(args.initializer)
+        if initial["words"] != saved["words"] or initial["max_keys"] != fitter.keys.shape[1]:
+            raise ValueError("motor initializer vocabulary or route width differs")
+        initializer = AmortizedMotor(initial["max_keys"]).to("mps").eval()
+        initializer.load_state_dict(initial["model"])
+        initializer.requires_grad_(False)
+    if fixed and fixed.get("initializer_sha256") != initializer_hash:
+        raise ValueError("fixed motor calibration initializer differs")
     results = {key: [] for key in ["candidates", "similarity", "errors", "penalties"]}
     began = time.monotonic()
     for start in range(0, len(paths), args.batch):
         query = paths[start:start + args.batch]
         with torch.no_grad():
             similarity, candidates = proxy_scores(encoder(encoder_features(encoder, query)), proxies).topk(args.candidates, dim=1)
-        errors, penalties = fitter.fit(query, candidates, steps=args.steps)
+        errors, penalties = fitter.fit(query, candidates, steps=args.steps, initializer=initializer)
         for key, value in zip(results, [candidates, similarity, errors, penalties]):
             results[key].append(value.detach().cpu())
         print(json.dumps({"finished": start + len(query), "total": len(paths), "seconds": time.monotonic() - began}), flush=True)
@@ -76,6 +89,7 @@ def main():
     report = {"development_sha256": info["sha256"], "checkpoint_sha256": hashlib.sha256(args.checkpoint.read_bytes()).hexdigest(),
         "test_data_used": False, "calibration_frozen": fixed is not None,
         "calibration_sha256": hashlib.sha256(args.fixed_calibration.read_bytes()).hexdigest() if fixed else None,
+        "initializer_sha256": initializer_hash,
         "optimization_regularization": 0.0002, "renderer_sha256": hashlib.sha256(Path(__file__).with_name("generative_fit.py").read_bytes()).hexdigest(),
         "samples": len(paths), "baseline_top1": float((candidates[:, 0] == labels).float().mean()),
         "shortlist_recall": float((candidates == labels[:, None]).any(1).float().mean()),
