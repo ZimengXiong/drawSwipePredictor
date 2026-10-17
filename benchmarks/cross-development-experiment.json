@@ -1,0 +1,31 @@
+{
+  "experiment": "Character-only candidate cross attention",
+  "test_data_used": false,
+  "best_development": {
+    "epoch": 9,
+    "loss": 1.1138009480635325,
+    "validation": {
+      "clean": {
+        "samples": 291,
+        "top1": 0.9140893220901489,
+        "top5": 0.9965635538101196
+      },
+      "loose": {
+        "samples": 620,
+        "top1": 0.8177419304847717,
+        "top5": 0.9290322661399841
+      },
+      "memory": {
+        "samples": 2089,
+        "top1": 0.6151268482208252,
+        "top5": 0.8142651915550232
+      }
+    },
+    "best_score": 0.6151268482208252,
+    "improved": true,
+    "seconds": 95.97700804198394
+  },
+  "checkpoint_sha256": "edc385f4c0920afa43e8e7b485a45f51259d3c1627263724c1424311cf54ae3b",
+  "disposition": "Stop after 11 epochs; the gain over its 61.08% initial hard-development accuracy is small. Test explicit route geometry with a newer frozen encoder.",
+  "limits": "3000-query development subset; not a benchmark measurement."
+}
