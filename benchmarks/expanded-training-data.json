@@ -1,0 +1,104 @@
+{
+  "purpose": "Expanded training data only; no benchmark or confirmation evaluation",
+  "train_corpus": {
+    "samples": 1000000,
+    "vocabulary": 60000,
+    "seed": 700001,
+    "writer_start": 700003100003,
+    "writer_end": 700004100003,
+    "sha256": "557eb33b55d76c7c0b27b792f26b17b163006ca1ba13435a9a4e62436d6ce235"
+  },
+  "extra_train_corpora": [
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700011,
+      "writer_start": 700013100033,
+      "writer_end": 700014100033,
+      "sha256": "0d91bdd336343ee335f602485e29b16b9b279bd1a3cc8da667f5b204e83c3a13"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700012,
+      "writer_start": 700014100036,
+      "writer_end": 700015100036,
+      "sha256": "5e39835d5841fc998ca26bac8a5607b6c77b882c147f9cbec58e0f70c8d7a466"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700013,
+      "writer_start": 700015100039,
+      "writer_end": 700016100039,
+      "sha256": "981b463e94de836a0e55b8c08de99c5ebfe008eddbc505e032bdc34a3355b5b2"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700014,
+      "writer_start": 700016100042,
+      "writer_end": 700017100042,
+      "sha256": "3a9c0f9ebfd76c32349491f0be34375337eae6a56c79c60848f7b9fbfcd1f13c"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700015,
+      "writer_start": 700017100045,
+      "writer_end": 700018100045,
+      "sha256": "cfc9d0626aa407ee56669450c628ae8785ae71b2f00e265ca5a659319ef440cf"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700016,
+      "writer_start": 700018100048,
+      "writer_end": 700019100048,
+      "sha256": "57db41ac3cc96903bf60598a72941818e92b6d6460643d72d66f09b7706fc730"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700017,
+      "writer_start": 700019100051,
+      "writer_end": 700020100051,
+      "sha256": "54299022c791b81aa93b1defe556ae42093024781061da84a0ea9a62d9b74c74"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700018,
+      "writer_start": 700020100054,
+      "writer_end": 700021100054,
+      "sha256": "7434c5face1e4328d7d59b93c77bfc3b3f6ad2dba478d071c70ad8869b61258f"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700019,
+      "writer_start": 700021100057,
+      "writer_end": 700022100057,
+      "sha256": "097413b791e4a7e26f6ce12f690b2125016e9bf3a06cc260c47cf4ce684f61c7"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700020,
+      "writer_start": 700022100060,
+      "writer_end": 700023100060,
+      "sha256": "137f01942c269ee7d029e74ad50ce9ad613e39589d46ffeab58a27efd9c88fe6"
+    }
+  ],
+  "validation_corpus": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "test_data_used": false,
+  "total_cached_training_writers": 11000000,
+  "inputs": "Geometry only. Corpus labels are training targets; writer IDs are used only to audit splits."
+}
