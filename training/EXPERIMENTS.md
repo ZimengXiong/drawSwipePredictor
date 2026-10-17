@@ -91,6 +91,8 @@ The decoder receives stroke features and candidate letters. It receives no targe
 
 After training, use `evaluate_spelling.py --checkpoint <word-checkpoint> --decoder <spelling-checkpoint> --output <report>` to select scores on all 12,000 development drawings. The evaluator checks both checkpoint bindings and the development hash. It rejects other corpora, including the reserved confirmation set.
 
+For a second training stage, add `--init-decoder <saved-decoder> --ranking-candidates 16 --learning-rate 0.0001 --batch 32`. It combines candidate classification with one quarter of the letter loss. Training places the labeled positive beside naturally retrieved hard negatives. Evaluation never inserts it. `--validation-seed 900419` keeps the same development subset as the original spelling run while a separate training seed supplies fresh draws. The stage saves its initial decoder score before any update, so a regression cannot replace the starting model.
+
 ## Compare many independent drawings per word
 
 `reference_density.py` tests whether a distribution of reference drawings improves on one learned word vector. It generates the same number of independent examples for every dictionary word, including words outside the usual training-length range. Every word receives the same fixed mixture of clean, loose, and hard errors. The bank contains no development drawings.
