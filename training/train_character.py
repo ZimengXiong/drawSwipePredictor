@@ -105,6 +105,8 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     metadata = {"encoder_sha256": hashlib.sha256(args.checkpoint.read_bytes()).hexdigest(), "encoder_path": str(args.checkpoint),
         "train": train_info, "validation": val_info, "seed": args.seed, "test_data_used": False,
+        "arguments": {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
+        "real_training_sha256": hashlib.sha256(real_path.read_bytes()).hexdigest(),
         "selection": "Memory development top1 over unmodified naturally retrieved top128 candidates",
         "targets": "Collapsed character sequences for CTC only; final metrics require exact full words",
         "source": "CTC and ranking supervision; no evaluation target is inserted into a shortlist"}
@@ -121,7 +123,7 @@ def main():
             ri = torch.randint(len(real), (nr,), device=device)
             si = torch.randint(len(train_paths), (ns,), device=device)
             fresh_labels = sampler.labels(nf)
-            paths = torch.cat([real[ri], train_paths[si], sampler.sample(fresh_labels)])
+            paths = torch.cat([real[ri], train_paths[si], sampler.sample(fresh_labels, strength=min(1.0, epoch / 3))])
             labels = torch.cat([real_labels[ri], train_labels[si], fresh_labels])
             sequence, raw, embedding = encode(encoder, paths)
             log_probs = decoder(sequence, raw, embedding).log_softmax(2)
@@ -131,10 +133,10 @@ def main():
             if epoch >= 5:
                 with torch.no_grad():
                     similarity = proxy_scores(embedding, proxies)
-                    similarity.masked_fill_(alias_gpu[None] == alias_gpu[labels, None], -torch.inf)
-                    negatives = similarity.topk(7, dim=1).indices
+                    filtered = similarity.masked_fill(alias_gpu[None] == alias_gpu[labels, None], -torch.inf)
+                    negatives = filtered.topk(7, dim=1).indices
                     candidates = torch.cat([labels[:, None], negatives], dim=1)
-                    prior = proxy_scores(embedding, proxies).gather(1, candidates)
+                    prior = similarity.gather(1, candidates)
                 cost = candidate_ctc_cost(log_probs, candidates, targets, lengths)
                 scores = -cost / lengths[candidates.cpu()].to(device).float().pow(0.3) + 0.25 * 32 * prior
                 loss = 0.5 * loss + F.cross_entropy(scores, torch.zeros(args.batch, dtype=torch.long, device=device))
