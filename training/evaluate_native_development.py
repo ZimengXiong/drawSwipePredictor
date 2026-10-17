@@ -28,13 +28,25 @@ def main():
     rows, info = corpus(args.data)
     if manifest["training"]["validation_corpus"]["sha256"] != info["sha256"] or expected["development"]["sha256"] != info["sha256"] or expected["test_data_used"]:
         raise ValueError("native replay requires the declared development corpus")
-    if manifest["complete_selection"]["selection_sha256"] != hashlib.sha256(args.python_report.read_bytes()).hexdigest():
+    selection = manifest["spelling"] if "spelling" in manifest else manifest["complete_selection"]
+    if selection["selection_sha256"] != hashlib.sha256(args.python_report.read_bytes()).hexdigest():
         raise ValueError("native replay selection differs from the Python report")
     if manifest["vocabulary"] != info["vocabulary"]:
         raise ValueError("native replay vocabulary differs")
     report = {"test_data_used": False, "development": info, "full_vocabulary": info["vocabulary"],
               "selection_sha256": hashlib.sha256(args.python_report.read_bytes()).hexdigest(),
               "native_manifest_sha256": hashlib.sha256((args.model / "manifest.json").read_bytes()).hexdigest()}
+    artifacts = {"encoder.bin": manifest["encoder_sha256"], "words.bin": manifest["words_sha256"]}
+    if manifest.get("auxiliary_weight", 0.0):
+        auxiliary = json.loads((args.model / "auxiliary/manifest.json").read_text())
+        artifacts.update({"auxiliary/encoder.bin": auxiliary["encoder_sha256"], "auxiliary/words.bin": auxiliary["words_sha256"]})
+    if "spelling" in manifest:
+        artifacts.update({"spelling.bin": manifest["spelling"]["sha256"],
+                          "spelling/encoder.bin": manifest["spelling"]["context_encoder_sha256"]})
+    for name, digest in artifacts.items():
+        if hashlib.sha256((args.model / name).read_bytes()).hexdigest() != digest:
+            raise ValueError(f"native artifact hash differs: {name}")
+    report["native_artifacts_sha256"] = artifacts
     with tempfile.TemporaryDirectory(prefix="drawswipe-native-development-") as directory:
         rebuilt, references = Path(directory) / "rebuilt.bin", Path(directory) / "raw.json"
         subprocess.run([str(args.corpus_cli.resolve()), "--output", str(rebuilt), "--samples", str(len(rows)),

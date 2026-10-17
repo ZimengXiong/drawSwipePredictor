@@ -140,7 +140,8 @@ def main():
     for name, content in {"spelling.bin": bytes(binary), "spelling-verification.json": (json.dumps(verification, indent=2) + "\n").encode()}.items():
         temporary = args.output / (name + ".tmp")
         temporary.write_bytes(content); temporary.replace(args.output / name)
-    manifest["spelling"] = {"sha256": hashlib.sha256(binary).hexdigest(), "checkpoint_sha256": decoder_hash,
+    manifest["spelling"] = {"sha256": hashlib.sha256(binary).hexdigest(), "tag": fingerprint(binary), "checkpoint_sha256": decoder_hash,
+        "verification_sha256": hashlib.sha256((args.output / "spelling-verification.json").read_bytes()).hexdigest(),
         "context_checkpoint_sha256": context_hash, "context_encoder_sha256": hashlib.sha256(context_bytes).hexdigest(),
         "selection_sha256": hashlib.sha256(selection_bytes).hexdigest(), "selected": chosen}
     (args.output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

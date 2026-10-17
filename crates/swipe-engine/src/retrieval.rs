@@ -38,6 +38,7 @@ pub struct RetrievalEngine {
     character: Option<CharacterModel>,
     spelling: Option<(Encoder, SpellingModel)>,
     spelling_required: bool,
+    spelling_tag: u64,
     auxiliary: Option<Auxiliary>,
     auxiliary_weight: f32,
     auxiliary_tags: [u64; 2],
@@ -128,6 +129,9 @@ impl RetrievalEngine {
         }
         match std::fs::read(directory.as_ref().join("spelling.bin")) {
             Ok(bytes) => {
+                if !engine.spelling_required || engine.spelling_tag != fingerprint(&bytes) {
+                    return Err("spelling weights differ from the exported manifest".into());
+                }
                 let model = SpellingModel::from_bytes(&bytes)?;
                 let context = std::fs::read(directory.as_ref().join("spelling/encoder.bin"))
                     .map_err(|e| e.to_string())?;
@@ -280,6 +284,7 @@ impl RetrievalEngine {
             character: None,
             spelling: None,
             spelling_required: false,
+            spelling_tag: 0,
             auxiliary: None,
             auxiliary_weight: 0.0,
             auxiliary_tags: [0, 0],
@@ -317,6 +322,12 @@ impl RetrievalEngine {
         self.auxiliary_weight = settings.auxiliary_weight;
         self.auxiliary_tags = [settings.auxiliary_encoder_tag, settings.auxiliary_bank_tag];
         self.spelling_required = settings.spelling.is_some();
+        self.spelling_tag = match settings.spelling {
+            Some(value) => value["tag"]
+                .as_u64()
+                .ok_or("missing spelling weight binding")?,
+            None => 0,
+        };
         Ok(())
     }
 
@@ -386,6 +397,9 @@ impl RetrievalEngine {
     }
 
     pub fn predict_from_path(&self, path: &[(f64, f64)], limit: usize) -> Vec<Prediction> {
+        if self.spelling_required && self.spelling.is_none() {
+            return Vec::new();
+        }
         if let Some((encoder, model)) = &self.spelling {
             if limit == 0 {
                 return Vec::new();

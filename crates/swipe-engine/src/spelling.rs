@@ -18,19 +18,74 @@ impl Linear {
     }
 
     fn project(&self, input: &[f32], start: usize, outputs: usize) -> Vec<f32> {
-        let mut result = Vec::with_capacity(input.len() / self.inputs * outputs);
-        for row in input.chunks_exact(self.inputs) {
-            for output in start..start + outputs {
-                result.push(
-                    dot(
-                        row,
-                        &self.weights[output * self.inputs..(output + 1) * self.inputs],
-                    ) + self.bias[output],
+        #[cfg(target_os = "macos")]
+        {
+            let rows = input.len() / self.inputs;
+            let mut result = vec![0.0; rows * outputs];
+            // SAFETY: All matrices are contiguous f32 slices with the dimensions
+            // passed below. Fixed model widths and word lengths fit in i32.
+            unsafe {
+                cblas_sgemm(
+                    101,
+                    111,
+                    112,
+                    rows as i32,
+                    outputs as i32,
+                    self.inputs as i32,
+                    1.0,
+                    input.as_ptr(),
+                    self.inputs as i32,
+                    self.weights.as_ptr().add(start * self.inputs),
+                    self.inputs as i32,
+                    0.0,
+                    result.as_mut_ptr(),
+                    outputs as i32,
                 );
             }
+            for row in result.chunks_exact_mut(outputs) {
+                for (value, bias) in row.iter_mut().zip(&self.bias[start..start + outputs]) {
+                    *value += bias;
+                }
+            }
+            result
         }
-        result
+        #[cfg(not(target_os = "macos"))]
+        {
+            let mut result = Vec::with_capacity(input.len() / self.inputs * outputs);
+            for row in input.chunks_exact(self.inputs) {
+                for output in start..start + outputs {
+                    result.push(
+                        dot(
+                            row,
+                            &self.weights[output * self.inputs..(output + 1) * self.inputs],
+                        ) + self.bias[output],
+                    );
+                }
+            }
+            result
+        }
     }
+}
+
+#[cfg(target_os = "macos")]
+#[link(name = "Accelerate", kind = "framework")]
+unsafe extern "C" {
+    fn cblas_sgemm(
+        order: i32,
+        transpose_a: i32,
+        transpose_b: i32,
+        rows: i32,
+        columns: i32,
+        inner: i32,
+        alpha: f32,
+        a: *const f32,
+        stride_a: i32,
+        b: *const f32,
+        stride_b: i32,
+        beta: f32,
+        result: *mut f32,
+        stride_result: i32,
+    );
 }
 
 struct Norm {
