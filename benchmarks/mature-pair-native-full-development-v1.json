@@ -1,0 +1,54 @@
+{
+  "test_data_used": false,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "full_vocabulary": 60000,
+  "selection_sha256": "c7f9a41bf6c9b40c7b9fe567f667f832b7692c40cb02830cd7e5d491678f7613",
+  "native_manifest_sha256": "6637e4b28f7575e9572ea6e09bbc07db23cd79ff9e5e65a4f790762c7e174ba4",
+  "native_cli_sha256": "00d9cf29c7d9a9d623afb9f786f712dac0bfb5d98ee27fa93377f26703fb2878",
+  "native_artifacts_sha256": {
+    "encoder.bin": "cc2d2fbde7c7aa3f222ab062380366666f9d5aeae67db8844f44e7cb4b3c4b73",
+    "words.bin": "037778bbcee05f11beba4ea2f317ba7aada53af1f86a639c154876416355341f",
+    "auxiliary/encoder.bin": "d78ddb3b4afa00756009e6bcf69de1f792b6e5e9aba1195cd721bd37158965c4",
+    "auxiliary/words.bin": "96c41e82785f4432547af383376c717e87013275a87bcaf6d6f0d67899205cb8",
+    "spelling.bin": "624bebd86d07afefa859a61741edccb49e450af253aed175f8509a1ca95e0729",
+    "spelling/encoder.bin": "1eddedc4a75670b45609154ff934621df29c60182326fddf5675d68b91a5a822"
+  },
+  "regenerated_development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "validation": {
+    "clean": {
+      "samples": 1200,
+      "top1": 0.9608333333333333,
+      "top5": 0.9991666666666666,
+      "correct_top1": 1153,
+      "correct_top5": 1199
+    },
+    "loose": {
+      "samples": 2400,
+      "top1": 0.8716666666666667,
+      "top5": 0.96125,
+      "correct_top1": 2092,
+      "correct_top5": 2307
+    },
+    "memory": {
+      "samples": 8400,
+      "top1": 0.7346428571428572,
+      "top5": 0.8996428571428572,
+      "correct_top1": 6171,
+      "correct_top5": 7557
+    }
+  },
+  "matches_python_hit_counts": true,
+  "evaluated_rows": 12000,
+  "native_files_unchanged_through_replay": true,
+  "median_milliseconds": 181.083,
+  "p95_milliseconds": 205.08935145,
+  "limits": "Development only; regenerated raw strokes reproduce the unchanged corpus hash. Concurrent training affects timing. No benchmark or blind-confirmation evaluation.",
+  "raw_report_sha256": "3f897b66f0e186b51180434d32a892cda6f2aba4fb35f00b8bb878aa70a4ba28"
+}
