@@ -131,3 +131,17 @@ class MotorFitter:
         penalties = torch.zeros_like(errors)
         errors[keep], penalties[keep] = best_error, best_penalty
         return errors.reshape(shape), penalties.reshape(shape)
+
+
+def route_mixture_cost(errors, penalties, lengths, regularization, temperature, omission_prior=0.35):
+    """Combine route energies with the training prior for one interior omission."""
+    costs = errors + regularization * penalties
+    if temperature == 0:
+        return costs.min(2).values
+    if temperature < 0 or not 0 <= omission_prior < 1:
+        raise ValueError("invalid route-mixture configuration")
+    p = torch.where(lengths > 4, omission_prior, 0.0).float()
+    weights = torch.zeros_like(costs)
+    weights[:, :, 0] = 1 - p
+    weights[:, :, 1:] = (p / (lengths - 2).clamp_min(1))[:, :, None]
+    return -temperature * torch.logsumexp(-costs / temperature + weights.log(), dim=2)

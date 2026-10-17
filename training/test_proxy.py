@@ -14,7 +14,7 @@ from intrinsic_features import intrinsic_features
 from amortized_motor import AmortizedMotor, retained_training_keys
 from cross_model import RouteCrossRanker
 from large_encoder import expand_encoder
-from generative_fit import MotorFitter
+from generative_fit import MotorFitter, route_mixture_cost
 from character_edit import ctc_edit_components, edit_log_likelihood
 from character_model import character_targets, candidate_ctc_cost
 from motor_sampler import MotorSampler
@@ -153,6 +153,17 @@ class ProxyTests(unittest.TestCase):
         indices = balanced_real_indices(groups, 9000).numpy()
         _, counts = np.unique(labels[indices], return_counts=True)
         np.testing.assert_allclose(counts / len(indices), np.full(3, 1 / 3), atol=0.025)
+
+    def test_omission_mixture_normalizes_route_count(self):
+        lengths = torch.tensor([[4, 5, 8]])
+        errors = torch.full((1, 3, 7), 0.01)
+        errors[0, 0, 1:] = torch.inf
+        errors[0, 1, 4:] = torch.inf
+        mixture = route_mixture_cost(errors, torch.zeros_like(errors), lengths, 0.02, 0.001)
+        torch.testing.assert_close(mixture, torch.full((1, 3), 0.01), atol=1e-7, rtol=1e-6)
+        errors[0, 0, 1:] = 0.0
+        protected = route_mixture_cost(errors, torch.zeros_like(errors), lengths, 0.02, 0.001)
+        self.assertAlmostEqual(float(protected[0, 0]), 0.01, places=6)
 
     def test_word_mode_order_cannot_change_scores(self):
         query = torch.nn.functional.normalize(torch.randn(8, 128), dim=1)
