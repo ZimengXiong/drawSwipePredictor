@@ -1,0 +1,81 @@
+{
+  "status": "Work in progress; the 80% benchmark target has not been reached or rerun",
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "development_samples": 12000,
+  "hard_development_samples": 8400,
+  "ensemble": {
+    "checkpoints": [
+      {
+        "path": "checkpoints/ensemble-large-frozen.pt",
+        "sha256": "1d05b878e2927642b483b28c974fcff8846f181f956c8dd4e048b432a5d1cd46",
+        "architecture": "large",
+        "epoch": 63
+      },
+      {
+        "path": "checkpoints/ensemble-intrinsic-frozen.pt",
+        "sha256": "a9be6278a94cee4289d76535d8c2ede17a48a07691155bcdce80f0850da6cf64",
+        "architecture": "intrinsic",
+        "epoch": 48
+      },
+      {
+        "path": "checkpoints/proxy-v1/best.pt",
+        "sha256": "dcff804b22d5c9e6ed4636b220724f95df9f3dcd03d55206a660c5da801d75ae",
+        "architecture": "small",
+        "epoch": 148
+      }
+    ],
+    "selected": {
+      "weights": [
+        0.5,
+        0.5,
+        0
+      ],
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9366666674613953,
+          "top5": 0.996666669845581,
+          "top32": 1.0,
+          "top128": 1.0
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8299999833106995,
+          "top5": 0.9412500262260437,
+          "top32": 0.9879166483879089,
+          "top128": 0.9975000023841858
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.6508333086967468,
+          "top5": 0.838690459728241,
+          "top32": 0.9471428394317627,
+          "top128": 0.9850000143051147
+        }
+      }
+    }
+  },
+  "giant_encoder": {
+    "parameters": 10996624,
+    "initialization_only_native_parity": [
+      "hello: maximum embedding error 0.00000022",
+      "world: maximum embedding error 0.00000054",
+      "keyboard: maximum embedding error 0.00000016",
+      "lunchbox: maximum embedding error 0.00000036",
+      "alpacas: maximum embedding error 0.00000031"
+    ],
+    "encoder_sha256": "34d7fa04af4b6ffd2e8ddd1cf91dbe05fe7323b20c9c1b547ed78151b99e439a",
+    "bank_sha256": "78e952febb44f57f3922420e66ecd94ca0509db28a4c51fa4a7f973a35b050b8"
+  },
+  "checks": {
+    "python_tests_passed": 15,
+    "rust_workspace_tests_passed": 17,
+    "engine_clippy": "passed with warnings denied"
+  },
+  "limits": [
+    "Development results are not benchmark results.",
+    "Experimental character and cross-attention decoders are not yet exported to native inference.",
+    "Training is still running; the app retains the previously validated bundled model."
+  ]
+}
