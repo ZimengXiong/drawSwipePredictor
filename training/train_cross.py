@@ -54,7 +54,7 @@ def main():
     device = "mps"
     saved = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     architecture = saved["metadata"]["arguments"].get("architecture", "small")
-    if architecture not in ["large", "intrinsic"]:
+    if architecture not in ["large", "intrinsic", "giant"]:
         raise ValueError("cross attention requires a residual backbone")
     encoder = build_encoder(architecture).to(device).eval()
     encoder.load_state_dict(saved["model"])

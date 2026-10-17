@@ -25,10 +25,11 @@ impl Encoder {
     pub(crate) fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
         let large = match bytes.get(..8) {
             Some(b"SWPRT001") => false,
-            Some(b"SWPRT002") | Some(b"SWPRT003") => true,
+            Some(b"SWPRT002") | Some(b"SWPRT003") | Some(b"SWPRT004") => true,
             _ => return Err("unsupported route encoder format".into()),
         };
-        let input_channels = if bytes.get(..8) == Some(b"SWPRT003") {
+        let giant = bytes.get(..8) == Some(b"SWPRT004");
+        let input_channels = if giant || bytes.get(..8) == Some(b"SWPRT003") {
             16
         } else {
             8
@@ -80,10 +81,16 @@ impl Encoder {
             .collect::<Result<_, _>>()?;
         let mut residual = Vec::new();
         if large {
-            for dilation in [1, 2, 4, 8, 1, 2] {
+            let dilations = if giant {
+                vec![1, 2, 4, 8].repeat(4)
+            } else {
+                vec![1, 2, 4, 8, 1, 2]
+            };
+            let hidden = if giant { 512 } else { 192 };
+            for dilation in dilations {
                 residual.push([
-                    layer(128, 192, 5, 1, dilation)?,
-                    layer(192, 128, 3, 1, dilation)?,
+                    layer(128, hidden, 5, 1, dilation)?,
+                    layer(hidden, 128, 3, 1, dilation)?,
                 ]);
             }
         }

@@ -5,12 +5,12 @@ from torch.nn import functional as F
 
 
 class ResidualRouteBlock(nn.Module):
-    def __init__(self, dilation):
+    def __init__(self, dilation, hidden=192):
         super().__init__()
         self.layers = nn.Sequential(
-            nn.Conv1d(128, 192, 5, padding=2 * dilation, dilation=dilation),
-            nn.BatchNorm1d(192), nn.ReLU(),
-            nn.Conv1d(192, 128, 3, padding=dilation, dilation=dilation),
+            nn.Conv1d(128, hidden, 5, padding=2 * dilation, dilation=dilation),
+            nn.BatchNorm1d(hidden), nn.ReLU(),
+            nn.Conv1d(hidden, 128, 3, padding=dilation, dilation=dilation),
             nn.BatchNorm1d(128))
         # Start each block close to the identity while the new head adapts.
         nn.init.zeros_(self.layers[-1].weight)
@@ -21,14 +21,15 @@ class ResidualRouteBlock(nn.Module):
 
 class LargeGestureEncoder(nn.Module):
     """Use six residual context blocks and retain 32 steps through the trunk."""
-    def __init__(self, input_channels=8):
+    def __init__(self, input_channels=8, giant=False):
         super().__init__()
         self.input_channels = input_channels
         self.stages = nn.Sequential(
             nn.Conv1d(input_channels, 48, 5, padding=2), nn.BatchNorm1d(48), nn.ReLU(),
             nn.Conv1d(48, 64, 5, stride=2, padding=2), nn.BatchNorm1d(64), nn.ReLU(),
             nn.Conv1d(64, 128, 3, padding=1), nn.BatchNorm1d(128), nn.ReLU())
-        self.blocks = nn.Sequential(*[ResidualRouteBlock(d) for d in [1, 2, 4, 8, 1, 2]])
+        dilations = [1, 2, 4, 8] * 4 if giant else [1, 2, 4, 8, 1, 2]
+        self.blocks = nn.Sequential(*[ResidualRouteBlock(d, 512 if giant else 192) for d in dilations])
         self.downsample = nn.Sequential(nn.Conv1d(128, 192, 3, stride=2, padding=1), nn.BatchNorm1d(192), nn.ReLU())
         self.head = nn.Sequential(nn.Flatten(), nn.Linear(192 * 16, 768), nn.ReLU(), nn.Dropout(0.1), nn.Linear(768, 128))
 
@@ -40,3 +41,20 @@ class LargeGestureEncoder(nn.Module):
 
     def forward(self, x):
         return self.embed_sequence(self.encode_sequence(x))
+
+
+@torch.no_grad()
+def expand_encoder(model, original):
+    """Preserve an encoder while adding zero-contribution channels and blocks."""
+    state = model.state_dict()
+    for name, old in original.items():
+        if name not in state:
+            continue
+        new = state[name]
+        if new.shape == old.shape:
+            new.copy_(old)
+        elif new.ndim == old.ndim and all(a >= b for a, b in zip(new.shape, old.shape)):
+            if old.ndim >= 2 or name.endswith("bias"):
+                new.zero_()
+            new[tuple(slice(0, size) for size in old.shape)].copy_(old)
+    model.load_state_dict(state)

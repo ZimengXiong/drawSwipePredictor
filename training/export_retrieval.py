@@ -39,7 +39,7 @@ def main():
     architecture = checkpoint["metadata"]["arguments"].get("architecture", "small")
     model = build_encoder(architecture).eval()
     model.load_state_dict(checkpoint["model"])
-    encoded = bytearray({"small": b"SWPRT001", "large": b"SWPRT002", "intrinsic": b"SWPRT003"}[architecture])
+    encoded = bytearray({"small": b"SWPRT001", "large": b"SWPRT002", "intrinsic": b"SWPRT003", "giant": b"SWPRT004"}[architecture])
     # Fold normalization into convolution weights; the native runtime uses only
     # convolution, ReLU, dense layers, and vector normalization.
     def convolution(conv, norm):
@@ -48,7 +48,7 @@ def main():
         encoded.extend(floats((conv.bias - norm.running_mean) * factor + norm.bias))
     for i in range(0, len(model.stages), 3):
         convolution(model.stages[i], model.stages[i + 1])
-    if architecture in ["large", "intrinsic"]:
+    if architecture in ["large", "intrinsic", "giant"]:
         for block in model.blocks:
             convolution(block.layers[0], block.layers[1])
             convolution(block.layers[3], block.layers[4])
@@ -105,7 +105,7 @@ def main():
     training_metadata = json.loads(json.dumps(checkpoint["metadata"]).replace(str(ROOT) + "/", ""))
     report = {
         "schema_version": 1, "architecture": architecture,
-        "points": 64, "channels": 16 if architecture == "intrinsic" else 8, "embedding": 128, "vocabulary": len(words), "route_centers": centers,
+        "points": 64, "channels": 16 if architecture in ["intrinsic", "giant"] else 8, "embedding": 128, "vocabulary": len(words), "route_centers": centers,
         "checkpoint_epoch": checkpoint["epoch"] + 1, "validation_score": checkpoint["best_score"],
         "encoder_sha256": hashlib.sha256(encoded).hexdigest(),
         "words_sha256": hashlib.sha256(bank).hexdigest(),

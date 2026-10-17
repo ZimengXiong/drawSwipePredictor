@@ -75,7 +75,7 @@ def main():
     torch.manual_seed(args.seed)
     saved = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     architecture = saved["metadata"]["arguments"].get("architecture", "small")
-    if architecture not in ["large", "intrinsic"]:
+    if architecture not in ["large", "intrinsic", "giant"]:
         raise ValueError("character decoder requires a residual backbone")
     device = "mps"
     encoder = build_encoder(architecture).to(device).eval()

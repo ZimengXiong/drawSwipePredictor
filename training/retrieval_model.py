@@ -145,9 +145,9 @@ def augment(paths: torch.Tensor, *, force_memory: bool = False) -> torch.Tensor:
 def build_encoder(architecture="small"):
     if architecture == "small":
         return GestureEncoder()
-    if architecture in ["large", "intrinsic"]:
+    if architecture in ["large", "intrinsic", "giant"]:
         from large_encoder import LargeGestureEncoder
-        return LargeGestureEncoder(16 if architecture == "intrinsic" else 8)
+        return LargeGestureEncoder(16 if architecture in ["intrinsic", "giant"] else 8, giant=architecture == "giant")
     raise ValueError(f"unknown encoder architecture: {architecture}")
 
 
