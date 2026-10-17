@@ -101,6 +101,8 @@ After training, use `evaluate_spelling.py --checkpoint <word-checkpoint> --decod
 
 Add `--retrieval-checkpoint <word-checkpoint>` to test the decoder with candidates from a stronger word model. The spelling features still come from the decoder's bound encoder. The separate retrieval model must use the same vocabulary and declared development corpus. Its own natural top-128 list supplies every candidate and the retrieval-only control. The report records all three checkpoint hashes. No evaluation target is added to the list.
 
+For an already selected pair of word models, also pass `--retrieval-auxiliary <checkpoint> --retrieval-selection <report>`. This preserves the report's fixed mixture instead of tuning another retrieval weight. Both source hashes, the complete vocabulary, and the development hash must match. The evaluator rejects selections that used test data or would drop a component. It then selects spelling scores around the pair's naturally retrieved candidates and retains the pair-only control.
+
 For a second training stage, add `--init-decoder <saved-decoder> --ranking-candidates 16 --learning-rate 0.0001 --batch 32`. It combines candidate classification with one quarter of the letter loss. Training places the labeled positive beside naturally retrieved hard negatives. Evaluation never inserts it. `--validation-seed 900419` keeps the same development subset as the original spelling run while a separate training seed supplies fresh draws. The stage saves its initial decoder score before any update, so a regression cannot replace the starting model.
 
 ## Compare many independent drawings per word

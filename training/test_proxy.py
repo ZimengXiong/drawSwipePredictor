@@ -27,11 +27,31 @@ from reference_density import mixture_similarity
 from evaluate_training_exposure import exposure_bias
 from average_word_models import average_state
 from export_ensemble import pair_configuration
+from evaluate_spelling import retrieval_pair_weight
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_spelling_retrieval_selection_preserves_models_and_development_split(self):
+        selection = {"test_data_used": False, "development": {"sha256": "dev"},
+                     "full_vocabulary": 60000,
+                     "checkpoints": [{"sha256": name} for name in ["a", "b"]],
+                     "selected": {"weights": [0.75, 0.25], "validation": {}}}
+        self.assertEqual(retrieval_pair_weight(selection, "a", "b", "dev", 60000), 0.25)
+        with self.assertRaisesRegex(ValueError, "declared development"):
+            retrieval_pair_weight(selection, "a", "b", "confirmation", 60000)
+        with self.assertRaisesRegex(ValueError, "vocabulary differs"):
+            retrieval_pair_weight(selection, "a", "b", "dev", 59999)
+        with self.assertRaisesRegex(ValueError, "every selected component"):
+            retrieval_pair_weight(selection, "a", "wrong", "dev", 60000)
+        legacy = {**selection, "development": {"sha256": "dev", "vocabulary": 60000}}
+        del legacy["full_vocabulary"]
+        self.assertEqual(retrieval_pair_weight(legacy, "a", "b", "dev", 60000), 0.25)
+        selection["test_data_used"] = True
+        with self.assertRaisesRegex(ValueError, "declared development"):
+            retrieval_pair_weight(selection, "a", "b", "dev", 60000)
+
     def test_raw_proxy_resume_preserves_optimizer_trajectory_and_inference(self):
         torch.manual_seed(900547)
         raw = nn.Parameter(torch.randn(7, 128) * torch.arange(1, 8)[:, None])
