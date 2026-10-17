@@ -35,8 +35,8 @@ def evaluate(decoder, validation, targets, lengths):
     candidate_lengths = lengths[validation["candidates"].cpu()].to(costs.device)
     costs = costs / candidate_lengths.float().pow(0.3)
     best, trials = None, []
-    for weight in [0.0, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 4.0, 1000.0]:
-        logits = -costs + weight * 32 * validation["similarity"]
+    for weight in [None, 0.0, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 4.0]:
+        logits = validation["similarity"] if weight is None else -costs + weight * 32 * validation["similarity"]
         ranked = validation["candidates"].gather(1, logits.topk(5, dim=1).indices)
         hits = ranked == validation["labels"][:, None]
         metrics = {}
@@ -92,9 +92,11 @@ def main():
             seq, inp, vector = encode(encoder, part)
             sequence.append(seq); raw.append(inp); embeddings.append(vector)
         validation.update(sequence=torch.cat(sequence), raw=torch.cat(raw), embedding=torch.cat(embeddings))
-        similarity = proxy_scores(validation["embedding"], proxies)
-        values, candidates = similarity.topk(128, dim=1)
-        validation.update(candidates=candidates, similarity=values)
+        values, candidates = [], []
+        for vectors in validation["embedding"].split(256):
+            value, candidate = proxy_scores(vectors, proxies).topk(128, dim=1)
+            values.append(value); candidates.append(candidate)
+        validation.update(candidates=torch.cat(candidates), similarity=torch.cat(values))
     ids = {word: i for i, word in enumerate(words)}
     real_path = ROOT / "training/data/futo-large/train.jsonl"
     real, real_labels = load_recordings(real_path, ids)
