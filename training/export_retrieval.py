@@ -105,6 +105,7 @@ def main():
     training_metadata = json.loads(json.dumps(checkpoint["metadata"]).replace(str(ROOT) + "/", ""))
     report = {
         "schema_version": 1, "architecture": architecture,
+        "checkpoint_sha256": hashlib.sha256(args.checkpoint.read_bytes()).hexdigest(),
         "points": 64, "channels": 16 if architecture in ["intrinsic", "giant"] else 8, "embedding": 128, "vocabulary": len(words), "route_centers": centers,
         "checkpoint_epoch": checkpoint["epoch"] + 1, "validation_score": checkpoint["best_score"],
         "encoder_sha256": hashlib.sha256(encoded).hexdigest(),
@@ -120,7 +121,7 @@ def main():
         "word_frequency_sha256": hashlib.sha256((ROOT / "word_freq.txt").read_bytes()).hexdigest(),
     }
     # A new export is a base retriever. Candidate weights require a separate fit.
-    for filename in ["reranker.json", "reranker-verification.json"]:
+    for filename in ["reranker.json", "reranker-verification.json", "character.bin", "character-verification.json"]:
         (args.output / filename).unlink(missing_ok=True)
     outputs = {"encoder.bin": bytes(encoded), "words.bin": bytes(bank),
                "verification.json": (json.dumps(verification, indent=2) + "\n").encode(),
