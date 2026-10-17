@@ -26,6 +26,11 @@ def model_files(directory: Path) -> list[str]:
             auxiliary = json.loads(auxiliary_manifest.read_text())
             files.append("auxiliary/manifest.json")
             expected.update({"auxiliary/encoder.bin": auxiliary["encoder_sha256"], "auxiliary/words.bin": auxiliary["words_sha256"]})
+    for index, _ in enumerate(manifest.get("additional_models", [])):
+        folder = f"additional{index + 1}"
+        extra = json.loads((directory / folder / "manifest.json").read_text())
+        files.extend([folder + "/manifest.json", folder + "/encoder.bin", folder + "/words.bin"])
+        expected.update({folder + "/encoder.bin": extra["encoder_sha256"], folder + "/words.bin": extra["words_sha256"]})
     for component, filename in [("character", "character.bin"), ("reranker", "reranker.json"), ("spelling", "spelling.bin")]:
         if (directory / filename).exists() or component in manifest:
             files.append(filename)

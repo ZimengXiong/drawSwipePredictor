@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 import struct
 import subprocess
@@ -16,6 +17,7 @@ from retrieval_model import build_encoder, curve, encoder_features
 from train_character import encode
 from train_joint import load_checkpoint
 from train_proxy import proxy_scores
+from export_word_mixture import auxiliary_components, word_binding
 
 
 def main():
@@ -23,10 +25,14 @@ def main():
     parser.add_argument("--context-checkpoint", type=Path, required=True)
     parser.add_argument("--retrieval-checkpoint", type=Path, required=True)
     parser.add_argument("--auxiliary-checkpoint", type=Path)
+    parser.add_argument("--word-checkpoint", type=Path, action="append", default=[],
+                        help="Every auxiliary word checkpoint in a complete mixture")
     parser.add_argument("--decoder", type=Path, required=True)
     parser.add_argument("--selection", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
+    if args.auxiliary_checkpoint and args.word_checkpoint:
+        parser.error("use legacy auxiliary or complete word checkpoint options")
     torch.set_num_threads(4)
     context, context_hash = load_checkpoint(args.context_checkpoint)
     retrieved, retrieval_hash = load_checkpoint(args.retrieval_checkpoint)
@@ -36,25 +42,34 @@ def main():
     manifest = json.loads((args.output / "manifest.json").read_text())
     if selection["test_data_used"] or selection["samples"] != 12000 or selection["full_vocabulary"] != len(retrieved["words"]):
         raise ValueError("spelling export requires full development selection")
-    if (selection["encoder_sha256"], selection["decoder_sha256"], selection["retrieval_sha256"]) != (context_hash, decoder_hash, retrieval_hash):
+    if (selection["encoder_sha256"], selection["decoder_sha256"]) != (context_hash, decoder_hash):
         raise ValueError("spelling selection checkpoint bindings differ")
     if decoded["metadata"]["encoder_sha256"] != context_hash or manifest["checkpoint_sha256"] != retrieval_hash:
         raise ValueError("spelling encoder or native retrieval binding differs")
-    auxiliary_weight = manifest.get("auxiliary_weight", 0.0)
-    auxiliary = None
-    auxiliary_hash = None
-    records = [context, retrieved, decoded]
-    if auxiliary_weight:
-        if not args.auxiliary_checkpoint:
-            raise ValueError("selected retrieval requires its auxiliary checkpoint")
-        auxiliary, auxiliary_hash = load_checkpoint(args.auxiliary_checkpoint)
-        records.append(auxiliary)
+    components = auxiliary_components(manifest)
+    paths = [args.auxiliary_checkpoint] if args.auxiliary_checkpoint else args.word_checkpoint
+    loaded = [load_checkpoint(path) for path in paths]
+    records_by_hash = {retrieval_hash: retrieved, **{key: record for record, key in loaded}}
+    expected = {retrieval_hash: 1 - sum(component["weight"] for component in components),
+                **{component["checkpoint_sha256"]: component["weight"] for component in components}}
+    if len(expected) != len(components) + 1 or len(records_by_hash) != len(loaded) + 1 or set(records_by_hash) != set(expected):
+        raise ValueError("supply every native word component exactly once")
+    if components:
         if selection["retrieval_selection_sha256"] != manifest["complete_selection"]["selection_sha256"]:
             raise ValueError("spelling selection uses a different word mixture")
-        if auxiliary_hash != manifest["auxiliary_checkpoint_sha256"]:
-            raise ValueError("native auxiliary checkpoint differs")
-    if selection.get("retrieval_auxiliary_sha256") != auxiliary_hash or selection.get("retrieval_auxiliary_weight", 0.0) != auxiliary_weight:
-        raise ValueError("spelling selection auxiliary context differs")
+    if selection["retrieval_sha256"] is None:
+        selected_components = selection["word_retrieval"]
+        selected = {component["sha256"]: component["weight"] for component in selected_components}
+        if len(selected) != len(selected_components) or set(selected) != set(expected) or any(not math.isfinite(selected[key]) or abs(selected[key] - weight) > 1e-6 for key, weight in expected.items()):
+            raise ValueError("spelling selection must retain every complete word component")
+    else:
+        if selection["retrieval_sha256"] != retrieval_hash or len(components) > 1:
+            raise ValueError("legacy spelling selection cannot discard native word components")
+        auxiliary_hash = components[0]["checkpoint_sha256"] if components else None
+        auxiliary_weight = components[0]["weight"] if components else 0.0
+        if selection.get("retrieval_auxiliary_sha256") != auxiliary_hash or selection.get("retrieval_auxiliary_weight", 0.0) != auxiliary_weight:
+            raise ValueError("spelling selection auxiliary context differs")
+    records = [context, decoded, *records_by_hash.values()]
     for record in records:
         if record["words"] != retrieved["words"] or record["metadata"]["test_data_used"]:
             raise ValueError("spelling vocabulary or data provenance differs")
@@ -72,12 +87,10 @@ def main():
     for name, content in [("encoder", encoder_bytes), ("words", bank_bytes)]:
         if hashlib.sha256(content).hexdigest() != manifest[name + "_sha256"]:
             raise ValueError("native retrieval artifact hash differs")
-    binding = bytearray(bank_bytes)
-    if auxiliary_weight:
-        tags = [fingerprint((args.output / "auxiliary" / name).read_bytes()) for name in ["encoder.bin", "words.bin"]]
-        if tags != [manifest["auxiliary_encoder_tag"], manifest["auxiliary_bank_tag"]]:
+    for component in components:
+        tags = [fingerprint((args.output / component["directory"] / name).read_bytes()) for name in ["encoder.bin", "words.bin"]]
+        if tags != [component["encoder_tag"], component["bank_tag"]]:
             raise ValueError("native auxiliary artifact binding differs")
-        binding.extend(struct.pack("<QQf", *tags, auxiliary_weight))
     context_directory = args.output / "spelling"
     export_context = args.context_checkpoint
     if "context_model" in decoded:
@@ -87,11 +100,11 @@ def main():
     subprocess.run([sys.executable, str(Path(__file__).with_name("export_retrieval.py")),
                     "--checkpoint", str(export_context), "--output", str(context_directory)], check=True)
     context_bytes = (context_directory / "encoder.bin").read_bytes()
-    channels = 16 if context["metadata"]["arguments"].get("architecture") in ["intrinsic", "giant"] else 8
+    channels = 16 if context["metadata"]["arguments"].get("architecture") in ["intrinsic", "giant", "massive"] else 8
     model = SpellingDecoder(channels).eval()
     model.load_state_dict(decoded["model"])
     binary = bytearray(b"SWPSP001" + struct.pack("<QQQIff", fingerprint(context_bytes), fingerprint(encoder_bytes),
-                                              fingerprint(binding), channels, chosen["proxy_weight"], chosen["length_power"]))
+                                              word_binding(manifest, bank_bytes), channels, chosen["proxy_weight"], chosen["length_power"]))
     def linear(layer):
         binary.extend(floats(layer.weight)); binary.extend(floats(layer.bias))
     def attention(layer):
@@ -111,12 +124,10 @@ def main():
         result = build_encoder(record["metadata"]["arguments"].get("architecture", "small")).to(device).eval()
         result.load_state_dict(record["model"])
         return result
-    context_encoder, retrieval_encoder = encoder(context), encoder(retrieved)
+    context_encoder = encoder(context)
     if "context_model" in decoded:
         context_encoder.load_state_dict(decoded["context_model"])
-    auxiliary_encoder = encoder(auxiliary) if auxiliary else None
-    proxies = retrieved["proxies"].to(device)
-    auxiliary_proxies = auxiliary["proxies"].to(device) if auxiliary else None
+    word_models = [(encoder(records_by_hash[key]), records_by_hash[key]["proxies"].to(device), weight) for key, weight in expected.items()]
     model = model.to(device)
     words = retrieved["words"]
     inputs, targets, lengths = [v.to(device) for v in word_tokens(words)]
@@ -127,10 +138,8 @@ def main():
             paths = torch.tensor(curve(case["points"])[None], device=device)
             sequence, raw, embedding = encode(context_encoder, paths)
             memory = model.encode_memory(sequence, raw, embedding)
-            scores = proxy_scores(retrieval_encoder(encoder_features(retrieval_encoder, paths)), proxies)
-            if auxiliary_encoder:
-                other = proxy_scores(auxiliary_encoder(encoder_features(auxiliary_encoder, paths)), auxiliary_proxies)
-                scores = (1 - auxiliary_weight) * scores + auxiliary_weight * other
+            scores = sum(weight * proxy_scores(word_encoder(encoder_features(word_encoder, paths)), proxies)
+                         for word_encoder, proxies, weight in word_models)
             similarity, candidates = scores.topk(128, dim=1)
             costs = model.candidate_cost(memory, candidates, inputs, targets)
             ratings = costs / lengths[candidates].float().pow(chosen["length_power"]) - 32 * chosen["proxy_weight"] * similarity

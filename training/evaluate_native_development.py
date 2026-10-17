@@ -40,6 +40,10 @@ def main():
     if manifest.get("auxiliary_weight", 0.0):
         auxiliary = json.loads((args.model / "auxiliary/manifest.json").read_text())
         artifacts.update({"auxiliary/encoder.bin": auxiliary["encoder_sha256"], "auxiliary/words.bin": auxiliary["words_sha256"]})
+    for index, _ in enumerate(manifest.get("additional_models", [])):
+        folder = f"additional{index + 1}"
+        extra = json.loads((args.model / folder / "manifest.json").read_text())
+        artifacts.update({folder + "/encoder.bin": extra["encoder_sha256"], folder + "/words.bin": extra["words_sha256"]})
     if "spelling" in manifest:
         artifacts.update({"spelling.bin": manifest["spelling"]["sha256"],
                           "spelling/encoder.bin": manifest["spelling"]["context_encoder_sha256"]})

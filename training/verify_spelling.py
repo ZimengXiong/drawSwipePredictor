@@ -25,6 +25,10 @@ def main():
     if manifest.get("auxiliary_weight", 0.0):
         auxiliary = json.loads((model / "auxiliary/manifest.json").read_text())
         artifacts.update({"auxiliary/encoder.bin": auxiliary["encoder_sha256"], "auxiliary/words.bin": auxiliary["words_sha256"]})
+    for index, _ in enumerate(manifest.get("additional_models", [])):
+        folder = f"additional{index + 1}"
+        extra = json.loads((model / folder / "manifest.json").read_text())
+        artifacts.update({folder + "/encoder.bin": extra["encoder_sha256"], folder + "/words.bin": extra["words_sha256"]})
     for name, expected in artifacts.items():
         if hashlib.sha256((model / name).read_bytes()).hexdigest() != expected:
             raise ValueError(f"artifact hash differs: {name}")
@@ -34,7 +38,10 @@ def main():
     if len(result.stdout.splitlines()) != len(cases):
         raise ValueError("not every reference case was verified")
     failures = {}
-    for name in ["missing_decoder", "changed_decoder", "changed_context", "changed_mixture"]:
+    probes = ["missing_decoder", "changed_decoder", "changed_context", "changed_mixture"]
+    for index, _ in enumerate(manifest.get("additional_models", [])):
+        probes.extend([f"missing_additional{index + 1}", f"changed_additional{index + 1}", f"reweighted_additional{index + 1}"])
+    for name in probes:
         with tempfile.TemporaryDirectory(prefix="drawswipe-spelling-binding-") as directory:
             copied = Path(directory) / "model"
             shutil.copytree(model, copied)
@@ -45,10 +52,19 @@ def main():
                 content = bytearray(path.read_bytes())
                 content[44 if name == "changed_decoder" else 8] ^= 1
                 path.write_bytes(content)
+            elif name.startswith("missing_additional"):
+                (copied / name.removeprefix("missing_") / "encoder.bin").unlink()
+            elif name.startswith("changed_additional"):
+                path = copied / name.removeprefix("changed_") / "words.bin"
+                content = bytearray(path.read_bytes()); content[-1] ^= 1; path.write_bytes(content)
             else:
                 path = copied / "manifest.json"
                 modified = json.loads(path.read_text())
-                modified["auxiliary_weight"] = 0.5 if manifest.get("auxiliary_weight") != 0.5 else 0.25
+                if name.startswith("reweighted_additional"):
+                    index = int(name.removeprefix("reweighted_additional")) - 1
+                    modified["additional_models"][index]["weight"] *= 0.5
+                else:
+                    modified["auxiliary_weight"] = 0.5 if manifest.get("auxiliary_weight") != 0.5 else 0.25
                 path.write_text(json.dumps(modified))
             failed = subprocess.run([str(cli), "--model", str(copied)], input="", capture_output=True, text=True)
             if failed.returncode == 0:

@@ -13,20 +13,26 @@ class ModelPackagingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             files = ["encoder.bin", "words.bin", "auxiliary/encoder.bin", "auxiliary/words.bin",
-                     "spelling.bin", "spelling/encoder.bin"]
+                     "spelling.bin", "spelling/encoder.bin", "additional1/encoder.bin", "additional1/words.bin"]
             for name in files + ["training-checkpoint.pt"]:
                 path = root / name
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_bytes(name.encode())
             digest = lambda name: hashlib.sha256((root / name).read_bytes()).hexdigest()
             manifest = {"encoder_sha256": digest("encoder.bin"), "words_sha256": digest("words.bin"),
-                        "auxiliary_weight": 0.25, "spelling": {"sha256": digest("spelling.bin"),
+                        "auxiliary_weight": 0.25, "additional_models": [{"weight": 0.25}], "spelling": {"sha256": digest("spelling.bin"),
                         "context_encoder_sha256": digest("spelling/encoder.bin")}}
+            (root / "additional1/manifest.json").write_text(json.dumps({"encoder_sha256": digest("additional1/encoder.bin"),
+                                                                     "words_sha256": digest("additional1/words.bin")}))
             (root / "manifest.json").write_text(json.dumps(manifest))
             inventory = model_files(root)
-            self.assertEqual(set(inventory), {"manifest.json", *files})
+            self.assertEqual(set(inventory), {"manifest.json", "additional1/manifest.json", *files})
             self.assertNotIn("training-checkpoint.pt", inventory)
             (root / "spelling/encoder.bin").unlink()
+            with self.assertRaises(FileNotFoundError):
+                model_files(root)
+            (root / "spelling/encoder.bin").write_bytes(b"spelling/encoder.bin")
+            (root / "additional1/encoder.bin").unlink()
             with self.assertRaises(FileNotFoundError):
                 model_files(root)
 

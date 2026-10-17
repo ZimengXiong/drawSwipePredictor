@@ -20,6 +20,13 @@ struct Auxiliary {
     centers: usize,
 }
 
+#[derive(Clone, serde::Deserialize)]
+struct AdditionalModel {
+    weight: f32,
+    encoder_tag: u64,
+    bank_tag: u64,
+}
+
 /// Native neural recognizer. Load matching exported encoder and word-bank files.
 ///
 /// The encoder maps a gesture to a unit vector. Word vectors are cached at
@@ -42,6 +49,8 @@ pub struct RetrievalEngine {
     auxiliary: Option<Auxiliary>,
     auxiliary_weight: f32,
     auxiliary_tags: [u64; 2],
+    additional_specs: Vec<AdditionalModel>,
+    additional: Vec<Auxiliary>,
 }
 
 impl RetrievalEngine {
@@ -93,6 +102,31 @@ impl RetrievalEngine {
                 return Err("ensemble word banks differ".into());
             }
             engine.auxiliary = Some(Auxiliary {
+                encoder: other.encoder,
+                vectors: other.vectors,
+                centers: other.centers,
+            });
+        }
+        for (index, specification) in engine.additional_specs.iter().enumerate() {
+            let folder = directory.as_ref().join(format!("additional{}", index + 1));
+            let encoded = std::fs::read(folder.join("encoder.bin")).map_err(|e| e.to_string())?;
+            let vectors = std::fs::read(folder.join("words.bin")).map_err(|e| e.to_string())?;
+            if [specification.encoder_tag, specification.bank_tag]
+                != [fingerprint(&encoded), fingerprint(&vectors)]
+            {
+                return Err("additional model does not match the exported ensemble".into());
+            }
+            let other = Self::from_bytes(&encoded, &vectors)?;
+            if other.words.len() != engine.words.len()
+                || other
+                    .words
+                    .iter()
+                    .zip(&engine.words)
+                    .any(|(a, b)| a.text != b.text)
+            {
+                return Err("additional word banks differ".into());
+            }
+            engine.additional.push(Auxiliary {
                 encoder: other.encoder,
                 vectors: other.vectors,
                 centers: other.centers,
@@ -168,6 +202,11 @@ impl RetrievalEngine {
             binding.extend_from_slice(&tag.to_le_bytes());
         }
         binding.extend_from_slice(&self.auxiliary_weight.to_le_bytes());
+        for model in &self.additional_specs {
+            binding.extend_from_slice(&model.encoder_tag.to_le_bytes());
+            binding.extend_from_slice(&model.bank_tag.to_le_bytes());
+            binding.extend_from_slice(&model.weight.to_le_bytes());
+        }
         fingerprint(&binding)
     }
 
@@ -291,6 +330,8 @@ impl RetrievalEngine {
             auxiliary: None,
             auxiliary_weight: 0.0,
             auxiliary_tags: [0, 0],
+            additional_specs: Vec::new(),
+            additional: Vec::new(),
         })
     }
 
@@ -311,6 +352,8 @@ impl RetrievalEngine {
             auxiliary_bank_tag: u64,
             #[serde(default)]
             spelling: Option<serde_json::Value>,
+            #[serde(default)]
+            additional_models: Vec<AdditionalModel>,
         }
         let settings: Settings = serde_json::from_str(json).map_err(|e| e.to_string())?;
         if !(0.0..=2.0).contains(&settings.prior_weight)
@@ -319,11 +362,29 @@ impl RetrievalEngine {
         {
             return Err("invalid route ranking settings".into());
         }
+        if settings.additional_models.len() > 2
+            || settings.additional_models.iter().any(|model| {
+                !model.weight.is_finite()
+                    || !(0.0..1.0).contains(&model.weight)
+                    || model.weight == 0.0
+            })
+            || settings.auxiliary_weight
+                + settings
+                    .additional_models
+                    .iter()
+                    .map(|model| model.weight)
+                    .sum::<f32>()
+                > 1.0
+            || (!settings.additional_models.is_empty() && settings.auxiliary_weight == 0.0)
+        {
+            return Err("invalid complete word mixture settings".into());
+        }
         self.prior_weight = settings.prior_weight;
         self.tta_degrees = settings.tta_degrees;
         self.adaptive_prior = settings.adaptive_prior;
         self.auxiliary_weight = settings.auxiliary_weight;
         self.auxiliary_tags = [settings.auxiliary_encoder_tag, settings.auxiliary_bank_tag];
+        self.additional_specs = settings.additional_models;
         self.spelling_required = settings.spelling.is_some();
         self.spelling_tag = match settings.spelling {
             Some(value) => value["tag"]
@@ -347,6 +408,11 @@ impl RetrievalEngine {
             auxiliary
                 .vectors
                 .truncate(count * auxiliary.centers * auxiliary.encoder.dimension());
+        }
+        for model in &mut self.additional {
+            model
+                .vectors
+                .truncate(count * model.centers * model.encoder.dimension());
         }
     }
 
@@ -542,6 +608,18 @@ impl RetrievalEngine {
         if self.auxiliary_weight > 0.0 && self.auxiliary.is_none() {
             return Vec::new();
         }
+        if self.additional.len() != self.additional_specs.len() {
+            return Vec::new();
+        }
+        let Some(additional_queries) = self
+            .additional
+            .iter()
+            .map(|model| model.encoder.embed(path))
+            .collect::<Option<Vec<_>>>()
+        else {
+            return Vec::new();
+        };
+        let additional_weight: f32 = self.additional_specs.iter().map(|model| model.weight).sum();
         let auxiliary_query = if let Some(model) = &self.auxiliary {
             let Some(embedding) = model.encoder.embed(path) else {
                 return Vec::new();
@@ -560,8 +638,21 @@ impl RetrievalEngine {
                     let width = model.centers * embedding.len();
                     let start = index * width;
                     let other = center_similarity(embedding, &model.vectors[start..start + width]);
-                    similarity =
-                        (1.0 - self.auxiliary_weight) * similarity + self.auxiliary_weight * other;
+                    similarity = (1.0 - self.auxiliary_weight - additional_weight) * similarity
+                        + self.auxiliary_weight * other;
+                }
+                for ((model, embedding), specification) in self
+                    .additional
+                    .iter()
+                    .zip(&additional_queries)
+                    .zip(&self.additional_specs)
+                {
+                    let width = model.centers * embedding.len();
+                    similarity += specification.weight
+                        * center_similarity(
+                            embedding,
+                            &model.vectors[index * width..(index + 1) * width],
+                        );
                 }
                 let distance = (1.0 - similarity).max(0.0);
                 let popularity = self.words[index].popularity;
@@ -766,6 +857,35 @@ mod tests {
             ["world", "hello", "lunch"]
         );
         for (prediction, expected) in ranked.iter().zip([0.25, 0.75, 0.85]) {
+            assert!((prediction.raw_score - expected).abs() < 1e-6);
+        }
+        assert!(engine.configure(r#"{"prior_weight":0,"auxiliary_weight":0.75,"additional_models":[{"weight":0.5,"encoder_tag":0,"bank_tag":0}]}"#).is_err());
+        engine.auxiliary_weight = 0.25;
+        engine.additional_specs.push(AdditionalModel {
+            weight: 0.5,
+            encoder_tag: 0,
+            bank_tag: 0,
+        });
+        assert!(engine.predict_from_path(&path, 3).is_empty());
+        let vectors = [[0.0_f32, 1.0], [-1.0, 0.0], [1.0, 0.0]]
+            .into_iter()
+            .flat_map(|xy| {
+                let mut vector = [0.0; DIM];
+                vector[..2].copy_from_slice(&xy);
+                vector
+            })
+            .collect();
+        engine.additional.push(Auxiliary {
+            encoder: Encoder::from_bytes(&first).unwrap(),
+            vectors,
+            centers: 1,
+        });
+        let ranked = engine.predict_from_path(&path, 3);
+        assert_eq!(
+            ranked.iter().map(|p| p.word.as_str()).collect::<Vec<_>>(),
+            ["lunch", "hello", "world"]
+        );
+        for (prediction, expected) in ranked.iter().zip([0.35, 0.75, 1.25]) {
             assert!((prediction.raw_score - expected).abs() < 1e-6);
         }
         engine.truncate_vocabulary(2);
