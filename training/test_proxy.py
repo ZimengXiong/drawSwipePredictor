@@ -12,6 +12,7 @@ from torch import nn
 
 from intrinsic_features import intrinsic_features
 from amortized_motor import AmortizedMotor, retained_training_keys
+from autoregressive_model import SpellingDecoder, word_tokens, END
 from cross_model import RouteCrossRanker
 from large_encoder import expand_encoder
 from generative_fit import MotorFitter, route_mixture_cost
@@ -26,6 +27,24 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_spelling_likelihood_is_causal_and_candidate_order_independent(self):
+        torch.manual_seed(900419)
+        model = SpellingDecoder(width=48, layers=1).eval()
+        inputs, targets, lengths = word_tokens(["letter", "later", "lane"])
+        self.assertEqual(targets[0, :7].tolist(), [12, 5, 20, 20, 5, 18, END])
+        self.assertEqual(lengths.tolist(), [7, 6, 5])
+        memory = torch.randn(2, 32, 48)
+        original = model(memory, inputs[:2])
+        changed = inputs[:2].clone()
+        changed[:, 4:] = 26
+        torch.testing.assert_close(model(memory, changed)[:, :4], original[:, :4])
+        candidates = torch.tensor([[0, 2], [1, 0]])
+        costs = model.candidate_cost(memory, candidates, inputs, targets)
+        reversed_costs = model.candidate_cost(memory, candidates.flip(1), inputs, targets)
+        torch.testing.assert_close(costs.flip(1), reversed_costs)
+        costs.sum().backward()
+        self.assertTrue(torch.isfinite(model.output.weight.grad).all())
+
     def test_attention_preserves_baseline_and_learns_corrections(self):
         torch.manual_seed(900409)
         model = build_encoder("attention")
