@@ -11,6 +11,8 @@ import torch
 from torch import nn
 
 from intrinsic_features import intrinsic_features
+from character_edit import ctc_edit_components, edit_log_likelihood
+from character_model import character_targets, candidate_ctc_cost
 from motor_sampler import MotorSampler
 from retrieval_model import curve
 from train_pair import evaluate
@@ -32,6 +34,37 @@ class ProxyTests(unittest.TestCase):
         self.assertTrue(torch.isfinite(first).all())
         self.assertGreater((first - second).abs().mean().item(), 0.01)
         torch.testing.assert_close(first.square().sum(2).mean(1), torch.ones(32), atol=1e-5, rtol=1e-5)
+
+    def test_training_metadata_does_not_change_sampled_geometry(self):
+        sampler = MotorSampler(["helical", "abracadabra"], "cpu")
+        labels = torch.arange(2).repeat(16)
+        torch.manual_seed(81)
+        expected = sampler.sample(labels, strength=1)
+        torch.manual_seed(81)
+        actual, metadata = sampler.sample(labels, strength=1, return_metadata=True)
+        torch.testing.assert_close(actual, expected, atol=0, rtol=0)
+        self.assertTrue((metadata["keys"][:, 0] == sampler.keys[labels, 0] + 1).all())
+        self.assertTrue((metadata["lengths"] == sampler.lengths[labels] - metadata["dropped"].long()).all())
+
+    def test_latent_deletion_matches_explicit_ctc_enumeration(self):
+        words = ["abaca", "abcdefg", "abcd"]
+        targets, lengths, _ = character_targets(words)
+        probabilities = torch.randn(3, 18, 27, requires_grad=True).log_softmax(2)
+        candidates = torch.arange(3)[:, None]
+        ordinary, deleted = ctc_edit_components(probabilities, candidates, targets, lengths)
+        expected = -candidate_ctc_cost(probabilities, candidates, targets, lengths)
+        torch.testing.assert_close(ordinary, expected, atol=1e-5, rtol=1e-5)
+        for i, word in enumerate(words):
+            variants = [word[:j] + word[j + 1:] for j in range(1, len(word) - 1)]
+            # Keep repeated retained letters: CTC must insert a separating blank.
+            variant_targets = torch.tensor([[ord(c) - 96 for c in w] for w in variants])
+            variant_lengths = torch.full((len(variants),), len(word) - 1, dtype=torch.long)
+            costs = candidate_ctc_cost(probabilities[i:i + 1], torch.arange(len(variants))[None], variant_targets, variant_lengths)
+            torch.testing.assert_close(deleted[i, 0], (-costs).logsumexp(1)[0], atol=1e-5, rtol=1e-5)
+        combined = edit_log_likelihood(ordinary, deleted, lengths[:, None], 0.3)
+        torch.testing.assert_close(combined[2], ordinary[2])
+        gradients = torch.autograd.grad(combined.sum(), probabilities)[0]
+        self.assertTrue(torch.isfinite(gradients).all())
 
     def test_word_mode_order_cannot_change_scores(self):
         query = torch.nn.functional.normalize(torch.randn(8, 128), dim=1)
