@@ -20,7 +20,7 @@ from waypoint_model import WaypointDecoder
 def count_evidence(log_probabilities, log_prior, key_counts, omission=0.2835):
     """Integrate public candidate counts; correct the training count prior."""
     if (log_probabilities.ndim != 2 or log_probabilities.shape[1] != 31
-            or log_prior.shape != (31,) or torch.any((key_counts < 2) | (key_counts > 32))
+            or log_prior.shape != (31,) or key_counts.ndim != 1 or torch.any((key_counts < 2) | (key_counts > 32))
             or not 0 <= omission < 1):
         raise ValueError('expected all counts from two to thirty-two and a valid omission prior')
     ratios = log_probabilities-log_prior

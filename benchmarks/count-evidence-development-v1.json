@@ -1,0 +1,278 @@
+{
+  "test_data_used": false,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "samples": 12000,
+  "full_vocabulary": 60000,
+  "encoder_sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+  "counter_sha256": "d35e3082b020de4aeafb84e30aac71001e3f353d18fa2728addd134b6d971039",
+  "counter_epoch": 10,
+  "inputs_sha256": {
+    "checkpoints/exact-low-probe-v1.pt": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+    "checkpoints/count-evidence-probe-v1.pt": "d35e3082b020de4aeafb84e30aac71001e3f353d18fa2728addd134b6d971039",
+    "data/waypoint-inverse-v1/train.npz": "6d45f4362dab82b7b3d1a1a8e7734d4231491676915a21d9843699bcd293841e",
+    "checkpoints/route-spelling-full-v1.json": "7b2d5f60f53d6536f161d3e0242ce892535fa3e569a6643f97b8dab1d8cbba20",
+    "checkpoints/visited-routes-full-development-v1.json": "d9fc3207332fd6a7c5b03f2c9ebf8b8ac2d80db0111b46ef59238333a8065d2e"
+  },
+  "source_sha256": {
+    "evaluate_count_evidence.py": "c898c8c3ec6d541b3f0deb73c87aa50f76e8e07760030f44f23c123d20c2a810",
+    "waypoint_model.py": "5395dc483ca3d5d45decef8e04009c171ea561e6123b08b4a1232f24b90fab65",
+    "retrieval_model.py": "6be42de79e9777a97ef5cebcba60ce8b96fc840cdbf43aee532501e25cd87d4d",
+    "large_encoder.py": "41767ccc94c0d872490cb8a76866fb5f564d6c3179218bd0e2b0ed51c284a7e4"
+  },
+  "baseline_counts_verified": true,
+  "prior_source": "Training rows only; internal holdout excluded",
+  "training_count_prior": [
+    0.021224141120910645,
+    0.07797931134700775,
+    0.1146620661020279,
+    0.11275170743465424,
+    0.12408275902271271,
+    0.11672759801149368,
+    0.09973794221878052,
+    0.07793448120355606,
+    0.053644828498363495,
+    0.03538276255130768,
+    0.02222413942217827,
+    0.015141380950808525,
+    0.010596553795039654,
+    0.008334481157362461,
+    0.007406898308545351,
+    0.0067310333251953125,
+    0.0065206908620893955,
+    0.006634481251239777,
+    0.006837931461632252,
+    0.006372413132339716,
+    0.0064551737159490585,
+    0.006472415290772915,
+    0.006362068932503462,
+    0.006368964910507202,
+    0.006424138322472572,
+    0.006403448525816202,
+    0.006444827187806368,
+    0.006551723927259445,
+    0.006396551616489887,
+    0.006431034300476313,
+    0.00476206885650754
+  ],
+  "omission_prior": 0.2835,
+  "selected": {
+    "count_weight": 0.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "correct_top1": 1153,
+        "correct_top5": 1199,
+        "top1": 0.9608333333333333,
+        "top5": 0.9991666666666666
+      },
+      "loose": {
+        "samples": 2400,
+        "correct_top1": 2092,
+        "correct_top5": 2307,
+        "top1": 0.8716666666666667,
+        "top5": 0.96125
+      },
+      "memory": {
+        "samples": 8400,
+        "correct_top1": 6171,
+        "correct_top5": 7557,
+        "top1": 0.7346428571428572,
+        "top5": 0.8996428571428572
+      }
+    }
+  },
+  "trials": [
+    {
+      "count_weight": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1153,
+          "correct_top5": 1199,
+          "top1": 0.9608333333333333,
+          "top5": 0.9991666666666666
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2092,
+          "correct_top5": 2307,
+          "top1": 0.8716666666666667,
+          "top5": 0.96125
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6171,
+          "correct_top5": 7557,
+          "top1": 0.7346428571428572,
+          "top5": 0.8996428571428572
+        }
+      }
+    },
+    {
+      "count_weight": 0.1,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1153,
+          "correct_top5": 1199,
+          "top1": 0.9608333333333333,
+          "top5": 0.9991666666666666
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2092,
+          "correct_top5": 2307,
+          "top1": 0.8716666666666667,
+          "top5": 0.96125
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6169,
+          "correct_top5": 7556,
+          "top1": 0.7344047619047619,
+          "top5": 0.8995238095238095
+        }
+      }
+    },
+    {
+      "count_weight": 0.25,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1153,
+          "correct_top5": 1199,
+          "top1": 0.9608333333333333,
+          "top5": 0.9991666666666666
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2093,
+          "correct_top5": 2306,
+          "top1": 0.8720833333333333,
+          "top5": 0.9608333333333333
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6165,
+          "correct_top5": 7555,
+          "top1": 0.7339285714285714,
+          "top5": 0.8994047619047619
+        }
+      }
+    },
+    {
+      "count_weight": 0.5,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1153,
+          "correct_top5": 1199,
+          "top1": 0.9608333333333333,
+          "top5": 0.9991666666666666
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2091,
+          "correct_top5": 2307,
+          "top1": 0.87125,
+          "top5": 0.96125
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6159,
+          "correct_top5": 7552,
+          "top1": 0.7332142857142857,
+          "top5": 0.8990476190476191
+        }
+      }
+    },
+    {
+      "count_weight": 1.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1154,
+          "correct_top5": 1198,
+          "top1": 0.9616666666666667,
+          "top5": 0.9983333333333333
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2090,
+          "correct_top5": 2306,
+          "top1": 0.8708333333333333,
+          "top5": 0.9608333333333333
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6147,
+          "correct_top5": 7551,
+          "top1": 0.7317857142857143,
+          "top5": 0.8989285714285714
+        }
+      }
+    },
+    {
+      "count_weight": 2.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1152,
+          "correct_top5": 1199,
+          "top1": 0.96,
+          "top5": 0.9991666666666666
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2083,
+          "correct_top5": 2305,
+          "top1": 0.8679166666666667,
+          "top5": 0.9604166666666667
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6125,
+          "correct_top5": 7531,
+          "top1": 0.7291666666666666,
+          "top5": 0.896547619047619
+        }
+      }
+    },
+    {
+      "count_weight": 4.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1150,
+          "correct_top5": 1199,
+          "top1": 0.9583333333333334,
+          "top5": 0.9991666666666666
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2074,
+          "correct_top5": 2301,
+          "top1": 0.8641666666666666,
+          "top5": 0.95875
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6084,
+          "correct_top5": 7486,
+          "top1": 0.7242857142857143,
+          "top5": 0.8911904761904762
+        }
+      }
+    }
+  ],
+  "native_supported": false,
+  "limits": "Full development with identical natural128 candidates. Query inputs are points only; all31count classes remain available. Counts from candidate spellings are public hypotheses. No true query count, target, writer, or difficulty enters prediction; no benchmark or confirmation evaluation.",
+  "raw_report_sha256": "a1112618386cdf77d3e48f3f0f4857539ef28435515b7dd2bbbf1fa6b8356f9b"
+}
