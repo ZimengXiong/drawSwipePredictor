@@ -66,23 +66,19 @@ def break_widened_symmetry(model, original, scale=0.01, seed=900971):
     hidden = torch.arange(old_width*4).repeat(ratio)
     generator = torch.Generator(device='cpu').manual_seed(seed)
 
-    def perturb(layer, mapping):
+    def perturb(weight, mapping):
         groups = torch.stack([(mapping==index).nonzero().flatten() for index in range(int(mapping.max())+1)])
-        if groups.numel()!=layer.weight.shape[1] or groups.shape[1]!=ratio:
+        if groups.numel()!=weight.shape[1] or groups.shape[1]!=ratio:
             raise ValueError('projection does not have the expected replicated inputs')
-        noise = torch.randn(layer.weight.shape[0],len(groups),ratio-1,generator=generator)*scale
+        noise = torch.randn(weight.shape[0],len(groups),ratio-1,generator=generator)*scale
         noise = torch.cat([noise,-noise.sum(2,keepdim=True)],dim=2)
-        columns = groups.flatten().to(layer.weight.device)
-        layer.weight[:,columns] += noise.reshape(layer.weight.shape[0],-1).to(layer.weight.device)
+        columns = groups.flatten().to(weight.device)
+        weight[:,columns] += noise.reshape(weight.shape[0],-1).to(weight.device)
 
     for block in model.decoder.layers[:old_layers]:
         for attention in [block.self_attn,block.multihead_attn]:
-            # MultiheadAttention stores its combined Q/K/V matrix directly.
-            class Projection:
-                pass
-            projection=Projection();projection.weight=attention.in_proj_weight
-            perturb(projection,channels)
-            perturb(attention.out_proj,channels)
-        perturb(block.linear1,channels)
-        perturb(block.linear2,hidden)
-    perturb(model.output,channels)
+            perturb(attention.in_proj_weight,channels)
+            perturb(attention.out_proj.weight,channels)
+        perturb(block.linear1.weight,channels)
+        perturb(block.linear2.weight,hidden)
+    perturb(model.output.weight,channels)

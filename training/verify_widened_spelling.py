@@ -11,7 +11,7 @@ from autoregressive_model import SpellingDecoder, load_decoder, word_tokens
 from retrieval_model import build_encoder, curve
 from train_character import encode
 from train_joint import load_checkpoint
-from widen_spelling import widen_decoder
+from widen_spelling import widen_decoder, break_widened_symmetry
 
 
 def main():
@@ -20,6 +20,7 @@ def main():
     parser.add_argument('--decoder', type=Path, required=True)
     parser.add_argument('--references', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--symmetry-noise', type=float, default=0.0)
     args = parser.parse_args()
     torch.set_num_threads(4)
     saved, encoder_hash = load_checkpoint(args.checkpoint)
@@ -31,6 +32,8 @@ def main():
     old = load_decoder(source['model'], 8).to('mps').eval()
     new = SpellingDecoder(8, width=384, layers=12).to('mps').eval()
     widen_decoder(new, source['model'])
+    if args.symmetry_noise:
+        break_widened_symmetry(new, source['model'], args.symmetry_noise)
     cases = json.loads(args.references.read_text())
     reports = []
     with torch.no_grad():
@@ -50,7 +53,7 @@ def main():
             reports.append({'case': case['word'], 'maximum_cost_error': error})
     report = {'test_data_used': False, 'encoder_sha256': encoder_hash, 'decoder_sha256': decoder_hash,
               'reference_sha256': hashlib.sha256(args.references.read_bytes()).hexdigest(),
-              'width': 384, 'layers': 12, 'parameters': sum(p.numel() for p in new.parameters()),
+              'width': 384, 'layers': 12, 'symmetry_noise': args.symmetry_noise, 'parameters': sum(p.numel() for p in new.parameters()),
               'cases': reports, 'limits': 'Canonical Python initialization parity only; no training, native compatibility, or recognition improvement claimed.'}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2)+'\n')

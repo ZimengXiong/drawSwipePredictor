@@ -114,6 +114,8 @@ def main():
         parser.error("fresh fraction must be between zero and 0.7")
     if not np.isfinite(args.widen_symmetry_noise) or not 0 <= args.widen_symmetry_noise <= 0.05:
         parser.error("widening noise must be between zero and 0.05")
+    if args.widen_symmetry_noise and not args.init_decoder:
+        parser.error("widening noise requires an initialized expanded decoder")
     torch.set_num_threads(4)
     torch.manual_seed(args.seed)
     rng = np.random.default_rng(args.seed)
