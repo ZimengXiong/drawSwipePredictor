@@ -44,9 +44,10 @@ Repeat `--extra-train` for more shards. Each run records their hashes and writer
 
 ## Compare candidate words with the stroke
 
-Three experiments add evidence beyond a single word vector:
+Four experiments add evidence beyond a single word vector:
 
 - `train_character.py` learns character probabilities along the stroke, then scores retrieved dictionary words with CTC. `--edit-channel` also marginalizes a forgotten interior key. Visited-key metadata supervises fresh training examples only; it never enters the decoder.
+- `train_joint.py` updates the encoder, word proxies, and character decoder together. Validation recomputes features and retrieves fresh candidate lists after each epoch.
 - `train_cross.py` uses cross attention between a candidate's letter sequence and the observed stroke. Training uses fresh writers and naturally retrieved hard negatives.
 - `fit_development.py` fits bounded motor-error parameters for each retrieved candidate, including possible interior omissions. It measures this slower geometric method on the declared development corpus only.
 
@@ -67,4 +68,18 @@ uv run --directory training python -m unittest test_proxy test_retrieval
 cargo test --workspace --all-targets
 ```
 
-Native word-encoder support does not yet export the experimental character or cross-attention decoders. A selected complete system must pass its own native parity checks before it replaces the app's model.
+Export a joint character checkpoint after its base word model:
+
+```sh
+uv run --directory training python export_retrieval.py \
+  --checkpoint checkpoints/joint-v1/best.pt --output checkpoints/joint-native
+uv run --directory training python export_character.py \
+  --retrieval-checkpoint checkpoints/joint-v1/best.pt --output checkpoints/joint-native
+cargo run --release -p swipe-engine --example retrieval_cli -- \
+  --model training/checkpoints/joint-native \
+  --verify-character training/checkpoints/joint-native/character-verification.json
+```
+
+For a separately trained frozen decoder, also pass `--decoder-checkpoint` to `export_character.py`. The exporter and runtime bind the decoder to the exact encoder and word bank. Verification checks character probabilities and final word rankings. Native CTC also supports marginalizing one missing interior key.
+
+Cross-attention models are not yet exported to native inference. A selected complete system must pass native parity checks before it replaces the app's model.

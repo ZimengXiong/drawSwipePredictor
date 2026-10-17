@@ -147,7 +147,8 @@ def main():
             temporary = args.output / "best.pt.tmp"
             torch.save({"model": encoder.state_dict(), "character_model": decoder.state_dict(),
                 "proxies": F.normalize(proxies.detach(), dim=-1), "words": words, "counts": counts,
-                "metadata": metadata, "epoch": epoch, "best_score": best, "selected": result, "raw_channels": channels}, temporary)
+                "metadata": metadata, "epoch": epoch, "best_score": best, "selected": result, "raw_channels": channels,
+                "retriever_validation": next(trial["validation"] for trial in trials if trial["proxy_weight"] is None)}, temporary)
             temporary.replace(args.output / "best.pt")
             (args.output / "best-metrics.json").write_text(json.dumps({**report, "trials": trials}, indent=2) + "\n")
 

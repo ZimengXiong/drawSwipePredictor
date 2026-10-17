@@ -70,12 +70,12 @@
   },
   "checks": {
     "python_tests_passed": 15,
-    "rust_workspace_tests_passed": 17,
+    "rust_workspace_tests_passed": 19,
     "engine_clippy": "passed with warnings denied"
   },
   "limits": [
     "Development results are not benchmark results.",
-    "Experimental character and cross-attention decoders are not yet exported to native inference.",
+    "Experimental cross-attention decoders are not yet exported to native inference; character decoding has CLI parity support.",
     "Training is still running; the app retains the previously validated bundled model."
   ]
 }
