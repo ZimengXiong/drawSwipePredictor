@@ -108,3 +108,21 @@ cargo run --release -p swipe-engine --example retrieval_cli -- \
 ```
 
 The exported decoder binds to both encoders, both word banks, and the blend weight. Changing any of them requires a matching export. These directory exports work through the CLI; the bundled app still uses the previously validated model.
+
+## Learn faster motor proposals
+
+`train_amortized_motor.py` learns distortion parameters from fresh synthetic drawings and candidate geometry. Synthetic visited-key labels supervise the training reconstruction loss. Recognition enumerates candidate routes and possible interior omissions without those labels.
+
+```sh
+uv run --directory training python train_amortized_motor.py \
+  --output checkpoints/amortized-motor-v1 --epochs 100 --steps 200 --batch 256
+uv run --directory training python fit_development.py \
+  --checkpoint checkpoints/fit-encoder-frozen.pt \
+  --initializer checkpoints/amortized-motor-probe-v1.pt \
+  --output checkpoints/amortized-refinement-probe-v1.json \
+  --samples 128 --candidates 64 --steps 30 --batch 8
+```
+
+The trainer's conditional reconstruction error is measured with the correct word supplied. It is a fitting diagnostic, not word-recognition accuracy. The separate recognition evaluator uses naturally retrieved candidates and exact-word scoring. `--steps 0` tests the learned proposal directly; positive counts refine its parameters from the observed stroke.
+
+`combine_motor_evidence.py` checks whether completed fits add information beyond the fixed word-and-character system. It combines naturally retrieved lists and treats missing fit evidence as neutral. A saved `--fixed-combination` freezes the selected blend weight for a different development slice. Neither this blend nor the learned initializer is part of the bundled app yet.
