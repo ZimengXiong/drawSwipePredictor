@@ -61,6 +61,8 @@ def main():
     words, counts, paths = vocabulary(ROOT / "word_freq.txt", limit)
     model = model.to(args.device)
     if "proxies" in checkpoint:
+        if checkpoint["words"] != words:
+            raise ValueError("learned proxy word order differs from the deployment vocabulary")
         vectors = torch.nn.functional.normalize(checkpoint["proxies"], dim=-1).numpy()
         if limit != len(vectors):
             raise ValueError("learned proxy vocabulary must match the exported vocabulary")
