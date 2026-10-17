@@ -193,3 +193,68 @@ fn ctc_likelihood(probabilities: &[[f32; 27]], keys: &[usize]) -> f32 {
     }
     log_add(states[states.len() - 1], states[states.len() - 2])
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ctc_matches_exhaustive_paths_and_repeated_letter_rules() {
+        let rows = [[0.2_f32, 0.5, 0.3], [0.4, 0.2, 0.4], [0.1, 0.6, 0.3]];
+        let probabilities: Vec<_> = rows
+            .iter()
+            .map(|row| {
+                let mut values = [f32::NEG_INFINITY; 27];
+                for i in 0..3 {
+                    values[i] = row[i].ln();
+                }
+                values
+            })
+            .collect();
+        for target in [vec![1, 2], vec![1, 1], vec![2, 1]] {
+            let mut expected = 0.0;
+            for a in 0..3 {
+                for b in 0..3 {
+                    for c in 0..3 {
+                        let mut collapsed = Vec::new();
+                        let mut previous = usize::MAX;
+                        for symbol in [a, b, c] {
+                            if symbol != previous && symbol != 0 {
+                                collapsed.push(symbol);
+                            }
+                            previous = symbol;
+                        }
+                        if collapsed == target {
+                            expected += rows[0][a] * rows[1][b] * rows[2][c];
+                        }
+                    }
+                }
+            }
+            assert!((ctc_likelihood(&probabilities, &target).exp() - expected).abs() < 1e-6);
+        }
+        assert_eq!(
+            ctc_likelihood(&probabilities[..2], &[1, 1]),
+            f32::NEG_INFINITY
+        );
+    }
+
+    #[test]
+    fn decoder_rejects_invalid_configuration_and_truncated_weights() {
+        let mut bytes = b"SWPCH001".to_vec();
+        bytes.extend_from_slice(&0_u64.to_le_bytes());
+        bytes.extend_from_slice(&0_u64.to_le_bytes());
+        bytes.extend_from_slice(&8_u32.to_le_bytes());
+        for value in [1.0_f32, 0.3, 0.3] {
+            bytes.extend_from_slice(&value.to_le_bytes());
+        }
+        assert!(CharacterModel::from_bytes(&bytes)
+            .err()
+            .unwrap()
+            .contains("truncated"));
+        bytes[28..32].copy_from_slice(&f32::NAN.to_le_bytes());
+        assert!(CharacterModel::from_bytes(&bytes)
+            .err()
+            .unwrap()
+            .contains("configuration"));
+    }
+}
