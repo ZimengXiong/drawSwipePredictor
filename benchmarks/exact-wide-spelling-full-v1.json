@@ -1,0 +1,107 @@
+{
+  "encoder_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "decoder_sha256": "d06540bd32a3575abf092d131623e4d0826729852886761ba1f08721a4fe4fa9",
+  "retrieval_sha256": null,
+  "word_retrieval": [
+    {
+      "sha256": "89a68311ded7735485a232d212691ea5e941c7fdee11318ff6f0358fcb741727",
+      "weight": 0.25
+    },
+    {
+      "sha256": "b86c9d1cab7d56cd50b23bc8cf38f6a47824427ab36c4a145a049b1951064156",
+      "weight": 0.25
+    },
+    {
+      "sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+      "weight": 0.25
+    },
+    {
+      "sha256": "be02eac8fa11d5dc1bd29613fcba7de1456ce1dbfd698fb9f11f3e1426f13dee",
+      "weight": 0.25
+    }
+  ],
+  "retrieval_auxiliary_sha256": null,
+  "retrieval_auxiliary_weight": 0.0,
+  "retrieval_selection_sha256": "50b46e212f3977e5e2cb2a313f8c98387efe1b87fdb55c3fafb2fb4b3d9a9efa",
+  "joint_context": false,
+  "context_state_source_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "decoder_epoch": 30,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "samples": 12000,
+  "selected": {
+    "length_power": 0.7,
+    "proxy_weight": 2.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9599999785423279,
+        "top5": 1.0
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8679166436195374,
+        "top5": 0.9604166746139526
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7294047474861145,
+        "top5": 0.8959524035453796
+      }
+    }
+  },
+  "shortlist_recall": {
+    "clean": 1.0,
+    "loose": 1.0,
+    "memory": 0.9955952167510986
+  },
+  "rules": "All development rows; natural top128; exact full words; no target insertion or alias credit",
+  "retrieval_only_control": {
+    "length_power": 0.0,
+    "proxy_weight": null,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9608333110809326,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8695833086967468,
+        "top5": 0.9608333110809326
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7265475988388062,
+        "top5": 0.8919047713279724
+      }
+    }
+  },
+  "raw_report_sha256": "8b5d6a912bf4108c3b923a33cd7a4ce83f6175be06ff76edbf96f6a58f5a2e94",
+  "native_verified": false,
+  "promoted_to_app": false,
+  "hard_correct_top1": 6127,
+  "aggregate_count_change_vs_previous": {
+    "clean": {
+      "top1": -4,
+      "top5": 1
+    },
+    "loose": {
+      "top1": -8,
+      "top5": -1
+    },
+    "memory": {
+      "top1": 18,
+      "top5": 33
+    }
+  },
+  "limits": "Full development only. Clean and loose groups have regressions relative to the prior selected system; all groups are retained. Complete three/four-word-model native mixture integration remains required. Individual wider/larger encoders pass separate canonical parity checks. No benchmark or confirmation evaluation."
+}

@@ -1,0 +1,103 @@
+{
+  "encoder_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "decoder_sha256": "d06540bd32a3575abf092d131623e4d0826729852886761ba1f08721a4fe4fa9",
+  "retrieval_sha256": null,
+  "word_retrieval": [
+    {
+      "sha256": "89a68311ded7735485a232d212691ea5e941c7fdee11318ff6f0358fcb741727",
+      "weight": 0.25
+    },
+    {
+      "sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+      "weight": 0.5
+    },
+    {
+      "sha256": "be02eac8fa11d5dc1bd29613fcba7de1456ce1dbfd698fb9f11f3e1426f13dee",
+      "weight": 0.25
+    }
+  ],
+  "retrieval_auxiliary_sha256": null,
+  "retrieval_auxiliary_weight": 0.0,
+  "retrieval_selection_sha256": "8276bf5b62ef2f8b4d2ffbd19d5fb7fedf3e79e17dde3a3eee91e66880a3dbd2",
+  "joint_context": false,
+  "context_state_source_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "decoder_epoch": 30,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "samples": 12000,
+  "selected": {
+    "length_power": 0.7,
+    "proxy_weight": 2.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9583333134651184,
+        "top5": 1.0
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8683333396911621,
+        "top5": 0.9604166746139526
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7298809289932251,
+        "top5": 0.895714282989502
+      }
+    }
+  },
+  "shortlist_recall": {
+    "clean": 1.0,
+    "loose": 1.0,
+    "memory": 0.9957143068313599
+  },
+  "rules": "All development rows; natural top128; exact full words; no target insertion or alias credit",
+  "retrieval_only_control": {
+    "length_power": 0.0,
+    "proxy_weight": null,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9624999761581421,
+        "top5": 1.0
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8708333373069763,
+        "top5": 0.9616666436195374
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7266666889190674,
+        "top5": 0.8921428322792053
+      }
+    }
+  },
+  "raw_report_sha256": "bce4a5d6f8dac6d74e4b42fca8518241c909927999d11846f8f79c91f1ec0271",
+  "native_verified": false,
+  "promoted_to_app": false,
+  "hard_correct_top1": 6131,
+  "aggregate_count_change_vs_previous": {
+    "clean": {
+      "top1": -6,
+      "top5": 1
+    },
+    "loose": {
+      "top1": -7,
+      "top5": -1
+    },
+    "memory": {
+      "top1": 22,
+      "top5": 31
+    }
+  },
+  "limits": "Full development only. Clean and loose groups have regressions relative to the prior selected system; all groups are retained. Complete three/four-word-model native mixture integration remains required. Individual wider/larger encoders pass separate canonical parity checks. No benchmark or confirmation evaluation."
+}
