@@ -1,0 +1,47 @@
+{
+  "source_checks": {
+    "word_freq.txt": {
+      "sha256": "51df159fd3de12b20e403c108f526e96dbd723d9cabdd5f17955cdc16059e690",
+      "unchanged_from": "8bd5454"
+    },
+    "crates/swipe-engine/src/synthetic.rs": {
+      "sha256": "760b43e423eb8fe9bd81273551a0df7749c93f2e722c2f86afd33f8f4e2bf1c0",
+      "unchanged_from": "8bd5454"
+    },
+    "crates/swipe-engine/examples/memory_bench.rs": {
+      "sha256": "d52a1eda5939a1d9a87101c8609f3619cecae80b49ee313b1f97acf66689085d",
+      "unchanged_from": "8bd5454"
+    },
+    "training/evaluate_reranker.py": {
+      "sha256": "f4e4b882c02431584e64e275a46044591f7b8f641da15dba14b404bc9886118d",
+      "unchanged_from": "8bd5454"
+    }
+  },
+  "corpora": {
+    "train": {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "sha256": "557eb33b55d76c7c0b27b792f26b17b163006ca1ba13435a9a4e62436d6ce235",
+      "writer_start": 700003100003,
+      "writer_end_exclusive": 700004100003
+    },
+    "validation": {
+      "samples": 12000,
+      "vocabulary": 60000,
+      "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+      "writer_start": 700005100009,
+      "writer_end_exclusive": 700005112009
+    },
+    "confirmation": {
+      "samples": 12000,
+      "vocabulary": 60000,
+      "sha256": "877bff4deee4847b4632140405c44f7b0183336dab3b7886cb2ce1cebfa3aa97",
+      "writer_start": 700009100021,
+      "writer_end_exclusive": 700009112021
+    }
+  },
+  "training_targets": "Uniform over all eligible words across the complete 60000-word vocabulary",
+  "inference_inputs": "Geometry only. No writer, label, source ID, seed, or vocabulary rank input.",
+  "benchmark_has_not_been_rerun": true,
+  "benchmark_sha256": "0dd181dfd6ee8be0c706bfe269504ddd6dbb1e0dc90ed587ebf3ba019ce1a63f"
+}
