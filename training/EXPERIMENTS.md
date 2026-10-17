@@ -65,6 +65,18 @@ Four experiments add evidence beyond a single word vector:
 
 These are experiments, not claims of improved benchmark accuracy. Run metadata and development histories remain beside each checkpoint. Unsuccessful pair-ranking and multi-center trials are recorded in `benchmarks/`.
 
+`train_autoregressive.py` trains a spelling decoder around a frozen word encoder. Each next-letter prediction can use the whole stroke and earlier candidate letters. Unlike the CTC targets, its targets retain repeated letters and include an end token. Training uses teacher forcing; evaluation scores only the 128 candidates retrieved naturally from the full dictionary. A retrieval-only option protects the baseline during development selection.
+
+```sh
+uv run --directory training python train_autoregressive.py \
+  --checkpoint checkpoints/proxy-giant-strong-init.pt \
+  --extra-train data/memory-proxy/train-700011.bin \
+  --output checkpoints/autoregressive-v1 \
+  --epochs 120 --steps 200 --batch 512 --seed 900419
+```
+
+The decoder receives stroke features and candidate letters. It receives no target label, writer identity, or word rank at evaluation. Its histories distinguish the fixed development subset from the full development set. It has no native exporter yet and cannot replace the app model until native verification is implemented.
+
 ## Verify without computer use
 
 All checks use the command line. The native exporter supports the compact, large, intrinsic, and giant word encoders. Export to a separate directory, then compare native embeddings with PyTorch reference values:
