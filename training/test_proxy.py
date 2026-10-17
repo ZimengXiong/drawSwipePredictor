@@ -22,11 +22,19 @@ from motor_sampler import MotorSampler
 from retrieval_model import curve, build_encoder, encoder_features
 from train_pair import evaluate
 from train_proxy import RECORD, corpus, proxy_scores, real_word_groups, balanced_real_indices
+from reference_density import mixture_similarity
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_reference_density_is_invariant_to_reference_order_and_duplication(self):
+        similarities = torch.tensor([[[0.1, 0.8, 0.3], [0.5, 0.4, 0.2]]])
+        for temperature in [0.0, 0.01, 0.1]:
+            score = mixture_similarity(similarities, temperature)
+            torch.testing.assert_close(score, mixture_similarity(similarities.flip(-1), temperature))
+            torch.testing.assert_close(score, mixture_similarity(similarities.repeat_interleave(2, -1), temperature))
+
     def test_motor_sampler_covers_short_and_long_dictionary_routes(self):
         words = ["at", "hello", "electroencephalographic"]
         sampler = MotorSampler(words, "cpu", max_keys=None)

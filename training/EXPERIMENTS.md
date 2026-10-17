@@ -79,6 +79,22 @@ The decoder receives stroke features and candidate letters. It receives no targe
 
 After training, use `evaluate_spelling.py --checkpoint <word-checkpoint> --decoder <spelling-checkpoint> --output <report>` to select scores on all 12,000 development drawings. The evaluator checks both checkpoint bindings and the development hash. It rejects other corpora, including the reserved confirmation set.
 
+## Compare many independent drawings per word
+
+`reference_density.py` tests whether a distribution of reference drawings improves on one learned word vector. It generates the same number of independent examples for every dictionary word, including words outside the usual training-length range. Every word receives the same fixed mixture of clean, loose, and hard errors. The bank contains no development drawings.
+
+```sh
+uv run --directory training python reference_density.py build \
+  --checkpoint checkpoints/proxy-giant-strong-init.pt \
+  --output checkpoints/reference-density-v1 --references 32 --seed 900433
+uv run --directory training python reference_density.py evaluate \
+  --checkpoint checkpoints/proxy-giant-strong-init.pt \
+  --bank checkpoints/reference-density-v1 \
+  --output checkpoints/reference-density-development-v1.json
+```
+
+Evaluation uses the existing full-vocabulary retriever's natural top 128 candidates. It blends learned word scores with reference-kernel scores and includes the unchanged baseline. Equal-count kernel averaging prevents reference count from acting as a word prior. Selection uses all development rows and checks encoder, dictionary, and bank hashes. The bank is experimental and has no native exporter yet.
+
 ## Verify without computer use
 
 All checks use the command line. The native exporter supports the compact, large, intrinsic, and giant word encoders. Export to a separate directory, then compare native embeddings with PyTorch reference values:
