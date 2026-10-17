@@ -351,3 +351,16 @@ The frozen round-two corner model completes the full 12,000-row comparison. At w
 Later word checkpoints produce a stronger word-only mixture: 25% wider round 150, 25% wider round 174, and 50% synthetic-only round 158. Full-vocabulary development reaches 6,162/8,400 hard first choices, 21 above the previous word pair. The complete nine-layer spelling comparison is running. This result is separate from both the native complete model and the 28.6-million-parameter decoder comparison.
 
 The frozen round-ten 28.6-million-parameter decoder finishes full development at 6,171/8,400 hard first choices, tying the selected nine-layer system. Its hard top-five score is lower, and initialization measurements show greater native latency. The subset gain did not establish a full-development gain. The preview remains unchanged; both larger-decoder training variants continue.
+
+
+The later three-component word mixture completes its nine-layer spelling comparison at 6,176/8,400 hard first choices (73.52%), five above the current native preview. Five canonical references and seven binding checks pass. Its full point-only native replay is running. Hard top-five accuracy is lower than the preview, so both counts and latency remain relevant to any replacement. This is a development result, not benchmark accuracy.
+
+## Compare complete candidate paths directly
+
+`CandidateMatcher` uses bidirectional attention over a public candidate's complete spelling, followed by attention to the observed stroke. Each letter receives normalized keyboard coordinates and route progress. Consecutive repeated letters remain separate tokens. Mean and end-token features produce a compatibility score. Candidate pairs are scored independently, so candidate order cannot carry information.
+
+The first model has 14,658,462 parameters, six blocks, and width 384. It transfers the original trained three-layer spelling backbone through a widened initialization with canceling symmetry perturbations. Its new output starts at zero, preserving the existing word score. It optimizes direct candidate classification rather than next-letter prediction. The original encoder and word experts remain frozen.
+
+`train_candidate_matcher.py` samples the audited 31-million-writer pool. A batch of 16 contains 13 synthetic swipes, two public human recordings, and one augmented canonical path sampled from all 60,000 words. The canonical component retains positive support outside the cached target-length range. Training mixes hard and random retrieved alternatives and shuffles the labeled positive's position. These positives supervise training only. Development always uses natural top128 candidates retrieved from every word; missing targets remain misses.
+
+The zero-output initialization reproduces 1,498/2,051 hard first choices on the fixed 3,000-row development subset. This is a word-only baseline and establishes no trained gain. Checkpoint selection on that subset requires a full-development comparison and native verification before promotion. Unit tests check repeated-letter geometry, end-token preservation, candidate permutation, neutral initialization, learned attention gradients, and shuffled unique training candidates. All 70 Python tests pass. No benchmark or confirmation data enters this stage.
