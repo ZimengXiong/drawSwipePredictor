@@ -1,0 +1,37 @@
+{
+  "test_data_used": false,
+  "control_run_sha256": "a43c49c3903ad528790c93e5b7f13ce995c31065b553092770cd81dcfbf1f8bf",
+  "fixed_normalization_run_sha256": "2fa485f393ddef8d3999f67735d2962df23fc752086a87d163fd61f20e3974e4",
+  "initialization_sha256": "51917dcb2739b2300a08c0e971c556024238f484f7dea2f61239e8f238f22bec",
+  "different_arguments": {
+    "output": [
+      "checkpoints/proxy-wide512-exact-v1",
+      "checkpoints/proxy-wide512-fixed-norm-v1"
+    ],
+    "freeze_normalization": [
+      false,
+      true
+    ]
+  },
+  "all_other_arguments_match": true,
+  "all_data_and_initial_rates_match": true,
+  "initial_validation": {
+    "clean": {
+      "samples": 1200,
+      "top1": 0.9583333134651184,
+      "top5": 0.9983333349227905
+    },
+    "loose": {
+      "samples": 2400,
+      "top1": 0.8762500286102295,
+      "top5": 0.9637500047683716
+    },
+    "memory": {
+      "samples": 8400,
+      "top1": 0.7303571701049805,
+      "top5": 0.8959524035453796
+    }
+  },
+  "hypothesis": "Test whether adapting BatchNorm running statistics contributes to the wider exact-data stage initial regression. Both runs train affine parameters; dropout remains active.",
+  "limits": "Paired configuration and initial-count verification only; no trained gain claimed. Equal seeds are not a claim of bit-identical GPU execution. No benchmark or confirmation evaluation."
+}

@@ -288,7 +288,7 @@ Motor fitting and ranking can use different penalties. `fit_development.py --opt
 
 `train_adaptive_words.py` freezes four complete word models and learns a small query-dependent gate. Shape features and per-expert score statistics determine convex mixture weights. No frequency, candidate identity, true word, writer identity, or difficulty enters the gate. Training uses full 60,000-class cross entropy on the audited training writers. Every development query is scored against every word.
 
-The first five training rounds reach 6,146/8,400 hard first choices, compared with 6,141 for the fixed mature pair and 6,113 for the uniform four-model initializer. This is a word-only experiment; it trails the 6,171-hit complete system. It has no native export and remains in training. Candidate-permutation tests check that word-bank order cannot affect query weights.
+The first five training rounds reach 6,146/8,400 hard first choices, compared with 6,141 for the fixed mature pair and 6,113 for the uniform four-model initializer. This is a word-only experiment; it trails the 6,171-hit complete system. It has no native export. The stage stopped after round 30, with its best at round 5; its saved best checkpoint is preserved. Candidate-permutation tests check that word-bank order cannot affect query weights.
 
 The expanded-real-data stage stopped after 136 completed rounds, 81 beyond its best checkpoint at round 55. Its best 72.50% and latest weights remain preserved. Two larger encoder controls, the wider encoder, synthetic-only training, and the decoder experiments continue independently.
 
@@ -299,3 +299,11 @@ The expanded-real-data stage stopped after 136 completed rounds, 81 beyond its b
 The first 512-row diagnostic improves six hard first choices over its spelling control: 270 versus 264 out of 349. This supports a full comparison; it does not establish 77.36% accuracy across all hard development rows. The full visited-route replay is still running. The combination has no native exporter yet. Scored arrays are retained so reporting repairs do not require another model pass.
 
 The initial wide encoder completed all 180 rounds, with its best at round 174 (73.04% hard development). Its weights are frozen before a follow-up stage using all 31 million exact-generator writers. That stage retains real recordings and augmented canonical routes, including positive examples outside the cached target-length range. It changes the data mixture as well as the schedule and is not a controlled width-only experiment.
+
+## Test normalization during the data transition
+
+`train_proxy.py --freeze-normalization` fixes BatchNorm running means and variances during fine-tuning. Affine parameters, the rest of the encoder, and word vectors remain trainable. Dropout remains active. Resume rejects a changed normalization mode. A regression test checks unchanged statistics and successful affine updates.
+
+The paired wide-encoder runs use the same completed checkpoint, random seed, 31 training shards, real recordings, batch size, optimizer rates, and 200-round schedule. Their only configuration differences are the output directory and normalization flag. Both reproduce identical initial development counts. This tests an early regression in the normal-statistics control; it does not yet establish a trained gain.
+
+The adaptive gate stopped after 25 rounds without improvement, and the nine-layer decoder after 22. Their saved checkpoints remain available. The gate trainer produced a best checkpoint only; the decoder also preserved its latest checkpoint. This frees compute for the larger decoder, structural-route evidence, and the paired normalization experiment.
