@@ -1,0 +1,278 @@
+{
+  "test_data_used": false,
+  "control": "proxy-massive-exact-v1",
+  "experiment": "proxy-massive-gates-v1",
+  "argument_differences": {
+    "new_block_gate_learning_rate": [
+      null,
+      0.001
+    ],
+    "output": [
+      "checkpoints/proxy-massive-exact-v1",
+      "checkpoints/proxy-massive-gates-v1"
+    ],
+    "real_train": [
+      null,
+      "/Users/xzm/Projects/drawSwipePredictor/training/data/futo-large/train.jsonl"
+    ]
+  },
+  "real_train_argument_note": "The older control predates the real-train option. The real training file SHA is identical.",
+  "initialization_sha256": "b86c9d1cab7d56cd50b23bc8cf38f6a47824427ab36c4a145a049b1951064156",
+  "train_corpus": {
+    "samples": 1000000,
+    "vocabulary": 60000,
+    "seed": 700001,
+    "writer_start": 700003100003,
+    "writer_end": 700004100003,
+    "sha256": "557eb33b55d76c7c0b27b792f26b17b163006ca1ba13435a9a4e62436d6ce235"
+  },
+  "extra_train_corpora": [
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700011,
+      "writer_start": 700013100033,
+      "writer_end": 700014100033,
+      "sha256": "0d91bdd336343ee335f602485e29b16b9b279bd1a3cc8da667f5b204e83c3a13"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700012,
+      "writer_start": 700014100036,
+      "writer_end": 700015100036,
+      "sha256": "5e39835d5841fc998ca26bac8a5607b6c77b882c147f9cbec58e0f70c8d7a466"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700013,
+      "writer_start": 700015100039,
+      "writer_end": 700016100039,
+      "sha256": "981b463e94de836a0e55b8c08de99c5ebfe008eddbc505e032bdc34a3355b5b2"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700014,
+      "writer_start": 700016100042,
+      "writer_end": 700017100042,
+      "sha256": "3a9c0f9ebfd76c32349491f0be34375337eae6a56c79c60848f7b9fbfcd1f13c"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700015,
+      "writer_start": 700017100045,
+      "writer_end": 700018100045,
+      "sha256": "cfc9d0626aa407ee56669450c628ae8785ae71b2f00e265ca5a659319ef440cf"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700016,
+      "writer_start": 700018100048,
+      "writer_end": 700019100048,
+      "sha256": "57db41ac3cc96903bf60598a72941818e92b6d6460643d72d66f09b7706fc730"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700017,
+      "writer_start": 700019100051,
+      "writer_end": 700020100051,
+      "sha256": "54299022c791b81aa93b1defe556ae42093024781061da84a0ea9a62d9b74c74"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700018,
+      "writer_start": 700020100054,
+      "writer_end": 700021100054,
+      "sha256": "7434c5face1e4328d7d59b93c77bfc3b3f6ad2dba478d071c70ad8869b61258f"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700019,
+      "writer_start": 700021100057,
+      "writer_end": 700022100057,
+      "sha256": "097413b791e4a7e26f6ce12f690b2125016e9bf3a06cc260c47cf4ce684f61c7"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700020,
+      "writer_start": 700022100060,
+      "writer_end": 700023100060,
+      "sha256": "137f01942c269ee7d029e74ad50ce9ad613e39589d46ffeab58a27efd9c88fe6"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700021,
+      "writer_start": 700023100063,
+      "writer_end": 700024100063,
+      "sha256": "17b8a8d8cfad1cf15d22b8b1a8e4f1db8939c9ae169a6682a5e0f044177c6ac7"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700022,
+      "writer_start": 700024100066,
+      "writer_end": 700025100066,
+      "sha256": "8c6b12466685eaac6159d6bcff4d7f6878de946f1011abeda07e5f9c736afab3"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700023,
+      "writer_start": 700025100069,
+      "writer_end": 700026100069,
+      "sha256": "2cc4c5b4a7ba792ce867ff63eb0c0cbf687a9dd20d6164cd743be1ee5df6df47"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700024,
+      "writer_start": 700026100072,
+      "writer_end": 700027100072,
+      "sha256": "e61d9e8b9039ce6e43ba60343c288497c53a30f46ec74cf00f0f5886b241f925"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700025,
+      "writer_start": 700027100075,
+      "writer_end": 700028100075,
+      "sha256": "7e446223af471b35356a55a24435e287da14fd06ec07deb5c41dd3e514f0e88e"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700026,
+      "writer_start": 700028100078,
+      "writer_end": 700029100078,
+      "sha256": "6d4f1dd05e9eb08236e3bd7087a8b632383aa31f8a1411d6948659b3ef886678"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700027,
+      "writer_start": 700029100081,
+      "writer_end": 700030100081,
+      "sha256": "f670cd37d8cc8f2e1bf51107015b5ded90c1babc36c0c2609f9bb0c1e748cb16"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700028,
+      "writer_start": 700030100084,
+      "writer_end": 700031100084,
+      "sha256": "e69948ea9a868e81a87c9f50f75c178f16d0ad209b890c97a8d3117321aab2d5"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700029,
+      "writer_start": 700031100087,
+      "writer_end": 700032100087,
+      "sha256": "37638de7e17a95f26184612211d2121c56f27537777a15ee09f680e095bf8185"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700030,
+      "writer_start": 700032100090,
+      "writer_end": 700033100090,
+      "sha256": "5dbd495dfb90f876985778f4d86cf8a94fa2d322bd59f92e8b7b9a13c3a584ff"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700031,
+      "writer_start": 700033100093,
+      "writer_end": 700034100093,
+      "sha256": "52c9585124ec1bdbaec0712e492b1cdd622d62a6434b2e49b99a21825a0bf3dc"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700032,
+      "writer_start": 700034100096,
+      "writer_end": 700035100096,
+      "sha256": "1e88ef73ef9bb797be80b244fb614c011200566b475735ec1403ccea3b77ad1a"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700033,
+      "writer_start": 700035100099,
+      "writer_end": 700036100099,
+      "sha256": "8d444418be6b223db91c8cc46cdc9c63149118403e8be0be4755f3017ce63d22"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700034,
+      "writer_start": 700036100102,
+      "writer_end": 700037100102,
+      "sha256": "c12058b184c2c76fd2fece355ce4c48a0724591166a506d5ff3c0347df16ec96"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700035,
+      "writer_start": 700037100105,
+      "writer_end": 700038100105,
+      "sha256": "dc3d2eba722174928a5728528921b81463cc7674fdc3674881d46e3b10387749"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700036,
+      "writer_start": 700038100108,
+      "writer_end": 700039100108,
+      "sha256": "bac79de5ebd00e55167707d6b4e9b5ac9518f326a7b3eae75aa4fd667191fe08"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700037,
+      "writer_start": 700039100111,
+      "writer_end": 700040100111,
+      "sha256": "f207de086ec47864a4ab68f4a055684878f09f018120bb46390a1394c290619b"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700038,
+      "writer_start": 700040100114,
+      "writer_end": 700041100114,
+      "sha256": "8ee337b4553b38653e2e3fc94e6775bf8bac882ddc69e4bfdfcaaa0942f7999a"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700039,
+      "writer_start": 700041100117,
+      "writer_end": 700042100117,
+      "sha256": "58281ad429dd467e164c6e64fbc94f53fb74a0f1fb00dbd54142f836811cf1e9"
+    },
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700040,
+      "writer_start": 700042100120,
+      "writer_end": 700043100120,
+      "sha256": "f56091991ffcbf2824dc4d420bf2b80d25679f490faee68b0d9b09253f04d5e7"
+    }
+  ],
+  "real_training_sha256": "5d833110127d554d43e9a83843305e90b51f2022bddd880c7e1586c0761693da",
+  "optimizer_learning_rates_at_start": [
+    1e-05,
+    1e-05,
+    0.001
+  ],
+  "limits": "Configuration audit only. Both runs remain active; no accuracy gain established."
+}

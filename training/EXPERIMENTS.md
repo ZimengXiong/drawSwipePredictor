@@ -180,6 +180,21 @@ Cross-attention models are not yet exported to native inference. A selected comp
 
 `evaluate_proxy_ensemble.py` compares prediction mixtures on full development. When exactly two word models receive positive weights, its report can be passed directly to `export_ensemble.py`. The exporter requires both selected components and rejects a report that would silently discard a third model. `verify_word_ensemble.py --primary <checkpoint> --auxiliary <checkpoint> --model <export-directory> --output <report>` checks artifact hashes, exact top-five words, and word costs against the native CLI. Only points are sent to native inference.
 
+`export_word_mixture.py` exports two to four active components, including mixtures of 128- and 512-coordinate models. Supply every selected component exactly once. Export the primary checkpoint first, then pass the remaining checkpoints with repeated `--component` arguments. Component order must match the selected Python calculation. The runtime retains every component's full word bank and rejects missing files, changed bindings, or different vocabulary order.
+
+For the three-model development candidate:
+
+```sh
+uv run --directory training python export_word_mixture.py \
+  --primary checkpoints/completed-intrinsic-v1.pt \
+  --component checkpoints/exact-low-probe-v1.pt \
+  --component checkpoints/wide512-probe-v1.pt \
+  --selection checkpoints/exact-wide-word-ensemble-development-v2.json \
+  --output checkpoints/exact-wide-complete-native-v1
+```
+
+When exporting its spelling decoder, pass every auxiliary source with repeated `--word-checkpoint` arguments to `export_spelling.py`. The context encoder has its own checkpoint binding. The decoder binds all word-model encoder hashes, bank hashes, and weights. `verify_spelling.py` checks the canonical costs and exact top-five rankings, then rejects missing or changed components and changed mixture weights. The three-model candidate passes five canonical cases and seven corruption checks. Its full-development native replay remains a separate accuracy check; canonical agreement alone does not establish the development score.
+
 `evaluate_native_development.py --model <export-directory> --python-report <selection-report> --output <report>` replays every development drawing through the native CLI. It regenerates raw strokes from the declared development seed and requires the resulting binary corpus hash to match the original. `memory_corpus --verification-limit <count>` controls raw-reference export only; it changes neither generated drawings nor corpus bytes. Native requests contain points only. The evaluator keeps every row and requires exact agreement with Python's top-one and top-five hit counts in each difficulty group. The confirmation corpus is rejected by the development-hash guard.
 
 `evaluate_complete.py` compares a joint checkpoint with an auxiliary word model on the entire declared development corpus. It retrieves all candidates naturally from the full vocabulary, selects blend settings on development data, and retains exact-word scoring.
