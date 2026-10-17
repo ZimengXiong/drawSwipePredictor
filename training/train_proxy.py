@@ -112,6 +112,8 @@ def main():
         datasets[name] = (torch.tensor(np.array(validation["points"][mask]), device=device), torch.tensor(np.array(validation["label"][mask], dtype=np.int64), device=device))
     model = build_encoder(args.architecture).to(device)
     initial = torch.load(args.init_model, map_location=device, weights_only=False)
+    if initial["words"] != words:
+        raise ValueError("initial model vocabulary differs from the training corpus")
     initial_architecture = initial["metadata"]["arguments"].get("architecture", "small")
     teacher = None
     if args.architecture != initial_architecture:
@@ -160,6 +162,7 @@ def main():
         "test_data_used": False, "selection": "uniform full-vocabulary memory validation top1",
         "input_features": "geometry only; labels and writer identities are never model inputs",
         "motor_sampler_sha256": hashlib.sha256((ROOT / "training/motor_sampler.py").read_bytes()).hexdigest() if sampler else None,
+        "proxy_initialization_sha256": hashlib.sha256(args.proxy_init.read_bytes()).hexdigest() if args.proxy_init else None,
         "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()}
     (args.output / "run.json").write_text(json.dumps(metadata, indent=2) + "\n")
     print(json.dumps({"initial_validation": evaluate(model, proxies, datasets)}), flush=True)
