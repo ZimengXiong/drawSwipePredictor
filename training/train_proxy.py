@@ -13,6 +13,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
+from motor_sampler import MotorSampler
 from retrieval_model import GestureEncoder, augment, features, load_recordings, vocabulary
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -60,11 +61,14 @@ def main():
     parser.add_argument("--batch", type=int, default=768)
     parser.add_argument("--learning-rate", type=float, default=0.00015)
     parser.add_argument("--seed", type=int, default=812831)
+    parser.add_argument("--fresh-fraction", type=float, default=0.0)
     parser.add_argument("--resume", type=Path)
     parser.add_argument("--device", default="mps")
     args = parser.parse_args()
     if min(args.epochs, args.steps, args.batch) < 1:
         parser.error("counts must be positive")
+    if not 0 <= args.fresh_fraction <= 0.7:
+        parser.error("fresh fraction must be between 0 and 0.7")
     torch.set_num_threads(8)
     torch.manual_seed(args.seed)
     device = args.device
@@ -96,8 +100,9 @@ def main():
     initial = torch.load(args.init_model, map_location=device, weights_only=False)
     model.load_state_dict(initial["model"])
     model.eval()
+    sampler = MotorSampler(words, device) if args.fresh_fraction else None
     with torch.no_grad():
-        initial_vectors = torch.cat([model(features(part)) for part in canonical.split(512)])
+        initial_vectors = initial["proxies"].to(device) if "proxies" in initial else torch.cat([model(features(part)) for part in canonical.split(512)])
     proxies = nn.Parameter(initial_vectors)
     optimizer = torch.optim.AdamW([{"params": model.parameters(), "lr": args.learning_rate},
                                   {"params": [proxies], "lr": args.learning_rate * 4}], weight_decay=0.0001)
@@ -116,6 +121,7 @@ def main():
         "real_training_sha256": hashlib.sha256(real_path.read_bytes()).hexdigest(),
         "test_data_used": False, "selection": "uniform full-vocabulary memory validation top1",
         "input_features": "geometry only; labels and writer identities are never model inputs",
+        "motor_sampler_sha256": hashlib.sha256((ROOT / "training/motor_sampler.py").read_bytes()).hexdigest() if sampler else None,
         "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()}
     (args.output / "run.json").write_text(json.dumps(metadata, indent=2) + "\n")
     print(json.dumps({"initial_validation": evaluate(model, proxies, datasets)}), flush=True)
@@ -124,7 +130,8 @@ def main():
         began, loss_sum = time.monotonic(), 0.0
         for step in range(args.steps):
             nr, nc = args.batch * 15 // 100, args.batch // 10
-            ns = args.batch - nr - nc
+            nf = int(args.batch * args.fresh_fraction)
+            ns = args.batch - nr - nc - nf
             ri = torch.randint(len(real), (nr,), device=device)
             si = torch.randint(len(train_paths), (ns,), device=device)
             ci = torch.randint(len(words), (nc,), device=device)
@@ -132,6 +139,10 @@ def main():
             # destroying their remaining evidence with a second heavy distortion.
             paths = torch.cat([augment(real[ri]), train_paths[si], augment(canonical[ci])])
             labels = torch.cat([real_labels[ri], train_labels[si], ci])
+            if sampler:
+                fresh_labels = sampler.labels(nf)
+                paths = torch.cat([paths, sampler.sample(fresh_labels)])
+                labels = torch.cat([labels, fresh_labels])
             query = model(features(paths))
             logits = 32.0 * query @ F.normalize(proxies, dim=1).T
             loss = F.cross_entropy(logits, labels)
@@ -156,9 +167,13 @@ def main():
         saved = {"model": model.state_dict(), "proxies": F.normalize(proxies.detach(), dim=1),
                  "optimizer": optimizer.state_dict(), "scheduler": scheduler.state_dict(),
                  "epoch": epoch, "best_score": best, "words": words, "counts": counts, "metadata": metadata}
-        torch.save(saved, args.output / "latest.pt")
+        temporary = args.output / "latest.pt.tmp"
+        torch.save(saved, temporary)
+        temporary.replace(args.output / "latest.pt")
         if improved:
-            torch.save(saved, args.output / "best.pt")
+            temporary = args.output / "best.pt.tmp"
+            torch.save(saved, temporary)
+            temporary.replace(args.output / "best.pt")
             (args.output / "best-metrics.json").write_text(json.dumps(result, indent=2) + "\n")
 
 
