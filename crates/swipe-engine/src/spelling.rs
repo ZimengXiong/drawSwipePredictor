@@ -96,13 +96,14 @@ struct Norm {
 impl Norm {
     fn forward(&self, input: &[f32]) -> Vec<f32> {
         let mut result = Vec::with_capacity(input.len());
-        for row in input.as_chunks::<WIDTH>().0 {
-            let mean = row.iter().map(|&x| f64::from(x)).sum::<f64>() / WIDTH as f64;
+        let width = self.weight.len();
+        for row in input.chunks_exact(width) {
+            let mean = row.iter().map(|&x| f64::from(x)).sum::<f64>() / width as f64;
             let variance = row
                 .iter()
                 .map(|&x| (f64::from(x) - mean).powi(2))
                 .sum::<f64>()
-                / WIDTH as f64;
+                / width as f64;
             let scale = (variance + 1e-5).sqrt().recip() as f32;
             for (i, &value) in row.iter().enumerate() {
                 result.push((value - mean as f32) * scale * self.weight[i] + self.bias[i]);
@@ -119,28 +120,30 @@ struct Attention {
 
 impl Attention {
     fn keys(&self, memory: &[f32]) -> [Vec<f32>; 2] {
+        let width = self.projection.inputs;
         [
-            self.projection.project(memory, WIDTH, WIDTH),
-            self.projection.project(memory, 2 * WIDTH, WIDTH),
+            self.projection.project(memory, width, width),
+            self.projection.project(memory, 2 * width, width),
         ]
     }
 
     fn forward(&self, query: &[f32], keys: &[Vec<f32>; 2], causal: bool) -> Vec<f32> {
-        let query = self.projection.project(query, 0, WIDTH);
-        let count = query.len() / WIDTH;
-        let key_count = keys[0].len() / WIDTH;
-        let head_width = WIDTH / HEADS;
+        let width = self.projection.inputs;
+        let query = self.projection.project(query, 0, width);
+        let count = query.len() / width;
+        let key_count = keys[0].len() / width;
+        let head_width = width / HEADS;
         let mut joined = vec![0.0; query.len()];
         for t in 0..count {
             for head in 0..HEADS {
                 let offset = head * head_width;
-                let q = &query[t * WIDTH + offset..t * WIDTH + offset + head_width];
+                let q = &query[t * width + offset..t * width + offset + head_width];
                 let end = if causal { t + 1 } else { key_count };
                 let mut scores: Vec<_> = (0..end)
                     .map(|k| {
                         dot(
                             q,
-                            &keys[0][k * WIDTH + offset..k * WIDTH + offset + head_width],
+                            &keys[0][k * width + offset..k * width + offset + head_width],
                         ) / (head_width as f32).sqrt()
                     })
                     .collect();
@@ -152,8 +155,8 @@ impl Attention {
                 }
                 for (k, score) in scores.into_iter().enumerate() {
                     for d in 0..head_width {
-                        joined[t * WIDTH + offset + d] +=
-                            score / total * keys[1][k * WIDTH + offset + d];
+                        joined[t * width + offset + d] +=
+                            score / total * keys[1][k * width + offset + d];
                     }
                 }
             }
@@ -204,17 +207,17 @@ impl Reader<'_> {
         })
     }
 
-    fn norm(&mut self) -> Result<Norm, String> {
+    fn norm(&mut self, width: usize) -> Result<Norm, String> {
         Ok(Norm {
-            weight: self.values(WIDTH)?,
-            bias: self.values(WIDTH)?,
+            weight: self.values(width)?,
+            bias: self.values(width)?,
         })
     }
 
-    fn attention(&mut self) -> Result<Attention, String> {
+    fn attention(&mut self, width: usize) -> Result<Attention, String> {
         Ok(Attention {
-            projection: self.linear(WIDTH, 3 * WIDTH)?,
-            output: self.linear(WIDTH, WIDTH)?,
+            projection: self.linear(width, 3 * width)?,
+            output: self.linear(width, width)?,
         })
     }
 }
@@ -230,6 +233,7 @@ pub(crate) struct SpellingModel {
     pub(crate) proxy_weight: f32,
     pub(crate) length_power: f32,
     channels: usize,
+    width: usize,
     memory: Linear,
     memory_positions: Vec<f32>,
     symbols: Vec<f32>,
@@ -242,10 +246,14 @@ pub(crate) struct SpellingModel {
 impl SpellingModel {
     pub(crate) fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
         let version = bytes.get(..8);
-        if bytes.len() < 44 || (version != Some(b"SWPSP001") && version != Some(b"SWPSP002")) {
+        if bytes.len() < 44
+            || (version != Some(b"SWPSP001")
+                && version != Some(b"SWPSP002")
+                && version != Some(b"SWPSP003"))
+        {
             return Err("unsupported spelling decoder format".into());
         }
-        let (layers, header) = if bytes.get(..8) == Some(b"SWPSP002") {
+        let (layers, header) = if version != Some(b"SWPSP001") {
             if bytes.len() < 48 {
                 return Err("truncated spelling decoder header".into());
             }
@@ -256,6 +264,18 @@ impl SpellingModel {
             (layers, 48)
         } else {
             (3, 44)
+        };
+        let (width, header) = if version == Some(b"SWPSP003") {
+            if bytes.len() < 52 {
+                return Err("truncated spelling width header".into());
+            }
+            let width = u32::from_le_bytes(bytes[48..52].try_into().unwrap()) as usize;
+            if ![192, 384].contains(&width) {
+                return Err("invalid spelling decoder width".into());
+            }
+            (width, 52)
+        } else {
+            (WIDTH, header)
         };
         let tag = |start| u64::from_le_bytes(bytes[start..start + 8].try_into().unwrap());
         let channels = u32::from_le_bytes(bytes[32..36].try_into().unwrap()) as usize;
@@ -273,22 +293,26 @@ impl SpellingModel {
             bytes,
             position: header,
         };
-        let memory = reader.linear(256 + channels, WIDTH)?;
-        let memory_positions = reader.values(MEMORY * WIDTH)?;
-        let symbols = reader.values(29 * WIDTH)?;
-        let positions = reader.values(64 * WIDTH)?;
+        let memory = reader.linear(256 + channels, width)?;
+        let memory_positions = reader.values(MEMORY * width)?;
+        let symbols = reader.values(29 * width)?;
+        let positions = reader.values(64 * width)?;
         let mut blocks = Vec::new();
         for _ in 0..layers {
             blocks.push(Block {
-                norms: [reader.norm()?, reader.norm()?, reader.norm()?],
-                self_attention: reader.attention()?,
-                cross_attention: reader.attention()?,
-                hidden: reader.linear(WIDTH, 4 * WIDTH)?,
-                output: reader.linear(4 * WIDTH, WIDTH)?,
+                norms: [
+                    reader.norm(width)?,
+                    reader.norm(width)?,
+                    reader.norm(width)?,
+                ],
+                self_attention: reader.attention(width)?,
+                cross_attention: reader.attention(width)?,
+                hidden: reader.linear(width, 4 * width)?,
+                output: reader.linear(4 * width, width)?,
             });
         }
-        let norm = reader.norm()?;
-        let output = reader.linear(WIDTH, 29)?;
+        let norm = reader.norm(width)?;
+        let output = reader.linear(width, 29)?;
         if reader.position != bytes.len() {
             return Err("spelling decoder has trailing data".into());
         }
@@ -299,6 +323,7 @@ impl SpellingModel {
             proxy_weight,
             length_power,
             channels,
+            width,
             memory,
             memory_positions,
             symbols,
@@ -345,12 +370,11 @@ impl SpellingModel {
         }
         let letters: Vec<_> = word.bytes().map(|c| (c - b'a' + 1) as usize).collect();
         let input: Vec<_> = std::iter::once(27).chain(letters.iter().copied()).collect();
-        let mut values = Vec::with_capacity(input.len() * WIDTH);
+        let mut values = Vec::with_capacity(input.len() * self.width);
         for (t, symbol) in input.into_iter().enumerate() {
-            values.extend(
-                (0..WIDTH)
-                    .map(|d| self.symbols[symbol * WIDTH + d] + self.positions[t * WIDTH + d]),
-            );
+            values.extend((0..self.width).map(|d| {
+                self.symbols[symbol * self.width + d] + self.positions[t * self.width + d]
+            }));
         }
         for (block, keys) in self.blocks.iter().zip(&memory.keys) {
             let normalized = block.norms[0].forward(&values);
@@ -398,13 +422,13 @@ fn add(target: &mut [f32], update: &[f32]) {
 mod tests {
     use super::*;
 
-    fn identity(outputs: usize) -> Linear {
-        let mut weights = vec![0.0; outputs * WIDTH];
+    fn identity(width: usize, outputs: usize) -> Linear {
+        let mut weights = vec![0.0; outputs * width];
         for row in 0..outputs {
-            weights[row * WIDTH + row % WIDTH] = 1.0;
+            weights[row * width + row % width] = 1.0;
         }
         Linear {
-            inputs: WIDTH,
+            inputs: width,
             outputs,
             weights,
             bias: vec![0.0; outputs],
@@ -413,19 +437,21 @@ mod tests {
 
     #[test]
     fn causal_attention_excludes_future_letters() {
-        let model = Attention {
-            projection: identity(3 * WIDTH),
-            output: identity(WIDTH),
-        };
-        let first = vec![1.0; 2 * WIDTH];
-        let mut changed = first.clone();
-        changed[WIDTH..].fill(2.0);
-        let original = model.forward(&first, &model.keys(&first), true);
-        let causal = model.forward(&changed, &model.keys(&changed), true);
-        let unmasked = model.forward(&changed, &model.keys(&changed), false);
-        assert_eq!(original[..WIDTH], causal[..WIDTH]);
-        assert!(unmasked[0] > causal[0] + 0.5);
-        assert!(causal[WIDTH] > original[WIDTH]);
+        for width in [192, 384] {
+            let model = Attention {
+                projection: identity(width, 3 * width),
+                output: identity(width, width),
+            };
+            let first = vec![1.0; 2 * width];
+            let mut changed = first.clone();
+            changed[width..].fill(2.0);
+            let original = model.forward(&first, &model.keys(&first), true);
+            let causal = model.forward(&changed, &model.keys(&changed), true);
+            let unmasked = model.forward(&changed, &model.keys(&changed), false);
+            assert_eq!(original[..width], causal[..width]);
+            assert!(unmasked[0] > causal[0] + 0.5);
+            assert!(causal[width] > original[width]);
+        }
     }
 
     #[test]
@@ -472,6 +498,24 @@ mod tests {
                 .contains("depth"));
         }
         bytes[44..48].copy_from_slice(&9_u32.to_le_bytes());
+        assert!(SpellingModel::from_bytes(&bytes)
+            .err()
+            .unwrap()
+            .contains("truncated"));
+        bytes[..8].copy_from_slice(b"SWPSP003");
+        assert!(SpellingModel::from_bytes(&bytes)
+            .err()
+            .unwrap()
+            .contains("header"));
+        bytes.extend(0_u32.to_le_bytes());
+        for invalid in [0_u32, 193, 768, u32::MAX] {
+            bytes[48..52].copy_from_slice(&invalid.to_le_bytes());
+            assert!(SpellingModel::from_bytes(&bytes)
+                .err()
+                .unwrap()
+                .contains("width"));
+        }
+        bytes[48..52].copy_from_slice(&384_u32.to_le_bytes());
         assert!(SpellingModel::from_bytes(&bytes)
             .err()
             .unwrap()

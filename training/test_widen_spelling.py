@@ -1,14 +1,23 @@
 """Verify preserved spelling likelihoods and trainable widened parameters."""
 import unittest
+import struct
 
 import torch
 from torch.nn import functional as F
 
 from autoregressive_model import SpellingDecoder, load_decoder
 from widen_spelling import widen_decoder
+from export_spelling import spelling_binary
 
 
 class SpellingWidthTests(unittest.TestCase):
+    def test_native_header_retains_width_and_every_parameter(self):
+        model = SpellingDecoder(width=384, layers=1)
+        binary = spelling_binary(model, 11, 12, 13, 8, 2.0, 0.7)
+        self.assertEqual(binary[:8], b'SWPSP003')
+        self.assertEqual(struct.unpack_from('<II', binary, 44), (1, 384))
+        self.assertEqual(len(binary), 52 + 4 * sum(p.numel() for p in model.parameters()))
+
     def test_wider_deeper_decoder_preserves_scores_and_can_learn(self):
         torch.manual_seed(91)
         old = SpellingDecoder(width=48, layers=1).eval()

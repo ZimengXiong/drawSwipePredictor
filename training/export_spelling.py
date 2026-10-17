@@ -23,12 +23,16 @@ from export_word_mixture import auxiliary_components, word_binding
 def spelling_binary(model, context_tag, encoder_tag, bank_tag, channels, proxy_weight, length_power):
     """Serialize every decoder block while preserving the legacy three-block format."""
     layers = len(model.decoder.layers)
-    if model.symbols.embedding_dim != 192 or model.positions.num_embeddings != 64 or not 1 <= layers <= 12:
-        raise ValueError("native spelling requires width 192, 64 token positions, and one to twelve blocks")
-    binary = bytearray((b"SWPSP001" if layers == 3 else b"SWPSP002") +
+    width = model.symbols.embedding_dim
+    if width not in [192, 384] or model.positions.num_embeddings != 64 or not 1 <= layers <= 12:
+        raise ValueError("native spelling requires width 192 or 384, 64 token positions, and one to twelve blocks")
+    version = b"SWPSP003" if width != 192 else b"SWPSP001" if layers == 3 else b"SWPSP002"
+    binary = bytearray(version +
                        struct.pack("<QQQIff", context_tag, encoder_tag, bank_tag, channels, proxy_weight, length_power))
-    if layers != 3:
+    if version != b"SWPSP001":
         binary.extend(struct.pack("<I", layers))
+    if version == b"SWPSP003":
+        binary.extend(struct.pack("<I", width))
 
     def linear(layer):
         binary.extend(floats(layer.weight))
