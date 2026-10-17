@@ -82,6 +82,7 @@ def main():
     parser.add_argument("--fine-tune-encoder", action="store_true")
     parser.add_argument("--encoder-learning-rate", type=float, default=0.00001)
     parser.add_argument("--fresh-fraction", type=float)
+    parser.add_argument("--real-train", type=Path, default=ROOT / "training/data/futo-large/train.jsonl")
     args = parser.parse_args()
     if min(args.epochs, args.steps, args.batch, args.evaluate_every, args.validation_samples) < 1:
         parser.error("counts must be positive")
@@ -136,7 +137,9 @@ def main():
     validation_paths = paths
     del encoded, ranked, saved
     sampler = MotorSampler(words, device) if args.fresh_fraction != 0 else None
-    real_path = ROOT / "training/data/futo-large/train.jsonl"
+    real_path = args.real_train
+    with real_path.open("rb") as real_source:
+        real_hash = hashlib.file_digest(real_source, "sha256").hexdigest()
     real, real_labels = load_recordings(real_path, {word: i for i, word in enumerate(words)})
     groups = real_word_groups(real_labels, device)
     real, real_labels = torch.tensor(real, device=device), torch.tensor(real_labels, device=device)
@@ -165,7 +168,7 @@ def main():
         "objective": "Listwise candidate classification plus 0.25 times letter cross entropy" if args.ranking_candidates else "Full-spelling teacher-forced cross entropy",
         "arguments": {key: [str(p) for p in value] if key == "extra_train" else str(value) if isinstance(value, Path) else value for key, value in vars(args).items()},
         "train_corpora": [info for _, info in shards], "validation_corpus": val_info,
-        "real_training_sha256": hashlib.sha256(real_path.read_bytes()).hexdigest(),
+        "real_training_sha256": real_hash,
         "real_sampling": "uniform observed training word types; all recordings retained",
         "source_sha256": {name: hashlib.sha256((ROOT / "training" / name).read_bytes()).hexdigest()
                           for name in ["autoregressive_model.py", "train_autoregressive.py", "motor_sampler.py"]},

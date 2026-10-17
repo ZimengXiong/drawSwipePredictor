@@ -30,11 +30,26 @@ from export_ensemble import pair_configuration
 from evaluate_spelling import retrieval_pair_weight
 from covariance_density import factor_covariance, gaussian_costs
 from train_autoregressive import differentiable_context
+from fetch_additional_real_swipes import training_record
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_additional_human_data_excludes_held_sessions_without_distance_filtering(self):
+        row = {"word": "hello", "id": "record1", "session": "donor1", "canvas_width": 100,
+               "canvas_height": 50, "distance": 100000,
+               "data": [{"x": i / 10, "y": 0.5, "t": i} for i in range(6)]}
+        self.assertIsNone(training_record(row, {"hello"}, 4, {"donor1"}))
+        accepted = training_record(row, {"hello"}, 4, {"other_donor"})
+        self.assertEqual(accepted["source"], "futo_swipe_4")
+        self.assertEqual(accepted["source_id"], "4:record1")
+        self.assertEqual(accepted["session"], "donor1")
+        self.assertEqual(accepted["points"][-1], [50.0, 25.0])
+        self.assertIsNone(training_record(row, {"different"}, 4, set()))
+        row["data"][3]["t"] = -1
+        self.assertIsNone(training_record(row, {"hello"}, 4, set()))
+
     def test_joint_spelling_updates_encoder_without_changing_running_statistics(self):
         torch.set_num_threads(2)
         encoder = build_encoder("large").eval()

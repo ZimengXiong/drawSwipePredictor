@@ -126,6 +126,7 @@ def main():
     parser.add_argument("--learning-rate", type=float, default=0.00015)
     parser.add_argument("--proxy-learning-rate", type=float)
     parser.add_argument("--seed", type=int, default=812831)
+    parser.add_argument("--real-train", type=Path, default=ROOT / "training/data/futo-large/train.jsonl")
     parser.add_argument("--architecture", choices=["small", "large", "intrinsic", "giant", "massive", "attention", "wide512"], default="small")
     parser.add_argument("--centers", type=int, default=1)
     parser.add_argument("--proxy-init", type=Path)
@@ -166,7 +167,9 @@ def main():
     if len(words) != validation_info["vocabulary"]:
         raise ValueError("corpus vocabularies differ")
     ids = {word: i for i, word in enumerate(words)}
-    real_path = ROOT / "training/data/futo-large/train.jsonl"
+    real_path = args.real_train
+    with real_path.open("rb") as real_source:
+        real_hash = hashlib.file_digest(real_source, "sha256").hexdigest()
     real, real_labels = load_recordings(real_path, ids)
     real_groups = real_word_groups(real_labels, device) if args.balance_real else None
     real = torch.tensor(real, device=device)
@@ -249,6 +252,8 @@ def main():
         recorded = [saved["metadata"]["train_corpus"]] + saved["metadata"].get("extra_train_corpora", [])
         if [record["sha256"] for record in recorded] != [info["sha256"] for _, info in shards]:
             raise ValueError("resume checkpoint training shards differ")
+        if saved["metadata"]["real_training_sha256"] != real_hash:
+            raise ValueError("resume checkpoint real recordings differ; use --init-model for a new data stage")
         model.load_state_dict(saved["model"])
         proxies.data.copy_(training_proxy_vectors(saved))
         legacy_resume = "raw_proxies" not in saved
@@ -258,7 +263,7 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     metadata = {"arguments": {k: [str(item) for item in v] if k == "extra_train" else str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
         "train_corpus": train_info, "extra_train_corpora": [info for _, info in shards[1:]], "validation_corpus": validation_info,
-        "real_training_sha256": hashlib.sha256(real_path.read_bytes()).hexdigest(),
+        "real_training_sha256": real_hash,
         "real_sampling": "uniform observed word types; all recordings retained" if args.balance_real else "uniform recordings",
         "initialization_sha256": initial_hash,
         "proxy_state_schema": 2, "initialization_preserves_raw_vectors": preserve_raw,
