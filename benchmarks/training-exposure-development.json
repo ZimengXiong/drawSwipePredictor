@@ -1,0 +1,127 @@
+{
+  "kind": "Training-recording exposure correction; full-development comparison",
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "strength_grid": [
+    0.0,
+    0.25,
+    0.5,
+    0.75,
+    1.0,
+    1.5,
+    2.0
+  ],
+  "comparisons": [
+    {
+      "checkpoint_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+      "real_training_sha256": "5d833110127d554d43e9a83843305e90b51f2022bddd880c7e1586c0761693da",
+      "balanced_real_sampling": false,
+      "baseline": {
+        "strength": 0.0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9624999761581421,
+            "top5": 0.9975000023841858
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8637499809265137,
+            "top5": 0.9579166769981384
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7101190686225891,
+            "top5": 0.8745238184928894
+          }
+        }
+      },
+      "selected": {
+        "strength": 0.5,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9616666436195374,
+            "top5": 0.9975000023841858
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8654166460037231,
+            "top5": 0.9566666483879089
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7105952501296997,
+            "top5": 0.8733333349227905
+          }
+        }
+      },
+      "paired_memory": {
+        "gained": 35,
+        "lost": 31
+      },
+      "raw_report_sha256": "9948baf675ef4ab962dc0d94378504132b1658d237b9f34f76e78137b3a938e4"
+    },
+    {
+      "checkpoint_sha256": "1970620aa0ac8e31da5c5668d0c57902587e83afa8bed0afdd1bda618d362237",
+      "real_training_sha256": "5d833110127d554d43e9a83843305e90b51f2022bddd880c7e1586c0761693da",
+      "balanced_real_sampling": true,
+      "baseline": {
+        "strength": 0.0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9591666460037231,
+            "top5": 0.9975000023841858
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8662499785423279,
+            "top5": 0.9570833444595337
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7165476083755493,
+            "top5": 0.885952353477478
+          }
+        }
+      },
+      "selected": {
+        "strength": 0.0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9591666460037231,
+            "top5": 0.9975000023841858
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8662499785423279,
+            "top5": 0.9570833444595337
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7165476083755493,
+            "top5": 0.885952353477478
+          }
+        }
+      },
+      "paired_memory": {
+        "gained": 0,
+        "lost": 0
+      },
+      "raw_report_sha256": "2d6e387f6121e3389819a6cd7e617a810e1ea566856f3a0fbc872ab7414544d1"
+    }
+  ],
+  "rules": "Offsets derived only from hashed real training recordings and the declared sampler, with the same procedural floor for every dictionary word. All dictionary scores remain eligible. No popularity, length, rank, writer ID, or evaluation label enters the offset.",
+  "decision": "No default change. Four net answers on the older word model; the stronger model selects zero correction.",
+  "limits": "Settings selected on development. This is an exposure hypothesis, not an exact label-shift correction for the full training mixture. No benchmark or blind-confirmation evaluation."
+}
