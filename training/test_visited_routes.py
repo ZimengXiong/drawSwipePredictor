@@ -6,6 +6,7 @@ import torch
 from torch import nn
 
 from visited_route_model import RouteBank, route_variants
+from evaluate_visited_routes import score_trials
 
 
 class UniformDecoder(nn.Module):
@@ -25,6 +26,18 @@ class VisitedRouteTests(unittest.TestCase):
         for probability in [-0.1, 1.0]:
             with self.assertRaises(ValueError):
                 route_variants('abaca', probability)
+
+    def test_trial_reporting_counts_missing_targets_and_preserves_all_queries(self):
+        candidates = torch.tensor([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        similarities = torch.tensor([[3., 2., 1.]] * 3)
+        costs = -similarities
+        trials = score_trials(candidates, similarities, costs,
+                              torch.tensor([1, 99, 8]), torch.tensor([2, 2, 2]))
+        self.assertEqual(len(trials), 8)
+        for trial in trials:
+            self.assertEqual(trial['validation']['memory']['samples'], 3)
+            self.assertEqual(trial['validation']['memory']['correct_top1'], 1)
+            self.assertEqual(trial['validation']['memory']['correct_top5'], 2)
 
     def test_candidate_likelihood_matches_explicit_route_marginal(self):
         words = ['abaca', 'hello', 'helo', 'lunchbox']
