@@ -6,6 +6,7 @@ import struct
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 import torch
@@ -22,7 +23,7 @@ from character_model import character_targets, candidate_ctc_cost
 from motor_sampler import MotorSampler
 from retrieval_model import curve, build_encoder, encoder_features
 from train_pair import evaluate
-from train_proxy import RECORD, corpus, proxy_scores, real_word_groups, balanced_real_indices, proxy_checkpoint_state, training_proxy_vectors, optimizer_groups
+from train_proxy import RECORD, corpus, proxy_scores, real_word_groups, balanced_real_indices, proxy_checkpoint_state, training_proxy_vectors, optimizer_groups, mix_training_paths
 from reference_density import mixture_similarity
 from evaluate_training_exposure import exposure_bias
 from average_word_models import average_state
@@ -36,6 +37,22 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_synthetic_only_batch_keeps_generated_errors_and_label_order(self):
+        empty = torch.empty(0, 64, 2)
+        empty_labels = torch.empty(0, dtype=torch.long)
+        synthetic = torch.randn(3, 64, 2)
+        synthetic_labels = torch.tensor([8, 2, 9])
+        with patch("train_proxy.augment", side_effect=AssertionError("unexpected augmentation")):
+            paths, labels = mix_training_paths(empty, empty_labels, synthetic, synthetic_labels, empty, empty_labels)
+        torch.testing.assert_close(paths, synthetic, atol=0, rtol=0)
+        torch.testing.assert_close(labels, synthetic_labels, atol=0, rtol=0)
+        real, canonical = torch.ones(1, 64, 2), torch.ones(2, 64, 2) * 2
+        with patch("train_proxy.augment", side_effect=lambda paths: paths + 10) as augmentation:
+            paths, labels = mix_training_paths(real, torch.tensor([4]), synthetic, synthetic_labels, canonical, torch.tensor([5, 6]))
+        self.assertEqual(augmentation.call_count, 2)
+        torch.testing.assert_close(paths, torch.cat([real + 10, synthetic, canonical + 10]))
+        self.assertEqual(labels.tolist(), [4, 8, 2, 9, 5, 6])
+
     def test_added_gate_groups_cover_parameters_once_and_preserve_old_rates(self):
         from large_encoder import LargeGestureEncoder
         model = LargeGestureEncoder(giant=True, hidden=8)

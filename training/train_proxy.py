@@ -37,6 +37,20 @@ def optimizer_groups(model, proxies, encoder_rate, proxy_rate, gate_rate=None):
     return groups
 
 
+def mix_training_paths(real, real_labels, synthetic, synthetic_labels, canonical, canonical_labels):
+    """Augment real and canonical routes without distorting generated errors twice."""
+    paths, labels = [], []
+    if len(real):
+        paths.append(augment(real))
+        labels.append(real_labels)
+    paths.append(synthetic)
+    labels.append(synthetic_labels)
+    if len(canonical):
+        paths.append(augment(canonical))
+        labels.append(canonical_labels)
+    return torch.cat(paths), torch.cat(labels)
+
+
 def corpus(path):
     with path.open("rb") as source:
         magic, count, size, seed = struct.unpack("<8sQIQ", source.read(28))
@@ -131,6 +145,8 @@ def main():
     parser.add_argument("--extra-train", type=Path, action="append", default=[])
     parser.add_argument("--stream-corpus", action="store_true")
     parser.add_argument("--balance-real", action="store_true")
+    parser.add_argument("--synthetic-only", action="store_true",
+                        help="Train on synthetic writers without real-recording or canonical-route mixing")
     parser.add_argument("--freeze-proxies", action="store_true")
     parser.add_argument("--validation", type=Path, default=ROOT / "training/data/memory-proxy/validation.bin")
     parser.add_argument("--init-model", type=Path, default=ROOT / "training/checkpoints/retrieval-v3/best.pt")
@@ -277,6 +293,8 @@ def main():
             raise ValueError("resume checkpoint real recordings differ; use --init-model for a new data stage")
         if saved["metadata"]["arguments"].get("new_block_gate_learning_rate") != args.new_block_gate_learning_rate:
             raise ValueError("resume checkpoint gate learning rate differs; use --init-model for a new training stage")
+        if saved["metadata"]["arguments"].get("synthetic_only", False) != args.synthetic_only:
+            raise ValueError("resume checkpoint training mixture differs; use --init-model for a new training stage")
         model.load_state_dict(saved["model"])
         proxies.data.copy_(training_proxy_vectors(saved))
         legacy_resume = "raw_proxies" not in saved
@@ -287,7 +305,7 @@ def main():
     metadata = {"arguments": {k: [str(item) for item in v] if k == "extra_train" else str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
         "train_corpus": train_info, "extra_train_corpora": [info for _, info in shards[1:]], "validation_corpus": validation_info,
         "real_training_sha256": real_hash,
-        "real_sampling": "uniform observed word types; all recordings retained" if args.balance_real else "uniform recordings",
+        "real_sampling": "excluded from updates" if args.synthetic_only else "uniform observed word types; all recordings retained" if args.balance_real else "uniform recordings",
         "initialization_sha256": initial_hash,
         "proxy_state_schema": 2, "initialization_preserves_raw_vectors": preserve_raw,
         "legacy_normalized_resume": legacy_resume,
@@ -316,7 +334,7 @@ def main():
         model.train()
         began, loss_sum = time.monotonic(), 0.0
         for step in range(args.steps):
-            nr, nc = args.batch * 15 // 100, args.batch // 10
+            nr, nc = (0, 0) if args.synthetic_only else (args.batch * 15 // 100, args.batch // 10)
             nf = int(args.batch * args.fresh_fraction)
             ns = args.batch - nr - nc - nf
             ri = balanced_real_indices(real_groups, nr) if args.balance_real else torch.randint(len(real), (nr,), device=device)
@@ -328,8 +346,8 @@ def main():
             ci = torch.randint(len(words), (nc,), device=device)
             # Procedural drawings already contain strong memory errors. Avoid
             # destroying their remaining evidence with a second heavy distortion.
-            paths = torch.cat([augment(real[ri]), synthetic_paths, augment(canonical[ci])])
-            labels = torch.cat([real_labels[ri], synthetic_labels, ci])
+            paths, labels = mix_training_paths(real[ri], real_labels[ri], synthetic_paths, synthetic_labels,
+                                               canonical[ci], ci)
             if sampler:
                 fresh_labels = sampler.labels(nf)
                 paths = torch.cat([paths, sampler.sample(fresh_labels)])
