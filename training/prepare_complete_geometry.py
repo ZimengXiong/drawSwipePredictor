@@ -65,6 +65,9 @@ def main():
     parser.add_argument("--cli", type=Path, default=ROOT / "target/release/examples/retrieval_cli")
     parser.add_argument("--replay-cli", type=Path, default=ROOT / "target/release/examples/replay_memory_writers")
     args = parser.parse_args()
+    source_hashes = {name: digest(ROOT / "training" / name)
+                     for name in ["prepare_complete_geometry.py", "retrieval_model.py", "train_proxy.py"]}
+    git_commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
     if args.samples < 1 or not 1 <= args.workers <= 8 or args.output.suffix != ".npz":
         parser.error("use positive counts, one to eight workers, and an .npz output")
     if args.output.exists() or args.output.with_suffix(".json").exists():
@@ -175,6 +178,7 @@ def main():
     temporary.replace(args.output)
     report = {"test_data_used": False, "split": args.split, "samples": args.samples, "full_vocabulary": 60000,
               "feature_schema": SCHEMA, "feature_names": FEATURES, "feature_file_sha256": digest(args.output),
+              "source_sha256": source_hashes, "git_commit": git_commit,
               "base_manifest_sha256": model_hashes["manifest.json"], "native_artifacts_sha256": model_hashes,
               "executable_snapshots_sha256": cli_hashes, "corpora": infos, "sampling_seed": args.seed,
               "selected_writers_sha256": hashlib.sha256(writers.tobytes()).hexdigest(),
