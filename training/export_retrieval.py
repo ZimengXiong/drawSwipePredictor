@@ -60,16 +60,17 @@ def main():
     limit = args.vocab or len(checkpoint["words"])
     words, counts, paths = vocabulary(ROOT / "word_freq.txt", limit)
     model = model.to(args.device)
-    vectors = []
-    with torch.no_grad():
-        for start in range(0, len(words), 1024):
-            values = torch.tensor(paths[start:start + 1024], device=args.device)
-            vectors.append(model(features(values)).cpu().numpy())
-    vectors = np.concatenate(vectors)
     if "proxies" in checkpoint:
         vectors = torch.nn.functional.normalize(checkpoint["proxies"], dim=1).numpy()
         if limit != len(vectors):
             raise ValueError("learned proxy vocabulary must match the exported vocabulary")
+    else:
+        vectors = []
+        with torch.no_grad():
+            for start in range(0, len(words), 1024):
+                values = torch.tensor(paths[start:start + 1024], device=args.device)
+                vectors.append(model(features(values)).cpu().numpy())
+        vectors = np.concatenate(vectors)
     calibration = None
     if args.calibration:
         calibration = json.loads(args.calibration.read_text())
