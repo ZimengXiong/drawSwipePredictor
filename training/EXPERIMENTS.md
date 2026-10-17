@@ -107,6 +107,8 @@ uv run --directory training python reference_density.py evaluate \
 
 Evaluation uses the existing full-vocabulary retriever's natural top 128 candidates. It blends learned word scores with reference-kernel scores and includes the unchanged baseline. Equal-count kernel averaging prevents reference count from acting as a word prior. Selection uses all development rows and checks encoder, dictionary, and bank hashes. The bank is experimental and has no native exporter yet.
 
+`evaluate_training_exposure.py` separately checks whether uneven real-recording exposure affects ranking. It derives class offsets from the checkpoint's hashed training recordings and recorded sampling method, using the same procedural floor for every word. It never uses word popularity, word length, or vocabulary rank. A single correction strength is selected on full development, with zero correction included. This is a limited exposure hypothesis, not an exact correction for the full training distribution.
+
 ## Verify without computer use
 
 All checks use the command line. The native exporter supports the compact, large, intrinsic, and giant word encoders. Export to a separate directory, then compare native embeddings with PyTorch reference values:

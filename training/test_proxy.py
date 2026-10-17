@@ -23,11 +23,23 @@ from retrieval_model import curve, build_encoder, encoder_features
 from train_pair import evaluate
 from train_proxy import RECORD, corpus, proxy_scores, real_word_groups, balanced_real_indices
 from reference_density import mixture_similarity
+from evaluate_training_exposure import exposure_bias
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_training_exposure_uses_recordings_and_respects_word_permutations(self):
+        counts = torch.tensor([100.0, 3.0, 1.0, 0.0])
+        for balanced in [False, True]:
+            bias = exposure_bias(counts, balanced)
+            torch.testing.assert_close(bias, exposure_bias(counts * 7, balanced))
+            torch.testing.assert_close(bias.flip(0), exposure_bias(counts.flip(0), balanced))
+            self.assertEqual(float(bias[-1]), 0)
+        balanced_bias = exposure_bias(counts, True)
+        torch.testing.assert_close(balanced_bias[:3], balanced_bias[0].expand(3))
+        self.assertGreater(float(exposure_bias(counts, False)[0]), float(exposure_bias(counts, False)[1]))
+
     def test_expanded_word_space_preserves_ranks_and_activates_new_coordinates(self):
         torch.manual_seed(900449)
         original, expanded = build_encoder("large").eval(), build_encoder("wide512").eval()
