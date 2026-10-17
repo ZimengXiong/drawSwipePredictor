@@ -52,7 +52,9 @@ uv run --directory training python train_proxy.py \
   --output checkpoints/proxy-giant-v1
 ```
 
-Repeat `--extra-train` for more shards. Each run records their hashes and writer ranges. A checkpoint retains the optimizer and schedule, but does not retain every random-number generator state. Resuming is not a bit-for-bit continuation.
+Repeat `--extra-train` for more shards. Each run records their hashes and writer ranges. New checkpoints retain normalized inference vectors and raw word-vector parameters, together with the optimizer and schedule. Older files contain only normalized vectors, so their original raw training scale cannot be recovered. Every random-number generator state is not retained; full training resumes are still not bit-for-bit continuations.
+
+`--proxy-learning-rate` controls word-vector updates separately from encoder updates. Its default remains four times `--learning-rate`. Run metadata records actual starting optimizer rates, raw-vector preservation, and legacy normalized resumes. The raw-state regression test checks that a serialized optimizer and its word vectors produce the same next update while preserving inference scores.
 
 `diagnose_generalization.py` compares fixed hard examples from declared training pools with all hard development writers. Models remain in evaluation mode and retain their weights and normalization statistics. A training-pool score is diagnostic, not held-out accuracy. The first comparison found about an eight-point gap for the original one-million-writer model and a four-point gap after broader training.
 

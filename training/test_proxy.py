@@ -1,6 +1,7 @@
 """Check geometry generation, multi-mode scoring, and honest validation behavior."""
 from pathlib import Path
 import json
+import io
 import struct
 import subprocess
 import tempfile
@@ -21,7 +22,7 @@ from character_model import character_targets, candidate_ctc_cost
 from motor_sampler import MotorSampler
 from retrieval_model import curve, build_encoder, encoder_features
 from train_pair import evaluate
-from train_proxy import RECORD, corpus, proxy_scores, real_word_groups, balanced_real_indices
+from train_proxy import RECORD, corpus, proxy_scores, real_word_groups, balanced_real_indices, proxy_checkpoint_state, training_proxy_vectors
 from reference_density import mixture_similarity
 from evaluate_training_exposure import exposure_bias
 from average_word_models import average_state
@@ -31,6 +32,34 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_raw_proxy_resume_preserves_optimizer_trajectory_and_inference(self):
+        torch.manual_seed(900547)
+        raw = nn.Parameter(torch.randn(7, 128) * torch.arange(1, 8)[:, None])
+        optimizer = torch.optim.AdamW([raw], lr=0.001)
+        query = torch.nn.functional.normalize(torch.randn(4, 128), dim=1)
+        labels = torch.arange(4)
+        def update(parameter, opt):
+            opt.zero_grad()
+            torch.nn.functional.cross_entropy(32 * proxy_scores(query, parameter), labels).backward()
+            opt.step()
+        update(raw, optimizer)
+        state = proxy_checkpoint_state(raw)
+        torch.testing.assert_close(proxy_scores(query, state["proxies"]), proxy_scores(query, raw))
+        content = io.BytesIO()
+        torch.save({**state, "optimizer": optimizer.state_dict()}, content)
+        content.seek(0)
+        saved = torch.load(content, weights_only=False)
+        resumed = nn.Parameter(training_proxy_vectors(saved).clone())
+        other = torch.optim.AdamW([resumed], lr=0.001)
+        other.load_state_dict(saved["optimizer"])
+        update(raw, optimizer)
+        update(resumed, other)
+        torch.testing.assert_close(resumed, raw, atol=0, rtol=0)
+        torch.testing.assert_close(training_proxy_vectors({"proxies": state["proxies"]}), state["proxies"])
+        saved["raw_proxies"] = saved["raw_proxies"] + 0.1
+        with self.assertRaisesRegex(ValueError, "raw word vectors differ"):
+            training_proxy_vectors(saved)
+
     def test_native_pair_export_does_not_drop_selected_models(self):
         selected = {"checkpoints": [{"sha256": name} for name in ["a", "b", "c"]],
                     "selected": {"weights": [0.0, 0.25, 0.75], "validation": {}}}

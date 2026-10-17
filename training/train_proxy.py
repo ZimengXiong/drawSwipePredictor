@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import io
 import json
+import math
 from pathlib import Path
 import struct
 import subprocess
@@ -76,6 +77,25 @@ def proxy_scores(query, proxies):
     return (weights * similarities).sum(2)
 
 
+def proxy_checkpoint_state(proxies):
+    """Keep inference vectors and the raw parameters needed by the optimizer."""
+    raw = proxies.detach().clone()
+    return {"proxies": F.normalize(raw, dim=-1), "raw_proxies": raw}
+
+
+def training_proxy_vectors(saved):
+    """Load raw state when available; retain compatibility with older files."""
+    normalized = saved["proxies"]
+    raw = saved.get("raw_proxies")
+    if raw is None:
+        return normalized
+    if raw.shape != normalized.shape or raw.dtype != normalized.dtype or not torch.isfinite(raw).all():
+        raise ValueError("raw word vectors differ from inference vectors")
+    if not torch.allclose(F.normalize(raw, dim=-1), normalized, atol=1e-6, rtol=1e-5):
+        raise ValueError("raw word vectors differ from inference vectors")
+    return raw
+
+
 @torch.no_grad()
 def evaluate(model, proxies, datasets):
     result = {}
@@ -104,6 +124,7 @@ def main():
     parser.add_argument("--steps", type=int, default=200)
     parser.add_argument("--batch", type=int, default=768)
     parser.add_argument("--learning-rate", type=float, default=0.00015)
+    parser.add_argument("--proxy-learning-rate", type=float)
     parser.add_argument("--seed", type=int, default=812831)
     parser.add_argument("--architecture", choices=["small", "large", "intrinsic", "giant", "attention", "wide512"], default="small")
     parser.add_argument("--centers", type=int, default=1)
@@ -114,6 +135,9 @@ def main():
     args = parser.parse_args()
     if min(args.epochs, args.steps, args.batch) < 1:
         parser.error("counts must be positive")
+    rates = [args.learning_rate] + ([] if args.proxy_learning_rate is None else [args.proxy_learning_rate])
+    if any(not math.isfinite(rate) or rate <= 0 for rate in rates):
+        parser.error("learning rates must be finite and positive")
     if not 1 <= args.centers <= 8:
         parser.error("use 1 to 8 route centers per word")
     if not 0 <= args.fresh_fraction <= 0.7:
@@ -192,27 +216,32 @@ def main():
     model.eval()
     sampler = MotorSampler(words, device) if args.fresh_fraction else None
     with torch.no_grad():
-        initial_vectors = initial["proxies"].to(device) if "proxies" in initial else torch.cat([model(encoder_features(model, part)) for part in canonical.split(512)])
+        initial_vectors = training_proxy_vectors(initial).to(device) if "proxies" in initial else torch.cat([model(encoder_features(model, part)) for part in canonical.split(512)])
+    preserve_raw = "raw_proxies" in initial
     if args.proxy_init:
         loaded = np.load(args.proxy_init, allow_pickle=False)
         if loaded["words"].tolist() != words:
             raise ValueError("proxy initialization vocabulary differs")
         initial_vectors = torch.tensor(loaded["vectors"], device=device)
+        preserve_raw = False
     elif args.centers > 1 and initial_vectors.ndim == 2:
         initial_vectors = initial_vectors[:, None].repeat(1, args.centers, 1)
         initial_vectors = initial_vectors + torch.randn_like(initial_vectors) * 0.01
+        preserve_raw = False
     embedding_dim = getattr(model, "embedding_dim", 128)
     if args.architecture == "wide512" and initial_vectors.shape[-1] == 128:
         initial_vectors = F.pad(initial_vectors, (0, embedding_dim - 128))
     expected = (len(words), embedding_dim) if args.centers == 1 else (len(words), args.centers, embedding_dim)
     if tuple(initial_vectors.shape) != expected:
         raise ValueError("proxy center dimensions differ from the requested model")
-    proxies = nn.Parameter(F.normalize(initial_vectors, dim=-1), requires_grad=not args.freeze_proxies)
+    proxies = nn.Parameter(initial_vectors if preserve_raw else F.normalize(initial_vectors, dim=-1), requires_grad=not args.freeze_proxies)
     del initial, initial_vectors
+    proxy_rate = args.proxy_learning_rate if args.proxy_learning_rate is not None else args.learning_rate * 4
     optimizer = torch.optim.AdamW([{"params": model.parameters(), "lr": args.learning_rate},
-                                  {"params": [proxies], "lr": args.learning_rate * 4}], weight_decay=0.0001)
+                                  {"params": [proxies], "lr": proxy_rate}], weight_decay=0.0001)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=0.00001)
     start, best = 0, -1.0
+    legacy_resume = False
     if args.resume:
         saved = torch.load(args.resume, map_location=device, weights_only=False)
         if saved["words"] != words or saved["metadata"]["validation_corpus"]["sha256"] != validation_info["sha256"]:
@@ -221,7 +250,8 @@ def main():
         if [record["sha256"] for record in recorded] != [info["sha256"] for _, info in shards]:
             raise ValueError("resume checkpoint training shards differ")
         model.load_state_dict(saved["model"])
-        proxies.data.copy_(saved["proxies"])
+        proxies.data.copy_(training_proxy_vectors(saved))
+        legacy_resume = "raw_proxies" not in saved
         optimizer.load_state_dict(saved["optimizer"])
         scheduler.load_state_dict(saved["scheduler"])
         start, best = saved["epoch"] + 1, saved["best_score"]
@@ -231,6 +261,9 @@ def main():
         "real_training_sha256": hashlib.sha256(real_path.read_bytes()).hexdigest(),
         "real_sampling": "uniform observed word types; all recordings retained" if args.balance_real else "uniform recordings",
         "initialization_sha256": initial_hash,
+        "proxy_state_schema": 2, "initialization_preserves_raw_vectors": preserve_raw,
+        "legacy_normalized_resume": legacy_resume,
+        "optimizer_learning_rates_at_start": [group["lr"] for group in optimizer.param_groups],
         "test_data_used": False, "selection": "uniform full-vocabulary memory validation top1",
         "input_features": "geometry only; labels and writer identities are never model inputs",
         "motor_sampler_sha256": hashlib.sha256((ROOT / "training/motor_sampler.py").read_bytes()).hexdigest() if sampler else None,
@@ -242,7 +275,7 @@ def main():
     print(json.dumps({"initial_validation": initial_metrics}), flush=True)
     if start == 0:
         best = initial_metrics["memory"]["top1"]
-        baseline = {"model": model.state_dict(), "proxies": F.normalize(proxies.detach(), dim=-1),
+        baseline = {"model": model.state_dict(), **proxy_checkpoint_state(proxies),
             "optimizer": optimizer.state_dict(), "scheduler": scheduler.state_dict(), "epoch": -1,
             "best_score": best, "words": words, "counts": counts, "metadata": metadata}
         temporary = args.output / "best.pt.tmp"
@@ -300,7 +333,7 @@ def main():
         print(json.dumps(result), flush=True)
         with (args.output / "history.jsonl").open("a") as output:
             output.write(json.dumps(result) + "\n")
-        saved = {"model": model.state_dict(), "proxies": F.normalize(proxies.detach(), dim=-1),
+        saved = {"model": model.state_dict(), **proxy_checkpoint_state(proxies),
                  "optimizer": optimizer.state_dict(), "scheduler": scheduler.state_dict(),
                  "epoch": epoch, "best_score": best, "words": words, "counts": counts, "metadata": metadata}
         temporary = args.output / "latest.pt.tmp"
