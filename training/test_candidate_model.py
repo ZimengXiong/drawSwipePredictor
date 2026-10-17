@@ -40,9 +40,14 @@ class CandidateMatcherTests(unittest.TestCase):
             zero = model.candidate_scores(memory, ids, tokens, lengths, geometry)
             torch.testing.assert_close(zero, torch.zeros_like(zero), atol=0, rtol=0)
             model.compatibility[-1].weight.normal_(std=.1)
-            first = model.candidate_scores(memory, ids, tokens, lengths, geometry, chunk=2)
+            first = model.candidate_scores(memory, ids, tokens, lengths, geometry, chunk=1)
             second = model.candidate_scores(memory, ids.flip(1), tokens, lengths, geometry, chunk=6)
             torch.testing.assert_close(first.flip(1), second, atol=1e-5, rtol=1e-5)
+            permutation = torch.tensor([2, 0, 3, 1])
+            remapped = permutation.argsort()[ids]
+            reordered = model.candidate_scores(memory, remapped, tokens[permutation],
+                                                lengths[permutation], geometry[permutation])
+            torch.testing.assert_close(first, reordered, atol=1e-5, rtol=1e-5)
         model.train()
         loss = model.candidate_scores(memory, ids, tokens, lengths, geometry).square().mean()
         loss.backward()
