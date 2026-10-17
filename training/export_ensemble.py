@@ -40,7 +40,7 @@ def main():
         complete_selection={"development_sha256": development, "selection_sha256": hashlib.sha256(args.selection.read_bytes()).hexdigest(),
             "proxy_weight": chosen["proxy_weight"], "deletion_probability": chosen["deletion_probability"], "validation": chosen["validation"]})
     # An earlier decoder would not be bound to this complete retrieval context.
-    for name in ["character.bin", "character-verification.json"]:
+    for name in ["character.bin", "character-verification.json", "reranker.json", "reranker-verification.json"]:
         (args.output / name).unlink(missing_ok=True)
     (args.output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"Exported auxiliary word evidence with development-selected weight {weight}", flush=True)

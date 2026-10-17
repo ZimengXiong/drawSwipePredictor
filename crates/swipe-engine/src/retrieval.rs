@@ -139,6 +139,9 @@ impl RetrievalEngine {
     }
 
     fn load_ranker(&mut self, json: &str, encoder: &[u8], bank: &[u8]) -> Result<(), String> {
+        if self.auxiliary.is_some() {
+            return Err("candidate ranker is not bound to this word ensemble".into());
+        }
         let ranker = Ranker::parse(json)?;
         if ranker.encoder_tag != fingerprint(encoder) || ranker.bank_tag != fingerprint(bank) {
             return Err("candidate ranker belongs to a different encoder or word bank".into());
@@ -448,6 +451,9 @@ impl RetrievalEngine {
         limit: usize,
         geometry_union: bool,
     ) -> Vec<Prediction> {
+        if self.auxiliary_weight > 0.0 && self.auxiliary.is_none() {
+            return Vec::new();
+        }
         let auxiliary_query = if let Some(model) = &self.auxiliary {
             let Some(embedding) = model.encoder.embed(path) else {
                 return Vec::new();
