@@ -32,6 +32,11 @@ class LargeGestureEncoder(nn.Module):
         self.downsample = nn.Sequential(nn.Conv1d(128, 192, 3, stride=2, padding=1), nn.BatchNorm1d(192), nn.ReLU())
         self.head = nn.Sequential(nn.Flatten(), nn.Linear(192 * 16, 768), nn.ReLU(), nn.Dropout(0.1), nn.Linear(768, 128))
 
+    def encode_sequence(self, x):
+        return self.blocks(self.stages(x))
+
+    def embed_sequence(self, sequence):
+        return F.normalize(self.head(self.downsample(sequence)), dim=1)
+
     def forward(self, x):
-        x = self.downsample(self.blocks(self.stages(x)))
-        return F.normalize(self.head(x), dim=1)
+        return self.embed_sequence(self.encode_sequence(x))
