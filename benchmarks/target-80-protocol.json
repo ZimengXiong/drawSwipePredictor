@@ -19,5 +19,11 @@
     "targets": "uniform over all 4\u201312 letter words across the complete 60000-word deployment vocabulary"
   },
   "selection_gate": "Aim for at least 83% memory development top1 before testing the final model",
-  "limits": "The benchmark was evaluated in previous work; new experiments must not inspect its mistakes or tune against new benchmark runs."
+  "limits": "The benchmark was evaluated in previous work; new experiments must not inspect its mistakes or tune against new benchmark runs.",
+  "confirmation_holdout": {
+    "seed": 700007,
+    "writers": 12000,
+    "sha256": "877bff4deee4847b4632140405c44f7b0183336dab3b7886cb2ce1cebfa3aa97",
+    "role": "Untouched confirmation after development selection; never fit weights, thresholds, or ranking settings on it."
+  }
 }

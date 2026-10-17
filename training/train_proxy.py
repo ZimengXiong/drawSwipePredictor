@@ -93,7 +93,7 @@ def main():
     if not (train_info["writer_end"] <= validation_info["writer_start"] or validation_info["writer_end"] <= train_info["writer_start"]):
         raise ValueError("training and validation writers overlap")
     for record in [train_info, validation_info]:
-        if record["seed"] in [101, 102, 9001, 12345, 246810]:
+        if record["seed"] in [101, 102, 9001, 12345, 246810, 700007]:
             raise ValueError("reserved benchmark writer block")
     words, counts, canonical = vocabulary(ROOT / "word_freq.txt", train_info["vocabulary"])
     if len(words) != validation_info["vocabulary"]:
