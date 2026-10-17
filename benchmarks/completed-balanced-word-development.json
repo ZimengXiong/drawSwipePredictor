@@ -1,0 +1,38 @@
+{
+  "kind": "Completed balanced-real training stage",
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "checkpoint_sha256": "b86c9d1cab7d56cd50b23bc8cf38f6a47824427ab36c4a145a049b1951064156",
+  "epochs_completed": 120,
+  "best_epoch": 112,
+  "additional_training_views": 12288000,
+  "cached_training_writers": 11000000,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "validation": {
+    "clean": {
+      "samples": 1200,
+      "top1": 0.9641666412353516,
+      "top5": 0.9991666674613953
+    },
+    "loose": {
+      "samples": 2400,
+      "top1": 0.8695833086967468,
+      "top5": 0.9595833420753479
+    },
+    "memory": {
+      "samples": 8400,
+      "top1": 0.7232142686843872,
+      "top5": 0.8885714411735535
+    }
+  },
+  "initialization_sha256": "71ddd1ed8147be03225cd3afc17c84e62a5b8e9c0043bf68f386276a5047d203",
+  "real_training_sha256": "5d833110127d554d43e9a83843305e90b51f2022bddd880c7e1586c0761693da",
+  "limits": "Completed stage; exact full-word development metrics. No benchmark or blind-confirmation evaluation. The bundled app remains unchanged."
+}
