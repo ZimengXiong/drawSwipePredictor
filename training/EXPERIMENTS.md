@@ -54,6 +54,10 @@ uv run --directory training python train_proxy.py \
 
 Repeat `--extra-train` for more shards. Each run records their hashes and writer ranges. A checkpoint retains the optimizer and schedule, but does not retain every random-number generator state. Resuming is not a bit-for-bit continuation.
 
+`diagnose_generalization.py` compares fixed hard examples from declared training pools with all hard development writers. Models remain in evaluation mode and retain their weights and normalization statistics. A training-pool score is diagnostic, not held-out accuracy. The first comparison found about an eight-point gap for the original one-million-writer model and a four-point gap after broader training.
+
+`build_writer_shards.py --output-dir data/memory-proxy-exact-v2 --start-seed 700021 --shards 20 --workers 4` adds 20 million independent writers using the unchanged Rust generator. It checks existing, development, and confirmation intervals before generation, validates every completed shard, and records source and data hashes. Existing shards are reused only when their build receipts and contents match. Pending output requires inspection of the original builder before restarting. The new pool does not change the benchmark or existing corpus files.
+
 `--architecture attention` adds four attention layers around a frozen `large` encoder. Each layer compares all 64 stroke positions and learns biases from spatial distance, tangent agreement, and stroke progress. A zero-initialized correction head preserves the starting predictions. The baseline stays in evaluation mode during training, and `--freeze-proxies` also preserves the word bank. This architecture is experimental and has no native exporter yet.
 
 ```sh
