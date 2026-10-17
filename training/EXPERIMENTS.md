@@ -179,4 +179,6 @@ uv run --directory training python fit_development.py \
 
 The trainer's conditional reconstruction error is measured with the correct word supplied. It is a fitting diagnostic, not word-recognition accuracy. The separate recognition evaluator uses naturally retrieved candidates and exact-word scoring. `--steps 0` tests the learned proposal directly; positive counts refine its parameters from the observed stroke.
 
+Motor fitting and ranking can use different penalties. `fit_development.py --optimization-regularization <value>` controls the fitting objective. `--score-regularization <value>` fixes the ranking penalty instead of selecting it from the usual grid. Supplying the same value tests a consistent prior. Defaults preserve the earlier experiments. A machine-generated report can be passed directly to `--fixed-calibration` for a disjoint development slice; it freezes ranking settings and rejects changes to the fitting penalty, checkpoint, or initializer.
+
 `combine_motor_evidence.py` checks whether completed fits add information beyond the fixed word-and-character system. It combines naturally retrieved lists and treats missing fit evidence as neutral. A saved `--fixed-combination` freezes the selected blend weight for a different development slice. Neither this blend nor the learned initializer is part of the bundled app yet.
