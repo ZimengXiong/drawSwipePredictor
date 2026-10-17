@@ -58,6 +58,8 @@ Repeat `--extra-train` for more shards. Each run records their hashes and writer
 
 `build_writer_shards.py --output-dir data/memory-proxy-exact-v2 --start-seed 700021 --shards 20 --workers 4` adds 20 million independent writers using the unchanged Rust generator. It checks existing, development, and confirmation intervals before generation, validates every completed shard, and records source and data hashes. Existing shards are reused only when their build receipts and contents match. Pending output requires inspection of the original builder before restarting. The new pool does not change the benchmark or existing corpus files.
 
+The `proxy-exact-v1` stage starts from the completed balanced model and uses all 31 million cached writers, with `--fresh-fraction 0`. Real-recording and canonical augmentation remain in the training mixture. This tests a combined change in writer diversity and sampler fidelity; it does not isolate either factor. Its initial development score is preserved, and a gain from the data change remains unproven.
+
 `--architecture attention` adds four attention layers around a frozen `large` encoder. Each layer compares all 64 stroke positions and learns biases from spatial distance, tangent agreement, and stroke progress. A zero-initialized correction head preserves the starting predictions. The baseline stays in evaluation mode during training, and `--freeze-proxies` also preserves the word bank. This architecture is experimental and has no native exporter yet.
 
 ```sh
