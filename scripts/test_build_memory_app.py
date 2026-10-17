@@ -13,7 +13,8 @@ class ModelPackagingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             files = ["encoder.bin", "words.bin", "auxiliary/encoder.bin", "auxiliary/words.bin",
-                     "spelling.bin", "spelling/encoder.bin", "additional1/encoder.bin", "additional1/words.bin"]
+                     "spelling.bin", "spelling/encoder.bin", "additional1/encoder.bin", "additional1/words.bin",
+                     "geometry-ranker.json"]
             for name in files + ["training-checkpoint.pt"]:
                 path = root / name
                 path.parent.mkdir(parents=True, exist_ok=True)
@@ -21,7 +22,8 @@ class ModelPackagingTests(unittest.TestCase):
             digest = lambda name: hashlib.sha256((root / name).read_bytes()).hexdigest()
             manifest = {"encoder_sha256": digest("encoder.bin"), "words_sha256": digest("words.bin"),
                         "auxiliary_weight": 0.25, "additional_models": [{"weight": 0.25}], "spelling": {"sha256": digest("spelling.bin"),
-                        "context_encoder_sha256": digest("spelling/encoder.bin")}}
+                        "context_encoder_sha256": digest("spelling/encoder.bin")},
+                        "geometry_ranker": {"sha256": digest("geometry-ranker.json")}}
             (root / "additional1/manifest.json").write_text(json.dumps({"encoder_sha256": digest("additional1/encoder.bin"),
                                                                      "words_sha256": digest("additional1/words.bin")}))
             (root / "manifest.json").write_text(json.dumps(manifest))
@@ -32,6 +34,13 @@ class ModelPackagingTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 model_files(root)
             (root / "spelling/encoder.bin").write_bytes(b"spelling/encoder.bin")
+            (root / "geometry-ranker.json").write_bytes(b"changed correction")
+            with self.assertRaisesRegex(ValueError, "artifact hash differs"):
+                model_files(root)
+            (root / "geometry-ranker.json").unlink()
+            with self.assertRaises(FileNotFoundError):
+                model_files(root)
+            (root / "geometry-ranker.json").write_bytes(b"geometry-ranker.json")
             (root / "additional1/encoder.bin").unlink()
             with self.assertRaises(FileNotFoundError):
                 model_files(root)

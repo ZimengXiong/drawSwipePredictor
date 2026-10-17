@@ -31,7 +31,7 @@ def model_files(directory: Path) -> list[str]:
         extra = json.loads((directory / folder / "manifest.json").read_text())
         files.extend([folder + "/manifest.json", folder + "/encoder.bin", folder + "/words.bin"])
         expected.update({folder + "/encoder.bin": extra["encoder_sha256"], folder + "/words.bin": extra["words_sha256"]})
-    for component, filename in [("character", "character.bin"), ("reranker", "reranker.json"), ("spelling", "spelling.bin")]:
+    for component, filename in [("character", "character.bin"), ("reranker", "reranker.json"), ("spelling", "spelling.bin"), ("geometry_ranker", "geometry-ranker.json")]:
         if (directory / filename).exists() or component in manifest:
             files.append(filename)
             if component in manifest:
