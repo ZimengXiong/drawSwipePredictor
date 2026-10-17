@@ -126,7 +126,7 @@ def main():
     parser.add_argument("--learning-rate", type=float, default=0.00015)
     parser.add_argument("--proxy-learning-rate", type=float)
     parser.add_argument("--seed", type=int, default=812831)
-    parser.add_argument("--architecture", choices=["small", "large", "intrinsic", "giant", "attention", "wide512"], default="small")
+    parser.add_argument("--architecture", choices=["small", "large", "intrinsic", "giant", "massive", "attention", "wide512"], default="small")
     parser.add_argument("--centers", type=int, default=1)
     parser.add_argument("--proxy-init", type=Path)
     parser.add_argument("--fresh-fraction", type=float, default=0.0)
@@ -198,7 +198,7 @@ def main():
         else:
             compatible = {key: value for key, value in initial["model"].items() if key in model.state_dict() and model.state_dict()[key].shape == value.shape}
             model.load_state_dict(compatible, strict=False)
-        if args.architecture == "giant":
+        if args.architecture in ["giant", "massive"]:
             from large_encoder import expand_encoder
             expand_encoder(model, initial["model"])
         if args.architecture == "wide512":
@@ -264,6 +264,8 @@ def main():
         "proxy_state_schema": 2, "initialization_preserves_raw_vectors": preserve_raw,
         "legacy_normalized_resume": legacy_resume,
         "optimizer_learning_rates_at_start": [group["lr"] for group in optimizer.param_groups],
+        "encoder_parameters": sum(parameter.numel() for parameter in model.parameters()),
+        "word_vector_parameters": proxies.numel(),
         "test_data_used": False, "selection": "uniform full-vocabulary memory validation top1",
         "input_features": "geometry only; labels and writer identities are never model inputs",
         "motor_sampler_sha256": hashlib.sha256((ROOT / "training/motor_sampler.py").read_bytes()).hexdigest() if sampler else None,

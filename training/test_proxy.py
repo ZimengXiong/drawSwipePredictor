@@ -260,22 +260,26 @@ class ProxyTests(unittest.TestCase):
 
     def test_larger_initialization_preserves_trained_predictions(self):
         torch.set_num_threads(2)
-        original, expanded = build_encoder("large").eval(), build_encoder("giant").eval()
+        original = build_encoder("large").eval()
         with torch.no_grad():
             for block in original.blocks:
                 block.layers[-1].weight.fill_(0.4)
-        expand_encoder(expanded, original.state_dict())
         paths = torch.randn(2, 64, 2)
         with torch.no_grad():
             expected = original(encoder_features(original, paths))
-            actual = expanded(encoder_features(expanded, paths))
-        torch.testing.assert_close(actual, expected, atol=2e-5, rtol=2e-5)
-        expanded.train()
-        query = expanded(encoder_features(expanded, paths))
-        (query * torch.randn_like(query)).sum().backward()
-        added_gradients = expanded.blocks[0].layers[3].weight.grad[:, 192:]
-        self.assertTrue(torch.isfinite(added_gradients).all())
-        self.assertGreater(added_gradients.abs().sum().item(), 0)
+        for architecture in ["giant", "massive"]:
+            with self.subTest(architecture=architecture):
+                expanded = build_encoder(architecture).eval()
+                expand_encoder(expanded, original.state_dict())
+                with torch.no_grad():
+                    actual = expanded(encoder_features(expanded, paths))
+                torch.testing.assert_close(actual, expected, atol=2e-5, rtol=2e-5)
+                expanded.train()
+                query = expanded(encoder_features(expanded, paths))
+                (query * torch.randn_like(query)).sum().backward()
+                added_gradients = expanded.blocks[0].layers[3].weight.grad[:, 192:]
+                self.assertTrue(torch.isfinite(added_gradients).all())
+                self.assertGreater(added_gradients.abs().sum().item(), 0)
 
     def test_cross_ranker_cannot_use_candidate_position(self):
         torch.set_num_threads(2)
