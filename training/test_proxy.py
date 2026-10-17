@@ -14,7 +14,7 @@ from intrinsic_features import intrinsic_features
 from amortized_motor import AmortizedMotor, retained_training_keys
 from autoregressive_model import SpellingDecoder, word_tokens, END
 from cross_model import RouteCrossRanker
-from large_encoder import expand_encoder
+from large_encoder import expand_encoder, expand_word_space
 from generative_fit import MotorFitter, route_mixture_cost
 from character_edit import ctc_edit_components, edit_log_likelihood
 from character_model import character_targets, candidate_ctc_cost
@@ -28,6 +28,24 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_expanded_word_space_preserves_ranks_and_activates_new_coordinates(self):
+        torch.manual_seed(900449)
+        original, expanded = build_encoder("large").eval(), build_encoder("wide512").eval()
+        expand_word_space(expanded, original.state_dict())
+        paths = torch.randn(4, 64, 2)
+        proxies = torch.nn.functional.normalize(torch.randn(13, 128), dim=1)
+        wide_proxies = nn.Parameter(torch.nn.functional.pad(proxies, (0, 384)))
+        old_scores = proxy_scores(original(encoder_features(original, paths)), proxies)
+        new_scores = proxy_scores(expanded(encoder_features(expanded, paths)), wide_proxies)
+        torch.testing.assert_close(torch.nn.functional.normalize(old_scores, dim=1),
+                                   torch.nn.functional.normalize(new_scores, dim=1), atol=1e-6, rtol=1e-5)
+        self.assertEqual(old_scores.argmax(1).tolist(), new_scores.argmax(1).tolist())
+        loss = torch.nn.functional.cross_entropy(32 * new_scores, torch.arange(4))
+        loss.backward()
+        self.assertTrue(torch.isfinite(wide_proxies.grad).all())
+        self.assertGreater(wide_proxies.grad[:, 128:].abs().sum().item(), 0)
+        self.assertGreater(expanded.head[-1].weight.grad[128:].abs().sum().item(), 0)
+
     def test_reference_density_is_invariant_to_reference_order_and_duplication(self):
         similarities = torch.tensor([[[0.1, 0.8, 0.3], [0.5, 0.4, 0.2]]])
         for temperature in [0.0, 0.01, 0.1]:

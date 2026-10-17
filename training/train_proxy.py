@@ -105,7 +105,7 @@ def main():
     parser.add_argument("--batch", type=int, default=768)
     parser.add_argument("--learning-rate", type=float, default=0.00015)
     parser.add_argument("--seed", type=int, default=812831)
-    parser.add_argument("--architecture", choices=["small", "large", "intrinsic", "giant", "attention"], default="small")
+    parser.add_argument("--architecture", choices=["small", "large", "intrinsic", "giant", "attention", "wide512"], default="small")
     parser.add_argument("--centers", type=int, default=1)
     parser.add_argument("--proxy-init", type=Path)
     parser.add_argument("--fresh-fraction", type=float, default=0.0)
@@ -165,6 +165,8 @@ def main():
     initial_architecture = initial["metadata"]["arguments"].get("architecture", "small")
     teacher = None
     if args.architecture != initial_architecture:
+        if args.architecture == "wide512" and (initial_architecture != "large" or args.freeze_proxies):
+            raise ValueError("expanded word space requires a large initializer and trainable word vectors")
         if args.architecture == "attention" and initial_architecture != "large":
             raise ValueError("attention corrections require a completed large initializer")
         if args.architecture == "attention":
@@ -175,6 +177,9 @@ def main():
         if args.architecture == "giant":
             from large_encoder import expand_encoder
             expand_encoder(model, initial["model"])
+        if args.architecture == "wide512":
+            from large_encoder import expand_word_space
+            expand_word_space(model, initial["model"])
         if args.architecture == "intrinsic" and initial["model"]["stages.0.weight"].shape[1] == 8:
             with torch.no_grad():
                 model.stages[0].weight[:, :8].copy_(initial["model"]["stages.0.weight"])
@@ -196,7 +201,10 @@ def main():
     elif args.centers > 1 and initial_vectors.ndim == 2:
         initial_vectors = initial_vectors[:, None].repeat(1, args.centers, 1)
         initial_vectors = initial_vectors + torch.randn_like(initial_vectors) * 0.01
-    expected = (len(words), 128) if args.centers == 1 else (len(words), args.centers, 128)
+    embedding_dim = getattr(model, "embedding_dim", 128)
+    if args.architecture == "wide512" and initial_vectors.shape[-1] == 128:
+        initial_vectors = F.pad(initial_vectors, (0, embedding_dim - 128))
+    expected = (len(words), embedding_dim) if args.centers == 1 else (len(words), args.centers, embedding_dim)
     if tuple(initial_vectors.shape) != expected:
         raise ValueError("proxy center dimensions differ from the requested model")
     proxies = nn.Parameter(F.normalize(initial_vectors, dim=-1), requires_grad=not args.freeze_proxies)
@@ -272,7 +280,8 @@ def main():
                 # Preserve the useful coarse geometry while the larger model
                 # learns evidence that the smaller encoder cannot represent.
                 weight = 2.0 if epoch < 5 else 0.1
-                loss = loss + weight * (1 - (query * target_vectors).sum(1)).mean()
+                old_view = F.normalize(query[:, :target_vectors.shape[1]], dim=1) if query.shape[1] != target_vectors.shape[1] else query
+                loss = loss + weight * (1 - (old_view * target_vectors).sum(1)).mean()
             if not torch.isfinite(loss):
                 raise RuntimeError("nonfinite proxy loss")
             optimizer.zero_grad(set_to_none=True)

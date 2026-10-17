@@ -148,9 +148,10 @@ def build_encoder(architecture="small"):
         return AttentionGestureEncoder()
     if architecture == "small":
         return GestureEncoder()
-    if architecture in ["large", "intrinsic", "giant"]:
+    if architecture in ["large", "intrinsic", "giant", "wide512"]:
         from large_encoder import LargeGestureEncoder
-        return LargeGestureEncoder(16 if architecture in ["intrinsic", "giant"] else 8, giant=architecture == "giant")
+        return LargeGestureEncoder(16 if architecture in ["intrinsic", "giant"] else 8,
+                                   giant=architecture == "giant", embedding=512 if architecture == "wide512" else 128)
     raise ValueError(f"unknown encoder architecture: {architecture}")
 
 

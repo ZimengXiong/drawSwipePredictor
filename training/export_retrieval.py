@@ -37,6 +37,8 @@ def main():
     torch.set_num_threads(8)
     checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     architecture = checkpoint["metadata"]["arguments"].get("architecture", "small")
+    if architecture not in ["small", "large", "intrinsic", "giant"]:
+        raise ValueError(f"{architecture} requires a native implementation before export")
     model = build_encoder(architecture).eval()
     model.load_state_dict(checkpoint["model"])
     encoded = bytearray({"small": b"SWPRT001", "large": b"SWPRT002", "intrinsic": b"SWPRT003", "giant": b"SWPRT004"}[architecture])

@@ -18,6 +18,18 @@ An evaluation shortlist contains only words retrieved from the observed stroke. 
 
 The larger encoder starts with the smaller encoder's predictions intact. Added channels contribute zero at initialization, and added residual blocks start as identities. Learned word proxies remain separate from the encoder parameter count.
 
+`wide512` instead expands the retrieval space from 128 to 512 coordinates. It retains the completed `large` encoder's old coordinates and pads word vectors with zeros, preserving initial candidate rankings. Small nonzero added query coordinates let the new word coordinates receive gradients immediately. Word vectors must remain trainable during expansion. Distillation compares the normalized old coordinates with the frozen teacher; it leaves the added coordinates free to learn. This architecture requires a native implementation before export.
+
+```sh
+uv run --directory training python train_proxy.py \
+  --init-model checkpoints/proxy-giant-strong-init.pt \
+  --architecture wide512 --balance-real --stream-corpus \
+  --extra-train data/memory-proxy/train-700011.bin \
+  --fresh-fraction 0.5 --learning-rate 0.00005 \
+  --batch 384 --epochs 180 --steps 200 --seed 900449 \
+  --output checkpoints/proxy-wide512-v1
+```
+
 Generate an independent training shard:
 
 ```sh

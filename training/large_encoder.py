@@ -21,9 +21,10 @@ class ResidualRouteBlock(nn.Module):
 
 class LargeGestureEncoder(nn.Module):
     """Use six residual context blocks and retain 32 steps through the trunk."""
-    def __init__(self, input_channels=8, giant=False):
+    def __init__(self, input_channels=8, giant=False, embedding=128):
         super().__init__()
         self.input_channels = input_channels
+        self.embedding_dim = embedding
         self.stages = nn.Sequential(
             nn.Conv1d(input_channels, 48, 5, padding=2), nn.BatchNorm1d(48), nn.ReLU(),
             nn.Conv1d(48, 64, 5, stride=2, padding=2), nn.BatchNorm1d(64), nn.ReLU(),
@@ -31,7 +32,7 @@ class LargeGestureEncoder(nn.Module):
         dilations = [1, 2, 4, 8] * 4 if giant else [1, 2, 4, 8, 1, 2]
         self.blocks = nn.Sequential(*[ResidualRouteBlock(d, 512 if giant else 192) for d in dilations])
         self.downsample = nn.Sequential(nn.Conv1d(128, 192, 3, stride=2, padding=1), nn.BatchNorm1d(192), nn.ReLU())
-        self.head = nn.Sequential(nn.Flatten(), nn.Linear(192 * 16, 768), nn.ReLU(), nn.Dropout(0.1), nn.Linear(768, 128))
+        self.head = nn.Sequential(nn.Flatten(), nn.Linear(192 * 16, 768), nn.ReLU(), nn.Dropout(0.1), nn.Linear(768, embedding))
 
     def encode_sequence(self, x):
         return self.blocks(self.stages(x))
@@ -62,3 +63,14 @@ def expand_encoder(model, original):
                 new.zero_()
             new[tuple(slice(0, size) for size in old.shape)].copy_(old)
     model.load_state_dict(state)
+
+
+@torch.no_grad()
+def expand_word_space(model, original):
+    """Retain old coordinates and activate added query dimensions for learning."""
+    expand_encoder(model, original)
+    old_width = original["head.4.weight"].shape[0]
+    # Padded word vectors initially ignore these nonzero query coordinates.
+    # Their gradients activate new word coordinates on the first update.
+    model.head[-1].weight[old_width:].normal_(0.0, 0.001)
+    model.head[-1].bias[old_width:].zero_()
