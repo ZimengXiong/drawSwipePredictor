@@ -14,6 +14,7 @@ from torch.nn import functional as F
 from retrieval_model import build_encoder, encoder_features
 from train_joint import load_checkpoint
 from train_proxy import corpus, proxy_scores
+from evaluate_spelling import retrieval_pair_weight
 
 
 def factor_covariance(references, standard_deviation):
@@ -106,13 +107,35 @@ def evaluate(args):
     encoder = build_encoder(saved["metadata"]["arguments"].get("architecture", "small")).to("mps").eval().requires_grad_(False)
     encoder.load_state_dict(saved["model"])
     proxies = saved["proxies"].to("mps")
+    retrieval, retrieval_hash = load_checkpoint(args.retrieval_checkpoint) if args.retrieval_checkpoint else (saved, source_hash)
+    auxiliary, auxiliary_hash = load_checkpoint(args.retrieval_auxiliary) if args.retrieval_auxiliary else (None, None)
+    for record in [retrieval] + ([] if auxiliary is None else [auxiliary]):
+        if record["words"] != saved["words"] or record["metadata"]["test_data_used"] or record["metadata"]["validation_corpus"]["sha256"] != info["sha256"]:
+            raise ValueError("covariance retrieval context differs from declared development")
+    def word_encoder(record):
+        model = build_encoder(record["metadata"]["arguments"].get("architecture", "small")).to("mps").eval().requires_grad_(False)
+        model.load_state_dict(record["model"])
+        return model
+    retrieval_encoder = encoder if retrieval_hash == source_hash else word_encoder(retrieval)
+    retrieval_proxies = proxies if retrieval_hash == source_hash else retrieval["proxies"].to("mps")
+    auxiliary_weight, selection_hash = 0.0, None
+    if auxiliary is not None:
+        selection_hash = digest(args.retrieval_selection)
+        auxiliary_weight = retrieval_pair_weight(json.loads(args.retrieval_selection.read_text()), retrieval_hash, auxiliary_hash, info["sha256"], len(saved["words"]))
+        auxiliary_encoder = word_encoder(auxiliary)
+        auxiliary_proxies = auxiliary["proxies"].to("mps")
     regularizers = [0.25, 1.0, 4.0]
     cached = {key: [] for key in ["candidates", "similarity", "cost"]}
     with torch.no_grad():
         for start in range(0, len(rows), 16):
             paths = torch.tensor(np.array(rows["points"][start:start + 16]), device="mps")
             query = encoder(encoder_features(encoder, paths))
-            similarity, candidates = proxy_scores(query, proxies).topk(128, dim=1)
+            retrieval_query = query if retrieval_encoder is encoder else retrieval_encoder(encoder_features(retrieval_encoder, paths))
+            scores = proxy_scores(retrieval_query, retrieval_proxies)
+            if auxiliary is not None:
+                other = proxy_scores(auxiliary_encoder(encoder_features(auxiliary_encoder, paths)), auxiliary_proxies)
+                scores = (1 - auxiliary_weight) * scores + auxiliary_weight * other
+            similarity, candidates = scores.topk(128, dim=1)
             costs = gaussian_costs(query, candidates, **arrays, regularizers=regularizers)
             if not torch.isfinite(costs).all():
                 raise ValueError("covariance scoring produced nonfinite costs")
@@ -143,6 +166,8 @@ def evaluate(args):
     gained = int((predictions[best] & ~predictions[0] & mask).sum())
     lost = int((~predictions[best] & predictions[0] & mask).sum())
     report = {"encoder_sha256": source_hash, "bank_manifest_sha256": digest(args.bank / "manifest.json"),
+              "retrieval_sha256": retrieval_hash, "retrieval_auxiliary_sha256": auxiliary_hash,
+              "retrieval_auxiliary_weight": auxiliary_weight, "retrieval_selection_sha256": selection_hash,
               "test_data_used": False, "development": info, "full_vocabulary": len(saved["words"]),
               "selected": trials[best], "trials": trials, "paired_memory": {"gained": gained, "lost": lost, "net": gained - lost},
               "rules": "All development rows; natural top128 from full vocabulary; exact full words. Fitted covariance uses independent references only. No target insertion."}
@@ -162,7 +187,12 @@ def main():
     evaluator.add_argument("--bank", type=Path, required=True)
     evaluator.add_argument("--data", type=Path, default=Path("data/memory-proxy/validation.bin"))
     evaluator.add_argument("--output", type=Path, required=True)
+    evaluator.add_argument("--retrieval-checkpoint", type=Path)
+    evaluator.add_argument("--retrieval-auxiliary", type=Path)
+    evaluator.add_argument("--retrieval-selection", type=Path)
     args = parser.parse_args()
+    if args.mode == "evaluate" and bool(args.retrieval_auxiliary) != bool(args.retrieval_selection):
+        parser.error("auxiliary retrieval requires its saved selection")
     torch.set_num_threads(4)
     build(args) if args.mode == "build" else evaluate(args)
 
