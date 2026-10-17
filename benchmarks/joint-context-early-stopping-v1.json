@@ -67,5 +67,5 @@
     "history.jsonl": "23af63538231f1dfb779d0c8a5512353e25506cea466f4d310cc04adec2f9b22"
   },
   "action": "SIGINT after verifying live identity; checkpoints and learned context retained.",
-  "limits": "Fixed 3000-row subset, including2051 hard drawings; not full-development or benchmark accuracy."
+  "limits": "Fixed 3000-row subset, including 2,051 hard drawings; not full-development or benchmark accuracy."
 }

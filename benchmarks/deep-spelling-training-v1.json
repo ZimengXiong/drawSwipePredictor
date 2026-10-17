@@ -230,5 +230,5 @@
     "motor_sampler.py": "d470f6d3faed5d20a8558fc66110eb75cbf76dcf0cdad2af5d5e8e796e8ad75d"
   },
   "git_commit": "da586a7f721ff9382186c757a4df4a2481abf789",
-  "limits": "Live training. Fixed3000-row development subset, not full8400 hard development or benchmark. Adds depth and stronger negative mining; no isolated causal effect or trained accuracy gain claimed. Initialization native parity is recorded separately."
+  "limits": "Live training. Fixed 3,000-row development subset, not full 8,400 hard development or benchmark. Adds depth and stronger negative mining; no isolated causal effect or trained accuracy gain claimed. Initialization native parity is recorded separately."
 }
