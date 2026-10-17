@@ -10,7 +10,7 @@ import struct
 import numpy as np
 import torch
 
-from retrieval_model import GestureEncoder, build_encoder, LAYOUT, curve, features, vocabulary
+from retrieval_model import GestureEncoder, build_encoder, encoder_features, LAYOUT, curve, features, vocabulary
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -39,7 +39,7 @@ def main():
     architecture = checkpoint["metadata"]["arguments"].get("architecture", "small")
     model = build_encoder(architecture).eval()
     model.load_state_dict(checkpoint["model"])
-    encoded = bytearray(b"SWPRT002" if architecture == "large" else b"SWPRT001")
+    encoded = bytearray({"small": b"SWPRT001", "large": b"SWPRT002", "intrinsic": b"SWPRT003"}[architecture])
     # Fold normalization into convolution weights; the native runtime uses only
     # convolution, ReLU, dense layers, and vector normalization.
     def convolution(conv, norm):
@@ -48,7 +48,7 @@ def main():
         encoded.extend(floats((conv.bias - norm.running_mean) * factor + norm.bias))
     for i in range(0, len(model.stages), 3):
         convolution(model.stages[i], model.stages[i + 1])
-    if architecture == "large":
+    if architecture in ["large", "intrinsic"]:
         for block in model.blocks:
             convolution(block.layers[0], block.layers[1])
             convolution(block.layers[3], block.layers[4])
@@ -69,7 +69,7 @@ def main():
         with torch.no_grad():
             for start in range(0, len(words), 1024):
                 values = torch.tensor(paths[start:start + 1024], device=args.device)
-                vectors.append(model(features(values)).cpu().numpy())
+                vectors.append(model(encoder_features(model, values)).cpu().numpy())
         vectors = np.concatenate(vectors)
     calibration = None
     if args.calibration:
@@ -97,12 +97,12 @@ def main():
             angle = 0.23
             raw = raw @ np.array([[np.cos(angle), np.sin(angle)], [-np.sin(angle), np.cos(angle)]])
             raw = raw * 75 + [420, 190]
-            expected = model(features(torch.tensor(curve(raw)[None], device=args.device))).cpu().tolist()[0]
+            expected = model(encoder_features(model, torch.tensor(curve(raw)[None], device=args.device))).cpu().tolist()[0]
             verification.append({"word": word, "points": raw.tolist(), "embedding": expected})
     training_metadata = json.loads(json.dumps(checkpoint["metadata"]).replace(str(ROOT) + "/", ""))
     report = {
         "schema_version": 1, "architecture": architecture,
-        "points": 64, "channels": 8, "embedding": 128, "vocabulary": len(words),
+        "points": 64, "channels": 16 if architecture == "intrinsic" else 8, "embedding": 128, "vocabulary": len(words),
         "checkpoint_epoch": checkpoint["epoch"] + 1, "validation_score": checkpoint["best_score"],
         "encoder_sha256": hashlib.sha256(encoded).hexdigest(),
         "words_sha256": hashlib.sha256(bank).hexdigest(),

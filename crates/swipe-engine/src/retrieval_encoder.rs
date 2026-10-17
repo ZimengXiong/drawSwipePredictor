@@ -25,8 +25,13 @@ impl Encoder {
     pub(crate) fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
         let large = match bytes.get(..8) {
             Some(b"SWPRT001") => false,
-            Some(b"SWPRT002") => true,
+            Some(b"SWPRT002") | Some(b"SWPRT003") => true,
             _ => return Err("unsupported route encoder format".into()),
+        };
+        let input_channels = if bytes.get(..8) == Some(b"SWPRT003") {
+            16
+        } else {
+            8
         };
         let mut position = 8;
         let mut layer = |inputs: usize,
@@ -60,7 +65,7 @@ impl Encoder {
             })
         };
         let specification = if large {
-            vec![(8, 48, 5, 1), (48, 64, 5, 2), (64, 128, 3, 1)]
+            vec![(input_channels, 48, 5, 1), (48, 64, 5, 2), (64, 128, 3, 1)]
         } else {
             vec![
                 (8, 48, 5, 1),
@@ -109,6 +114,9 @@ impl Encoder {
 
     pub(crate) fn embed(&self, raw: &[(f64, f64)]) -> Option<[f32; DIM]> {
         let mut values = prepare_features(raw)?;
+        if self.convolutions[0].inputs == 16 {
+            append_intrinsic(&mut values);
+        }
         let mut length = POINTS;
         for layer in &self.convolutions {
             let next = convolve(&values, length, layer, true);
@@ -174,6 +182,75 @@ fn convolve(values: &[f32], length: usize, layer: &Layer, relu: bool) -> (Vec<f3
         }
     }
     (output, next_length)
+}
+
+/// Append a whitened, stroke-anchored frame and local turn measurements.
+fn append_intrinsic(features: &mut Vec<f32>) {
+    let floor = (features[..POINTS * 2].iter().map(|v| v * v).sum::<f32>() / POINTS as f32) * 0.025;
+    let a = features[..POINTS].iter().map(|v| v * v).sum::<f32>() / POINTS as f32 + floor;
+    let d = features[POINTS..POINTS * 2]
+        .iter()
+        .map(|v| v * v)
+        .sum::<f32>()
+        / POINTS as f32
+        + floor;
+    let b = (0..POINTS)
+        .map(|i| features[i] * features[POINTS + i])
+        .sum::<f32>()
+        / POINTS as f32;
+    let root = (a * d - b * b).max(1e-8).sqrt();
+    let scale = (a + d + 2.0 * root).sqrt();
+    let denominator = ((a + root) * (d + root) - b * b).max(1e-8);
+    let mut whitened = [[0.0_f32; 2]; POINTS];
+    for (i, point) in whitened.iter_mut().enumerate() {
+        let (x, y) = (features[i], features[POINTS + i]);
+        *point = [
+            scale * ((d + root) * x - b * y) / denominator,
+            scale * ((a + root) * y - b * x) / denominator,
+        ];
+    }
+    let mut anchor = [
+        whitened[POINTS - 1][0] - whitened[0][0],
+        whitened[POINTS - 1][1] - whitened[0][1],
+    ];
+    if anchor[0].powi(2) + anchor[1].powi(2) <= 0.0225 {
+        anchor = [
+            whitened[8][0] - whitened[0][0],
+            whitened[8][1] - whitened[0][1],
+        ];
+    }
+    let norm = anchor[0].hypot(anchor[1]).max(1e-6);
+    anchor = anchor.map(|v| v / norm);
+    let frame = whitened.map(|p| {
+        [
+            p[0] * anchor[0] + p[1] * anchor[1],
+            p[1] * anchor[0] - p[0] * anchor[1],
+        ]
+    });
+    let mut deltas = [[0.0_f32; 2]; POINTS];
+    let mut directions = [[0.0_f32; 2]; POINTS];
+    for i in 0..POINTS {
+        let (lo, hi) = (i.saturating_sub(1), (i + 1).min(POINTS - 1));
+        deltas[i] = [frame[hi][0] - frame[lo][0], frame[hi][1] - frame[lo][1]];
+        let norm = deltas[i][0].hypot(deltas[i][1]).max(1e-6);
+        directions[i] = deltas[i].map(|v| v / norm);
+    }
+    features.resize(16 * POINTS, 0.0);
+    let mut area = 0.0;
+    for i in 0..POINTS {
+        for axis in 0..2 {
+            features[(8 + axis) * POINTS + i] = frame[i][axis];
+            features[(10 + axis) * POINTS + i] = deltas[i][axis];
+        }
+        let previous = directions[i.saturating_sub(1)];
+        features[12 * POINTS + i] = frame[i][0].hypot(frame[i][1]);
+        features[13 * POINTS + i] = previous[0] * directions[i][0] + previous[1] * directions[i][1];
+        features[14 * POINTS + i] = previous[0] * directions[i][1] - previous[1] * directions[i][0];
+        if i > 0 {
+            area += frame[i - 1][0] * frame[i][1] - frame[i - 1][1] * frame[i][0];
+        }
+        features[15 * POINTS + i] = area / 4.0;
+    }
 }
 
 /// Independent accumulators allow vectorization without architecture-specific code.
