@@ -1,0 +1,33 @@
+{
+  "experiment": "Visited-key CTC with latent interior deletion",
+  "test_data_used": false,
+  "best_development": {
+    "epoch": 15,
+    "loss": 1.6128872235616047,
+    "proxy_weight": 1.0,
+    "deletion_probability": 0.45,
+    "validation": {
+      "clean": {
+        "samples": 327,
+        "top1": 0.8960244655609131,
+        "top5": 0.9755351543426514
+      },
+      "loose": {
+        "samples": 591,
+        "top1": 0.7952622771263123,
+        "top5": 0.9289340376853943
+      },
+      "memory": {
+        "samples": 2082,
+        "top1": 0.6330451369285583,
+        "top5": 0.8165225982666016
+      }
+    },
+    "best_score": 0.6330451369285583,
+    "improved": true,
+    "seconds": 108.96686058299383
+  },
+  "checkpoint_sha256": "dd2ff1bb6f2f3c861f768a779212425a77bf4eabab5e5ff33de27f9a80cf7741",
+  "disposition": "Stop after 20 completed epochs. No measured advantage over the ordinary frozen character decoder; prioritize the larger word model and joint training. Preserve weights and native parity checks.",
+  "limits": "3000-query development subset; different training duration; no claim of a statistically significant difference. No benchmark evaluation."
+}
