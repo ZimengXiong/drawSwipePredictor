@@ -79,7 +79,7 @@ def main():
             scores = sum(weight * proxy_scores(encode(model, paths)[2], proxies) for model, proxies, weight in word_models)
             similarity, ids = scores.topk(128, dim=1)
             memory = decoder.encode_memory(*encode(encoder, paths))
-            costs = torch.stack([bank.costs(decoder, memory[i:i+1], ids[i]) for i in range(len(paths))])
+            costs = bank.costs_batch(decoder, memory, ids)
             candidates.append(ids.cpu()); similarities.append(similarity.cpu()); route_costs.append(costs.cpu())
             print(json.dumps({'finished': min(start+64, len(selected)), 'total': len(selected), 'seconds': time.monotonic()-began}), flush=True)
     candidates, similarities, route_costs = [torch.cat(parts) for parts in [candidates, similarities, route_costs]]

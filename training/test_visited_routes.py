@@ -6,6 +6,7 @@ import torch
 from torch import nn
 
 from visited_route_model import RouteBank, route_variants
+from autoregressive_model import SpellingDecoder
 from evaluate_visited_routes import score_trials
 
 
@@ -26,6 +27,17 @@ class VisitedRouteTests(unittest.TestCase):
         for probability in [-0.1, 1.0]:
             with self.assertRaises(ValueError):
                 route_variants('abaca', probability)
+
+    def test_packed_queries_preserve_independent_route_costs(self):
+        torch.manual_seed(31)
+        bank = RouteBank(['abaca', 'hello', 'lunchbox'], 'cpu')
+        model = SpellingDecoder(width=48, layers=1).eval()
+        memory = torch.randn(2, 32, 48)
+        candidates = torch.tensor([[0, 1], [2, 0]])
+        packed = bank.costs_batch(model, memory, candidates, chunk=3)
+        separate = torch.stack([bank.costs(model, memory[i:i+1], candidates[i], chunk=1)
+                                for i in range(2)])
+        torch.testing.assert_close(packed, separate, atol=1e-5, rtol=1e-6)
 
     def test_trial_reporting_counts_missing_targets_and_preserves_all_queries(self):
         candidates = torch.tensor([[1, 2, 3], [4, 5, 6], [7, 8, 9]])

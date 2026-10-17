@@ -40,17 +40,28 @@ class RouteBank:
         """Use query points and candidate routes only; no target or route-count oracle."""
         if len(memory) != 1 or candidates.ndim != 1:
             raise ValueError('score one query and its natural candidate list')
+        return self.costs_batch(model, memory, candidates[None], chunk)[0]
+
+    @torch.no_grad()
+    def costs_batch(self, model, memory, candidates, chunk=256):
+        """Pack independent query-route pairs for efficient teacher-forced scoring."""
+        if candidates.ndim != 2 or len(memory) != len(candidates):
+            raise ValueError('one candidate list is required for each query')
         route_ids = self.ids[candidates]
         prior = self.log_prior[candidates]
         present = prior.isfinite()
-        unique, inverse = route_ids[present].unique(return_inverse=True)
+        query_ids = torch.arange(len(memory), device=memory.device)[:, None, None].expand_as(route_ids)
+        route_count = len(self.inputs)
+        packed = query_ids * route_count + route_ids
+        unique, inverse = packed[present].unique(return_inverse=True)
         costs = []
         for part in unique.split(chunk):
-            width = int(self.lengths[part].max())
-            logits = model(memory.expand(len(part), -1, -1), self.inputs[part, :width])
-            labels = self.targets[part, :width]
+            queries, routes = part // route_count, part % route_count
+            width = int(self.lengths[routes].max())
+            logits = model(memory[queries], self.inputs[routes, :width])
+            labels = self.targets[routes, :width]
             nll = -logits.log_softmax(-1).gather(2, labels[..., None]).squeeze(-1)
             costs.append((nll * (labels != 0)).sum(1))
         likelihoods = torch.full_like(prior, -torch.inf)
         likelihoods[present] = -torch.cat(costs)[inverse] + prior[present]
-        return -likelihoods.logsumexp(1)
+        return -likelihoods.logsumexp(2)
