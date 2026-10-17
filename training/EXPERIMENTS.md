@@ -115,7 +115,7 @@ The decoder receives stroke features and candidate letters. It receives no targe
 
 The first trained nine-block checkpoint reaches 6,138/8,400, or 73.07%, on full hard development with the existing word mixture. Compared with the verified three-block system, it gains seven hard, two clean, and eight loose first choices, while losing two hard top-five hits. Its trained weights pass five native reference cases and seven corruption checks. A point-only native replay of all 12,000 development strokes reproduces every Python top-one and top-five count. Files and executable hashes remain unchanged throughout replay. Timing under concurrent training is 217 ms median and 416 ms p95. The preview retains the verified 72.99% model.
 
-Later immutable wide/synthetic-only checkpoints reach 6,141/8,400 hard word-only first choices. Their nine-block complete system reaches 6,171/8,400 (73.46%), with length power 0.3 and proxy weight 4.0. It passes five native reference cases and four binding checks. Full point-only native replay remains in progress. The benchmark and confirmation set stay closed.
+Later immutable wide/synthetic-only checkpoints reach 6,141/8,400 hard word-only first choices. Their nine-block complete system reaches 6,171/8,400 (73.46%), with length power 0.3 and proxy weight 4.0. It passes five native reference cases and four binding checks. Full point-only native replay reproduces every count across all 12,000 development rows. The benchmark and confirmation set stay closed.
 
 `--decoder-width 384 --decoder-layers 12` expands the trained decoder to 28,560,797 parameters. Channel replication, rescaled attention, and identity added blocks retain the initialized likelihoods. Five full-size Python references differ by at most 0.000027, and native references by at most 0.000039. Native `SWPSP003` records bounded width and depth; legacy formats remain supported. These initialization probes do not establish trained accuracy. Initial native timing is about 700–800 ms per reference query under concurrent work.
 
@@ -316,7 +316,7 @@ The adaptive gate stopped after 25 rounds without improvement, and the nine-laye
 
 `WaypointDecoder` predicts unrounded locations and uncertainty. Its inference method enumerates every possible count from two to 32 and receives no true count, target word, writer identity, or difficulty. Training conditions its supervised location loss on the known training count and separately predicts that count from the stroke. These internal diagnostics are not complete-word accuracy.
 
-The first five rounds improve internal count accuracy to 66.18%, while conditional location MSE stays near 0.567. Lower conditional loss therefore does not yet establish better corner reconstruction. This motivates checking alignment supervision and loss balance before using the model as word evidence. The experiment remains in training and has no word-recognition or native result yet.
+The first five rounds improve internal count accuracy to 66.18%, while conditional location MSE stays near 0.567. Lower conditional loss therefore does not yet establish better corner reconstruction. This motivates checking alignment supervision and loss balance before using the model as word evidence. This first stage stopped after 21 rounds and has no native result.
 
 ## Isolate count evidence
 
@@ -331,3 +331,16 @@ A reporting-only check of the fixed model across development vocabulary ranges a
 Five full-size GPU references differ by at most 0.000020 after this change. A matched 28.6-million-parameter run keeps the original context, decoder initialization, retrieval source, 31 training shards, rates, seed, and schedule. The output directory and symmetry setting are its only argument differences. It remains an experiment; initialization parity is not trained accuracy.
 
 The first corner-recovery stage stopped after 21 rounds. Count learning improved, but location MSE stayed near its starting value. Best and latest saved checkpoints are preserved before adding stronger ordered-alignment supervision.
+
+
+## Supervise corner alignment
+
+The second corner dataset adds the chronological arc position of each latent control. It uses the same 300,000 writers as the first dataset. Preparation checks that the original points, corner coordinates, and counts remain array-identical. These are additional labels, not additional independent swipes. The generator remains unchanged.
+
+`AlignedWaypointDecoder` predicts positive intervals between controls, then accumulates them into ordered arc positions. It samples the observed stroke at those positions and predicts a residual to recover the unrounded control. Explicit location and alignment losses prevent uncertainty or count learning from hiding a location failure. Checkpoint selection uses internal mean-query location MSE plus ten times arc MSE. Inference receives points and evaluates all 31 count hypotheses; it receives no true alignment or count.
+
+The first three rounds reduce internal mean-query location MSE from 0.4406 to 0.1367. This is conditional geometry reconstruction, not word-recognition accuracy. A frozen round-two diagnostic gains one hard first choice on 512 development rows: 253/350 versus 252/350. A full-development comparison is required before drawing conclusions.
+
+`evaluate_waypoint_evidence.py` compares recovered corners with each natural candidate's public keyboard route. It fits a regularized affine pose and integrates possible interior omissions. Count priors come from training rows only. The zero-corner baseline must reproduce every saved full-development spelling count. Candidate lists, inputs, source files, and model hashes are bound and checked. No native exporter exists for this proposal.
+
+Four larger encoder controls stopped without a trained gain: the massive control after 46 rounds, its gate variant after 33, and both normalization variants after 41. Each best checkpoint remains its initializer. Best and latest files are preserved and hashed in `benchmarks/larger-encoder-controls-stopped-v1.json`. Stopping these runs frees unified memory for the larger decoder and aligned-corner work. The 28.6-million-parameter decoder's round-ten gain on its fixed subset is undergoing full-development evaluation; it is not yet a full result.
