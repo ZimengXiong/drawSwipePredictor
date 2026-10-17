@@ -90,13 +90,16 @@ def main():
             probabilities.append(model.count_logits(model.encode_memory(*encode(encoder,points))).log_softmax(1).cpu())
     probabilities=torch.cat(probabilities)
     key_counts=torch.tensor([sum(i==0 or c!=word[i-1] for i,c in enumerate(word)) for word in saved['words']])
-    evidence=count_evidence(probabilities,log_prior,key_counts)
+    # Every word shares one of the thirty-one public count hypotheses.
+    # Evaluate those once, then gather the unchanged natural candidate scores.
+    evidence_by_count=count_evidence(probabilities,log_prior,torch.arange(2,33))
     ids=torch.tensor(candidates,dtype=torch.long)
+    evidence=evidence_by_count.gather(1,key_counts[ids]-2)
     fixed=fusion['fixed_spelling_settings']
     sizes=torch.tensor([len(word)+1 for word in saved['words']])[ids].float()
     baseline=-torch.tensor(costs)/sizes.pow(fixed['length_power'])+32*fixed['proxy_weight']*torch.tensor(similarity)
     labels=torch.tensor(np.array(rows['label'],dtype=np.int64));difficulty=torch.tensor(np.array(rows['difficulty'],dtype=np.int64))
-    trials=[{'count_weight':weight,'validation':metrics(baseline+weight*evidence.gather(1,ids),ids,labels,difficulty)}
+    trials=[{'count_weight':weight,'validation':metrics(baseline+weight*evidence,ids,labels,difficulty)}
             for weight in [0.0,0.1,0.25,0.5,1.0,2.0,4.0]]
     for name,values in trials[0]['validation'].items():
         for key in ['correct_top1','correct_top5']:
