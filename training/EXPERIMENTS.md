@@ -42,6 +42,18 @@ uv run --directory training python train_proxy.py \
 
 Repeat `--extra-train` for more shards. Each run records their hashes and writer ranges. A checkpoint retains the optimizer and schedule, but does not retain every random-number generator state. Resuming is not a bit-for-bit continuation.
 
+`--architecture attention` adds four attention layers around a frozen `large` encoder. Each layer compares all 64 stroke positions and learns biases from spatial distance, tangent agreement, and stroke progress. A zero-initialized correction head preserves the starting predictions. The baseline stays in evaluation mode during training, and `--freeze-proxies` also preserves the word bank. This architecture is experimental and has no native exporter yet.
+
+```sh
+uv run --directory training python train_proxy.py \
+  --init-model checkpoints/proxy-giant-strong-init.pt \
+  --architecture attention --freeze-proxies --stream-corpus \
+  --extra-train data/memory-proxy/train-700011.bin \
+  --fresh-fraction 0.5 --learning-rate 0.00005 \
+  --batch 256 --epochs 180 --steps 200 \
+  --seed 900409 --output checkpoints/proxy-attention-v1
+```
+
 ## Compare candidate words with the stroke
 
 Four experiments add evidence beyond a single word vector:

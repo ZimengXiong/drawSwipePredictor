@@ -1,0 +1,1327 @@
+{
+  "primary_sha256": "c85a84ced59681e5dcc0ae470eb250a5ea42ec8d35c1f5adb50f8727e7c7b6e9",
+  "auxiliary_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "primary_path": "checkpoints/completed-joint-v1.pt",
+  "auxiliary_path": "checkpoints/proxy-giant-strong-init.pt",
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "trials": [
+    {
+      "auxiliary_weight": 0.0,
+      "proxy_weight": 2.0,
+      "deletion_probability": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.940833330154419,
+          "top5": 0.9983333349227905
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8537499904632568,
+          "top5": 0.9504166841506958
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.6867856979370117,
+          "top5": 0.8569047451019287
+        }
+      },
+      "shortlist_recall": {
+        "clean": 1.0,
+        "loose": 0.996666669845581,
+        "memory": 0.9847618937492371
+      },
+      "calibration": [
+        {
+          "proxy_weight": null,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9366666674613953,
+              "top5": 0.9983333349227905
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8487499952316284,
+              "top5": 0.9487500190734863
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.663690447807312,
+              "top5": 0.8379762172698975
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.8399999737739563,
+              "top5": 0.9516666531562805
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.7262499928474426,
+              "top5": 0.8654166460037231
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.5753571391105652,
+              "top5": 0.7683333158493042
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.05,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.862500011920929,
+              "top5": 0.9674999713897705
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.7566666603088379,
+              "top5": 0.8837500214576721
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6020237803459167,
+              "top5": 0.7890475988388062
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.1,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.878333330154419,
+              "top5": 0.9741666913032532
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.7737500071525574,
+              "top5": 0.8966666460037231
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6220238208770752,
+              "top5": 0.8083333373069763
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.25,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.909166693687439,
+              "top5": 0.98416668176651
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8033333420753479,
+              "top5": 0.9237499833106995
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.653333306312561,
+              "top5": 0.8358333110809326
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.5,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9291666746139526,
+              "top5": 0.9933333396911621
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8258333206176758,
+              "top5": 0.9387500286102295
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.675000011920929,
+              "top5": 0.8529762029647827
+            }
+          }
+        },
+        {
+          "proxy_weight": 1.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.940833330154419,
+              "top5": 0.9975000023841858
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8445833325386047,
+              "top5": 0.9479166865348816
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6846428513526917,
+              "top5": 0.8609523773193359
+            }
+          }
+        },
+        {
+          "proxy_weight": 2.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.940833330154419,
+              "top5": 0.9983333349227905
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8537499904632568,
+              "top5": 0.9504166841506958
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6867856979370117,
+              "top5": 0.8569047451019287
+            }
+          }
+        },
+        {
+          "proxy_weight": 4.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9391666650772095,
+              "top5": 0.9975000023841858
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8533333539962769,
+              "top5": 0.9504166841506958
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6803571581840515,
+              "top5": 0.8513095378875732
+            }
+          }
+        }
+      ]
+    },
+    {
+      "auxiliary_weight": 0.25,
+      "proxy_weight": 4.0,
+      "deletion_probability": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9466666579246521,
+          "top5": 0.9983333349227905
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8608333468437195,
+          "top5": 0.9549999833106995
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.6954761743545532,
+          "top5": 0.8645238280296326
+        }
+      },
+      "shortlist_recall": {
+        "clean": 1.0,
+        "loose": 0.9983333349227905,
+        "memory": 0.9888095259666443
+      },
+      "calibration": [
+        {
+          "proxy_weight": null,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9424999952316284,
+              "top5": 0.9983333349227905
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8579166531562805,
+              "top5": 0.9516666531562805
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6828571557998657,
+              "top5": 0.8520237803459167
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.8399999737739563,
+              "top5": 0.949999988079071
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.7250000238418579,
+              "top5": 0.8654166460037231
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.5736904740333557,
+              "top5": 0.7641666531562805
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.05,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.8633333444595337,
+              "top5": 0.9674999713897705
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.7554166913032532,
+              "top5": 0.8841666579246521
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6026190519332886,
+              "top5": 0.7879762053489685
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.1,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.8799999952316284,
+              "top5": 0.9733333587646484
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.7745833396911621,
+              "top5": 0.8958333134651184
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6235714554786682,
+              "top5": 0.8082143068313599
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.25,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9108333587646484,
+              "top5": 0.9850000143051147
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8037499785423279,
+              "top5": 0.9245833158493042
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6579762101173401,
+              "top5": 0.8392857313156128
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.5,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9375,
+              "top5": 0.9941666722297668
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8266666531562805,
+              "top5": 0.940833330154419
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6813095211982727,
+              "top5": 0.8611904978752136
+            }
+          }
+        },
+        {
+          "proxy_weight": 1.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9483333230018616,
+              "top5": 0.9975000023841858
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8454166650772095,
+              "top5": 0.9495833516120911
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.692380964756012,
+              "top5": 0.8689285516738892
+            }
+          }
+        },
+        {
+          "proxy_weight": 2.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.949999988079071,
+              "top5": 0.9975000023841858
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8566666841506958,
+              "top5": 0.9537500143051147
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6952381134033203,
+              "top5": 0.8670238256454468
+            }
+          }
+        },
+        {
+          "proxy_weight": 4.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9466666579246521,
+              "top5": 0.9983333349227905
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8608333468437195,
+              "top5": 0.9549999833106995
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6954761743545532,
+              "top5": 0.8645238280296326
+            }
+          }
+        }
+      ]
+    },
+    {
+      "auxiliary_weight": 0.5,
+      "proxy_weight": 2.0,
+      "deletion_probability": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9583333134651184,
+          "top5": 0.9975000023841858
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8566666841506958,
+          "top5": 0.9558333158493042
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7036904692649841,
+          "top5": 0.8751190304756165
+        }
+      },
+      "shortlist_recall": {
+        "clean": 1.0,
+        "loose": 0.9995833039283752,
+        "memory": 0.9904761910438538
+      },
+      "calibration": [
+        {
+          "proxy_weight": null,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.949999988079071,
+              "top5": 0.9983333349227905
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8604166507720947,
+              "top5": 0.9570833444595337
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6972619295120239,
+              "top5": 0.8633333444595337
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.8391666412353516,
+              "top5": 0.9483333230018616
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.7237499952316284,
+              "top5": 0.8645833134651184
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.5721428394317627,
+              "top5": 0.7621428370475769
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.05,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.862500011920929,
+              "top5": 0.9666666388511658
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.7554166913032532,
+              "top5": 0.8820833563804626
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6016666889190674,
+              "top5": 0.7876190543174744
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.1,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.8858333230018616,
+              "top5": 0.9733333587646484
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.7737500071525574,
+              "top5": 0.8966666460037231
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6239285469055176,
+              "top5": 0.8080952167510986
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.25,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9208333492279053,
+              "top5": 0.9858333468437195
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8050000071525574,
+              "top5": 0.9241666793823242
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6575000286102295,
+              "top5": 0.8421428799629211
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.5,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9416666626930237,
+              "top5": 0.9933333396911621
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8270833492279053,
+              "top5": 0.9429166913032532
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6832143068313599,
+              "top5": 0.8651190400123596
+            }
+          }
+        },
+        {
+          "proxy_weight": 1.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9541666507720947,
+              "top5": 0.9975000023841858
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.846666693687439,
+              "top5": 0.9495833516120911
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.697857141494751,
+              "top5": 0.8736904859542847
+            }
+          }
+        },
+        {
+          "proxy_weight": 2.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9583333134651184,
+              "top5": 0.9975000023841858
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8566666841506958,
+              "top5": 0.9558333158493042
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.7036904692649841,
+              "top5": 0.8751190304756165
+            }
+          }
+        },
+        {
+          "proxy_weight": 4.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9574999809265137,
+              "top5": 0.9983333349227905
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8608333468437195,
+              "top5": 0.9579166769981384
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.70333331823349,
+              "top5": 0.8719047904014587
+            }
+          }
+        }
+      ]
+    },
+    {
+      "auxiliary_weight": 0.75,
+      "proxy_weight": 4.0,
+      "deletion_probability": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9616666436195374,
+          "top5": 0.9983333349227905
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8629166483879089,
+          "top5": 0.9570833444595337
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7104762196540833,
+          "top5": 0.878333330154419
+        }
+      },
+      "shortlist_recall": {
+        "clean": 1.0,
+        "loose": 0.9995833039283752,
+        "memory": 0.991190493106842
+      },
+      "calibration": [
+        {
+          "proxy_weight": null,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9608333110809326,
+              "top5": 0.9983333349227905
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8612499833106995,
+              "top5": 0.9579166769981384
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.7039285898208618,
+              "top5": 0.8715476393699646
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.8399999737739563,
+              "top5": 0.9474999904632568
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.7233333587646484,
+              "top5": 0.8650000095367432
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.5717856884002686,
+              "top5": 0.7598809599876404
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.05,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.8600000143051147,
+              "top5": 0.9633333086967468
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.7554166913032532,
+              "top5": 0.8824999928474426
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6025000214576721,
+              "top5": 0.7878571152687073
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.1,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.8858333230018616,
+              "top5": 0.9741666913032532
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.7729166746139526,
+              "top5": 0.8962500095367432
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6245238184928894,
+              "top5": 0.8089285492897034
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.25,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9208333492279053,
+              "top5": 0.9850000143051147
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8041666746139526,
+              "top5": 0.9237499833106995
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6594047546386719,
+              "top5": 0.8439285755157471
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.5,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9424999952316284,
+              "top5": 0.9933333396911621
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8258333206176758,
+              "top5": 0.9420833587646484
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6867856979370117,
+              "top5": 0.8675000071525574
+            }
+          }
+        },
+        {
+          "proxy_weight": 1.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9583333134651184,
+              "top5": 0.9958333373069763
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8479166626930237,
+              "top5": 0.9495833516120911
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.7044047713279724,
+              "top5": 0.8759523630142212
+            }
+          }
+        },
+        {
+          "proxy_weight": 2.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9624999761581421,
+              "top5": 0.9975000023841858
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8575000166893005,
+              "top5": 0.9570833444595337
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.708809494972229,
+              "top5": 0.8796428442001343
+            }
+          }
+        },
+        {
+          "proxy_weight": 4.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9616666436195374,
+              "top5": 0.9983333349227905
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8629166483879089,
+              "top5": 0.9570833444595337
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.7104762196540833,
+              "top5": 0.878333330154419
+            }
+          }
+        }
+      ]
+    },
+    {
+      "auxiliary_weight": 1.0,
+      "proxy_weight": 4.0,
+      "deletion_probability": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9633333086967468,
+          "top5": 0.9958333373069763
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8670833110809326,
+          "top5": 0.9587500095367432
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7145237922668457,
+          "top5": 0.8808333277702332
+        }
+      },
+      "shortlist_recall": {
+        "clean": 1.0,
+        "loose": 0.9991666674613953,
+        "memory": 0.9920238256454468
+      },
+      "calibration": [
+        {
+          "proxy_weight": null,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9624999761581421,
+              "top5": 0.9975000023841858
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8637499809265137,
+              "top5": 0.9579166769981384
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.7101190686225891,
+              "top5": 0.8745238184928894
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.8399999737739563,
+              "top5": 0.9474999904632568
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.722083330154419,
+              "top5": 0.8641666769981384
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.5727381110191345,
+              "top5": 0.758571445941925
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.05,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.8616666793823242,
+              "top5": 0.9641666412353516
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.7549999952316284,
+              "top5": 0.8829166889190674
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6033333539962769,
+              "top5": 0.7878571152687073
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.1,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.8858333230018616,
+              "top5": 0.971666693687439
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.7729166746139526,
+              "top5": 0.8991666436195374
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.626547634601593,
+              "top5": 0.8095238208770752
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.25,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9208333492279053,
+              "top5": 0.9858333468437195
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8045833110809326,
+              "top5": 0.925000011920929
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6602380871772766,
+              "top5": 0.8465476036071777
+            }
+          }
+        },
+        {
+          "proxy_weight": 0.5,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9433333277702332,
+              "top5": 0.9916666746139526
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8241666555404663,
+              "top5": 0.9420833587646484
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.6883333325386047,
+              "top5": 0.867976188659668
+            }
+          }
+        },
+        {
+          "proxy_weight": 1.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9591666460037231,
+              "top5": 0.9950000047683716
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8475000262260437,
+              "top5": 0.9520833492279053
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.7063094973564148,
+              "top5": 0.8767856955528259
+            }
+          }
+        },
+        {
+          "proxy_weight": 2.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9649999737739563,
+              "top5": 0.9950000047683716
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8608333468437195,
+              "top5": 0.9574999809265137
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.7128571271896362,
+              "top5": 0.8802381157875061
+            }
+          }
+        },
+        {
+          "proxy_weight": 4.0,
+          "deletion_probability": 0.0,
+          "validation": {
+            "clean": {
+              "samples": 1200,
+              "top1": 0.9633333086967468,
+              "top5": 0.9958333373069763
+            },
+            "loose": {
+              "samples": 2400,
+              "top1": 0.8670833110809326,
+              "top5": 0.9587500095367432
+            },
+            "memory": {
+              "samples": 8400,
+              "top1": 0.7145237922668457,
+              "top5": 0.8808333277702332
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "selected": {
+    "auxiliary_weight": 1.0,
+    "proxy_weight": 4.0,
+    "deletion_probability": 0.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9633333086967468,
+        "top5": 0.9958333373069763
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8670833110809326,
+        "top5": 0.9587500095367432
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7145237922668457,
+        "top5": 0.8808333277702332
+      }
+    },
+    "shortlist_recall": {
+      "clean": 1.0,
+      "loose": 0.9991666674613953,
+      "memory": 0.9920238256454468
+    },
+    "calibration": [
+      {
+        "proxy_weight": null,
+        "deletion_probability": 0.0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9624999761581421,
+            "top5": 0.9975000023841858
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8637499809265137,
+            "top5": 0.9579166769981384
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7101190686225891,
+            "top5": 0.8745238184928894
+          }
+        }
+      },
+      {
+        "proxy_weight": 0.0,
+        "deletion_probability": 0.0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.8399999737739563,
+            "top5": 0.9474999904632568
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.722083330154419,
+            "top5": 0.8641666769981384
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.5727381110191345,
+            "top5": 0.758571445941925
+          }
+        }
+      },
+      {
+        "proxy_weight": 0.05,
+        "deletion_probability": 0.0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.8616666793823242,
+            "top5": 0.9641666412353516
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.7549999952316284,
+            "top5": 0.8829166889190674
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.6033333539962769,
+            "top5": 0.7878571152687073
+          }
+        }
+      },
+      {
+        "proxy_weight": 0.1,
+        "deletion_probability": 0.0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.8858333230018616,
+            "top5": 0.971666693687439
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.7729166746139526,
+            "top5": 0.8991666436195374
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.626547634601593,
+            "top5": 0.8095238208770752
+          }
+        }
+      },
+      {
+        "proxy_weight": 0.25,
+        "deletion_probability": 0.0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9208333492279053,
+            "top5": 0.9858333468437195
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8045833110809326,
+            "top5": 0.925000011920929
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.6602380871772766,
+            "top5": 0.8465476036071777
+          }
+        }
+      },
+      {
+        "proxy_weight": 0.5,
+        "deletion_probability": 0.0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9433333277702332,
+            "top5": 0.9916666746139526
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8241666555404663,
+            "top5": 0.9420833587646484
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.6883333325386047,
+            "top5": 0.867976188659668
+          }
+        }
+      },
+      {
+        "proxy_weight": 1.0,
+        "deletion_probability": 0.0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9591666460037231,
+            "top5": 0.9950000047683716
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8475000262260437,
+            "top5": 0.9520833492279053
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7063094973564148,
+            "top5": 0.8767856955528259
+          }
+        }
+      },
+      {
+        "proxy_weight": 2.0,
+        "deletion_probability": 0.0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9649999737739563,
+            "top5": 0.9950000047683716
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8608333468437195,
+            "top5": 0.9574999809265137
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7128571271896362,
+            "top5": 0.8802381157875061
+          }
+        }
+      },
+      {
+        "proxy_weight": 4.0,
+        "deletion_probability": 0.0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9633333086967468,
+            "top5": 0.9958333373069763
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8670833110809326,
+            "top5": 0.9587500095367432
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7145237922668457,
+            "top5": 0.8808333277702332
+          }
+        }
+      }
+    ]
+  },
+  "rules": "All natural top128 candidates; exact-word metrics; no target insertion or alias credit"
+}

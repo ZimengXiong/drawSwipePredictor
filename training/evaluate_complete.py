@@ -45,7 +45,7 @@ def main():
     paths = torch.tensor(np.array(rows["points"]), device="mps")
     labels = torch.tensor(np.array(rows["label"], dtype=np.int64), device="mps")
     difficulty = torch.tensor(np.array(rows["difficulty"], dtype=np.int64), device="mps")
-    weights = [0.0, 0.25, 0.5, 0.75]
+    weights = [0.0, 0.25, 0.5, 0.75, 1.0]
     cached = {name: [] for name in ["sequence", "raw", "embedding"]}
     pools = {weight: {"similarity": [], "candidates": []} for weight in weights}
     with torch.no_grad():

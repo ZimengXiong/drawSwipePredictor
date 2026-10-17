@@ -143,6 +143,9 @@ def augment(paths: torch.Tensor, *, force_memory: bool = False) -> torch.Tensor:
 
 
 def build_encoder(architecture="small"):
+    if architecture == "attention":
+        from attention_encoder import AttentionGestureEncoder
+        return AttentionGestureEncoder()
     if architecture == "small":
         return GestureEncoder()
     if architecture in ["large", "intrinsic", "giant"]:

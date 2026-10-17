@@ -105,7 +105,7 @@ def main():
     parser.add_argument("--batch", type=int, default=768)
     parser.add_argument("--learning-rate", type=float, default=0.00015)
     parser.add_argument("--seed", type=int, default=812831)
-    parser.add_argument("--architecture", choices=["small", "large", "intrinsic", "giant"], default="small")
+    parser.add_argument("--architecture", choices=["small", "large", "intrinsic", "giant", "attention"], default="small")
     parser.add_argument("--centers", type=int, default=1)
     parser.add_argument("--proxy-init", type=Path)
     parser.add_argument("--fresh-fraction", type=float, default=0.0)
@@ -165,8 +165,13 @@ def main():
     initial_architecture = initial["metadata"]["arguments"].get("architecture", "small")
     teacher = None
     if args.architecture != initial_architecture:
-        compatible = {key: value for key, value in initial["model"].items() if key in model.state_dict() and model.state_dict()[key].shape == value.shape}
-        model.load_state_dict(compatible, strict=False)
+        if args.architecture == "attention" and initial_architecture != "large":
+            raise ValueError("attention corrections require a completed large initializer")
+        if args.architecture == "attention":
+            model.base.load_state_dict(initial["model"])
+        else:
+            compatible = {key: value for key, value in initial["model"].items() if key in model.state_dict() and model.state_dict()[key].shape == value.shape}
+            model.load_state_dict(compatible, strict=False)
         if args.architecture == "giant":
             from large_encoder import expand_encoder
             expand_encoder(model, initial["model"])

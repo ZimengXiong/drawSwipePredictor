@@ -26,6 +26,30 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_attention_preserves_baseline_and_learns_corrections(self):
+        torch.manual_seed(900409)
+        model = build_encoder("attention")
+        paths = torch.randn(3, 64, 2)
+        inputs = encoder_features(model, paths)
+        model.train()
+        self.assertFalse(model.base.training)
+        with torch.no_grad():
+            baseline = model.base(inputs[:, :8])
+        torch.testing.assert_close(model(inputs), baseline)
+        optimizer = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=0.001)
+        target = torch.nn.functional.normalize(torch.randn(3, 128), dim=1)
+        for step in range(2):
+            optimizer.zero_grad()
+            loss = (model(inputs) - target).square().mean()
+            loss.backward()
+            if step == 1:
+                gradient = model.blocks[0].qkv.weight.grad
+                self.assertTrue(torch.isfinite(gradient).all())
+                self.assertGreater(gradient.abs().sum().item(), 0)
+            optimizer.step()
+        self.assertTrue(all(p.grad is None for p in model.base.parameters()))
+        self.assertGreater((model(inputs) - baseline).abs().max().item(), 0)
+
     def test_intrinsic_view_ignores_rotation_translation_and_scale(self):
         paths = torch.tensor(curve([[0, 0], [2, 1], [-1, 3], [4, 2]]))[None]
         rotation = torch.tensor([[0.0, -1.0], [1.0, 0.0]])
