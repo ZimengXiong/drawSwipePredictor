@@ -12,8 +12,32 @@
       "checkpoints/autoregressive-wide-asymmetric-v1"
     ]
   },
-  "all_other_arguments_and_sources_match": true,
   "decoder_parameters": 28560797,
   "initialization_parity_report": "wide-spelling-asymmetric-initialization-parity-v1.json",
-  "limits": "Matched intended training configuration and canonical initialization parity only. No trained accuracy gain or bit-identical GPU execution claimed."
+  "limits": "Matched intended training configuration and canonical initialization parity only. No trained accuracy gain or bit-identical GPU execution claimed.",
+  "all_other_arguments_match": true,
+  "data_and_checkpoint_sources_match": true,
+  "code_version_note": "The control predates the noise option; default widening is retained. Each run records its code hashes.",
+  "initial_subset_metrics_and_ranking_settings_equal": true,
+  "initial_subset": {
+    "length_power": 1.0,
+    "proxy_weight": 1.0,
+    "validation": {
+      "clean": {
+        "samples": 323,
+        "top1": 0.9566563367843628,
+        "top5": 1.0
+      },
+      "loose": {
+        "samples": 626,
+        "top1": 0.8706070184707642,
+        "top5": 0.9664536714553833
+      },
+      "memory": {
+        "samples": 2051,
+        "top1": 0.734763503074646,
+        "top5": 0.8976109027862549
+      }
+    }
+  }
 }
