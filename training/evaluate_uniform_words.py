@@ -40,6 +40,7 @@ def main():
     if len({item["sha256"] for item in checkpoints}) != len(checkpoints):
         raise ValueError("supply each component once")
     count = len(models)
+    weight = 1 / count
     paths = torch.tensor(np.array(rows["points"]), device="mps")
     labels = torch.tensor(np.array(rows["label"], dtype=np.int64), device="mps")
     difficulty = torch.tensor(np.array(rows["difficulty"], dtype=np.int64), device="mps")
@@ -47,7 +48,7 @@ def main():
     with torch.no_grad():
         for start in range(0, len(paths), 192):
             part = paths[start:start + 192]
-            scores = sum(proxy_scores(model(encoder_features(model, part)), proxies) / count for model, proxies in models)
+            scores = sum(weight * proxy_scores(model(encoder_features(model, part)), proxies) for model, proxies in models)
             ranked = scores.topk(128, dim=1).indices
             truth = labels[start:start + len(part), None]
             hits = torch.stack([(ranked[:, :k] == truth).any(1) for k in [1, 5, 32, 128]], dim=1).float()
