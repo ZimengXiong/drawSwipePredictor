@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "architecture": "large",
+  "checkpoint_sha256": "b86c9d1cab7d56cd50b23bc8cf38f6a47824427ab36c4a145a049b1951064156",
+  "points": 64,
+  "channels": 8,
+  "embedding": 128,
+  "vocabulary": 60000,
+  "route_centers": 1,
+  "checkpoint_epoch": 112,
+  "validation_score": 0.7232142686843872,
+  "validation_score_includes_character": false,
+  "encoder_sha256": "909155b3b401dcc75d46759f8f751749974028e89a4fd2f13ca6c6cb70925372",
+  "words_sha256": "bdbc9c7a02da7fdc96102d175d937f348864678771498682f4bdee51b57bfbf1",
+  "training": {
+    "arguments": {
+      "train": "training/data/memory-proxy/train.bin",
+      "extra_train": [
+        "data/memory-proxy/train-700011.bin",
+        "data/memory-proxy/train-700012.bin",
+        "data/memory-proxy/train-700013.bin",
+        "data/memory-proxy/train-700014.bin",
+        "data/memory-proxy/train-700015.bin",
+        "data/memory-proxy/train-700016.bin",
+        "data/memory-proxy/train-700017.bin",
+        "data/memory-proxy/train-700018.bin",
+        "data/memory-proxy/train-700019.bin",
+        "data/memory-proxy/train-700020.bin"
+      ],
+      "stream_corpus": true,
+      "balance_real": true,
+      "validation": "training/data/memory-proxy/validation.bin",
+      "init_model": "checkpoints/proxy-balanced-init.pt",
+      "output": "checkpoints/proxy-balanced-v1",
+      "epochs": 120,
+      "steps": 200,
+      "batch": 512,
+      "learning_rate": 0.0001,
+      "seed": 900389,
+      "architecture": "large",
+      "centers": 1,
+      "proxy_init": null,
+      "fresh_fraction": 0.5,
+      "resume": null,
+      "device": "mps"
+    },
+    "train_corpus": {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700001,
+      "writer_start": 700003100003,
+      "writer_end": 700004100003,
+      "sha256": "557eb33b55d76c7c0b27b792f26b17b163006ca1ba13435a9a4e62436d6ce235"
+    },
+    "extra_train_corpora": [
+      {
+        "samples": 1000000,
+        "vocabulary": 60000,
+        "seed": 700011,
+        "writer_start": 700013100033,
+        "writer_end": 700014100033,
+        "sha256": "0d91bdd336343ee335f602485e29b16b9b279bd1a3cc8da667f5b204e83c3a13"
+      },
+      {
+        "samples": 1000000,
+        "vocabulary": 60000,
+        "seed": 700012,
+        "writer_start": 700014100036,
+        "writer_end": 700015100036,
+        "sha256": "5e39835d5841fc998ca26bac8a5607b6c77b882c147f9cbec58e0f70c8d7a466"
+      },
+      {
+        "samples": 1000000,
+        "vocabulary": 60000,
+        "seed": 700013,
+        "writer_start": 700015100039,
+        "writer_end": 700016100039,
+        "sha256": "981b463e94de836a0e55b8c08de99c5ebfe008eddbc505e032bdc34a3355b5b2"
+      },
+      {
+        "samples": 1000000,
+        "vocabulary": 60000,
+        "seed": 700014,
+        "writer_start": 700016100042,
+        "writer_end": 700017100042,
+        "sha256": "3a9c0f9ebfd76c32349491f0be34375337eae6a56c79c60848f7b9fbfcd1f13c"
+      },
+      {
+        "samples": 1000000,
+        "vocabulary": 60000,
+        "seed": 700015,
+        "writer_start": 700017100045,
+        "writer_end": 700018100045,
+        "sha256": "cfc9d0626aa407ee56669450c628ae8785ae71b2f00e265ca5a659319ef440cf"
+      },
+      {
+        "samples": 1000000,
+        "vocabulary": 60000,
+        "seed": 700016,
+        "writer_start": 700018100048,
+        "writer_end": 700019100048,
+        "sha256": "57db41ac3cc96903bf60598a72941818e92b6d6460643d72d66f09b7706fc730"
+      },
+      {
+        "samples": 1000000,
+        "vocabulary": 60000,
+        "seed": 700017,
+        "writer_start": 700019100051,
+        "writer_end": 700020100051,
+        "sha256": "54299022c791b81aa93b1defe556ae42093024781061da84a0ea9a62d9b74c74"
+      },
+      {
+        "samples": 1000000,
+        "vocabulary": 60000,
+        "seed": 700018,
+        "writer_start": 700020100054,
+        "writer_end": 700021100054,
+        "sha256": "7434c5face1e4328d7d59b93c77bfc3b3f6ad2dba478d071c70ad8869b61258f"
+      },
+      {
+        "samples": 1000000,
+        "vocabulary": 60000,
+        "seed": 700019,
+        "writer_start": 700021100057,
+        "writer_end": 700022100057,
+        "sha256": "097413b791e4a7e26f6ce12f690b2125016e9bf3a06cc260c47cf4ce684f61c7"
+      },
+      {
+        "samples": 1000000,
+        "vocabulary": 60000,
+        "seed": 700020,
+        "writer_start": 700022100060,
+        "writer_end": 700023100060,
+        "sha256": "137f01942c269ee7d029e74ad50ce9ad613e39589d46ffeab58a27efd9c88fe6"
+      }
+    ],
+    "validation_corpus": {
+      "samples": 12000,
+      "vocabulary": 60000,
+      "seed": 700003,
+      "writer_start": 700005100009,
+      "writer_end": 700005112009,
+      "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+    },
+    "real_training_sha256": "5d833110127d554d43e9a83843305e90b51f2022bddd880c7e1586c0761693da",
+    "real_sampling": "uniform observed word types; all recordings retained",
+    "initialization_sha256": "71ddd1ed8147be03225cd3afc17c84e62a5b8e9c0043bf68f386276a5047d203",
+    "test_data_used": false,
+    "selection": "uniform full-vocabulary memory validation top1",
+    "input_features": "geometry only; labels and writer identities are never model inputs",
+    "motor_sampler_sha256": "fe83c6ba6290b472f02c04cb7626aa066fe074044637fc22863bf9bed6e92b38",
+    "proxy_initialization_sha256": null,
+    "resume_sha256": null,
+    "git_commit": "c6df3230c99b0b1c7087a75c54fe140435e68372"
+  },
+  "prior_weight": 0.0,
+  "tta_degrees": 0.0,
+  "adaptive_prior": false,
+  "calibration": null,
+  "calibration_sources": null,
+  "data_source": "https://huggingface.co/datasets/futo-org/swipe.futo.org",
+  "data_license": "MIT",
+  "word_frequency_sha256": "51df159fd3de12b20e403c108f526e96dbd723d9cabdd5f17955cdc16059e690",
+  "auxiliary_weight": 0.25,
+  "auxiliary_encoder_tag": 12472950469400130210,
+  "auxiliary_bank_tag": 1395668996237827987,
+  "auxiliary_checkpoint_sha256": "89a68311ded7735485a232d212691ea5e941c7fdee11318ff6f0358fcb741727",
+  "complete_selection": {
+    "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+    "selection_sha256": "71d81b6242793e3b9c4d38d020e0aadea5cb92ba78c7d54d3c2618dbe8373db8",
+    "proxy_weight": null,
+    "deletion_probability": 0.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9641666412353516,
+        "top5": 0.9991666674613953,
+        "top32": 1.0,
+        "top128": 1.0
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8683333396911621,
+        "top5": 0.9599999785423279,
+        "top32": 0.9925000071525574,
+        "top128": 0.9991666674613953
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7251190543174744,
+        "top5": 0.8896428346633911,
+        "top32": 0.9746428728103638,
+        "top128": 0.9948809742927551
+      }
+    }
+  },
+  "spelling": {
+    "sha256": "1f3545194d45596b7b21ecbac88d76a5e21877ee46c61d10dc58c0606eb00c4e",
+    "checkpoint_sha256": "d06540bd32a3575abf092d131623e4d0826729852886761ba1f08721a4fe4fa9",
+    "context_checkpoint_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+    "context_encoder_sha256": "1eddedc4a75670b45609154ff934621df29c60182326fddf5675d68b91a5a822",
+    "selection_sha256": "aff0c4a77d99d1416c21aa416140ad85080c4bb1fe9f77432b36c8203f2d81a1",
+    "selected": {
+      "length_power": 1.0,
+      "proxy_weight": 2.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9633333086967468,
+          "top5": 0.9991666674613953
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8712499737739563,
+          "top5": 0.9608333110809326
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7272619009017944,
+          "top5": 0.8920238018035889
+        }
+      }
+    },
+    "tag": 17905684940757397317
+  }
+}

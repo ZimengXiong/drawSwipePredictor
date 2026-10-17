@@ -69,7 +69,8 @@
   "full_trial_report_path": "training/checkpoints/autoregressive-ranking-ensemble-full-v1.json",
   "hard_top1_hits": 6109,
   "baseline_hard_top1_hits": 6091,
-  "native_verified": false,
+  "native_verified": true,
   "promoted_to_app": false,
-  "status": "Development-only epoch30 decoder probe. All three word encoders and the spelling decoder must be represented in native inference before promotion. Training continues; target unmet."
+  "status": "Development-only epoch30 decoder probe. Full native12000-row replay matches Python hit counts in every difficulty group. Training continues; target unmet; bundled app unchanged.",
+  "native_verification_report": "benchmarks/spelling-ensemble-native-full-development-v1.json"
 }

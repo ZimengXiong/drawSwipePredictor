@@ -1,0 +1,56 @@
+{
+  "test_data_used": false,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "full_vocabulary": 60000,
+  "selection_sha256": "aff0c4a77d99d1416c21aa416140ad85080c4bb1fe9f77432b36c8203f2d81a1",
+  "native_manifest_sha256": "b6ff99fcb5763ed64cb0f9b793fee6efb8c784556e089ccce871ecf10a4bad6d",
+  "native_artifacts_sha256": {
+    "encoder.bin": "909155b3b401dcc75d46759f8f751749974028e89a4fd2f13ca6c6cb70925372",
+    "words.bin": "bdbc9c7a02da7fdc96102d175d937f348864678771498682f4bdee51b57bfbf1",
+    "auxiliary/encoder.bin": "4b5f81e92f873cdf1c2794d898a1c3a66d6f958a8f71a30786ec373ae9038961",
+    "auxiliary/words.bin": "952efb2686de85bfd9fd34f21eca75c529268592e16ef4bbf74310ccee72204c",
+    "spelling.bin": "1f3545194d45596b7b21ecbac88d76a5e21877ee46c61d10dc58c0606eb00c4e",
+    "spelling/encoder.bin": "1eddedc4a75670b45609154ff934621df29c60182326fddf5675d68b91a5a822"
+  },
+  "regenerated_development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "validation": {
+    "clean": {
+      "samples": 1200,
+      "top1": 0.9633333333333334,
+      "top5": 0.9991666666666666,
+      "correct_top1": 1156,
+      "correct_top5": 1199
+    },
+    "loose": {
+      "samples": 2400,
+      "top1": 0.87125,
+      "top5": 0.9608333333333333,
+      "correct_top1": 2091,
+      "correct_top5": 2306
+    },
+    "memory": {
+      "samples": 8400,
+      "top1": 0.7272619047619048,
+      "top5": 0.8920238095238096,
+      "correct_top1": 6109,
+      "correct_top5": 7493
+    }
+  },
+  "matches_python_hit_counts": true,
+  "evaluated_rows": 12000,
+  "median_milliseconds": 85.534458,
+  "p95_milliseconds": 131.17977535,
+  "limits": "Development only; regenerated raw strokes reproduce the unchanged corpus hash. Concurrent training affects timing. No benchmark or blind-confirmation evaluation.",
+  "native_cli_sha256": "67812bed14e67992ec488a4d5c4fb60f916e7e150e4252f437ff9d0d1c53ef0f",
+  "native_corpus_cli_sha256": "4850b3aa0b8a2afce65221430105c5689c88b09e9ad38d6ee46cf51221e738e8",
+  "native_manifest_snapshot": "benchmarks/spelling-native-replay-manifest-v1.json",
+  "current_native_manifest_sha256": "1b1dbcd554547009692c9ac15da66a6b7c56b46c6f8dddd9dd7d1ef4b8403929",
+  "metadata_note": "The verification-fixture SHA was added to the live manifest after replay started. The archived start manifest matches the replay hash exactly. Comparing both manifests confirms this is the only difference; inference artifacts and settings are identical."
+}
