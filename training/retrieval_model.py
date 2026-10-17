@@ -145,7 +145,15 @@ def augment(paths: torch.Tensor, *, force_memory: bool = False) -> torch.Tensor:
 def build_encoder(architecture="small"):
     if architecture == "small":
         return GestureEncoder()
-    if architecture == "large":
+    if architecture in ["large", "intrinsic"]:
         from large_encoder import LargeGestureEncoder
-        return LargeGestureEncoder()
+        return LargeGestureEncoder(16 if architecture == "intrinsic" else 8)
     raise ValueError(f"unknown encoder architecture: {architecture}")
+
+
+def encoder_features(model, paths):
+    ordinary = features(paths)
+    if getattr(model, "input_channels", 8) == 16:
+        from intrinsic_features import intrinsic_features
+        return torch.cat([ordinary, intrinsic_features(paths)], dim=1)
+    return ordinary

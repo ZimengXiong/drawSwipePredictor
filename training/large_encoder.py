@@ -21,10 +21,11 @@ class ResidualRouteBlock(nn.Module):
 
 class LargeGestureEncoder(nn.Module):
     """Use six residual context blocks and retain 32 steps through the trunk."""
-    def __init__(self):
+    def __init__(self, input_channels=8):
         super().__init__()
+        self.input_channels = input_channels
         self.stages = nn.Sequential(
-            nn.Conv1d(8, 48, 5, padding=2), nn.BatchNorm1d(48), nn.ReLU(),
+            nn.Conv1d(input_channels, 48, 5, padding=2), nn.BatchNorm1d(48), nn.ReLU(),
             nn.Conv1d(48, 64, 5, stride=2, padding=2), nn.BatchNorm1d(64), nn.ReLU(),
             nn.Conv1d(64, 128, 3, padding=1), nn.BatchNorm1d(128), nn.ReLU())
         self.blocks = nn.Sequential(*[ResidualRouteBlock(d) for d in [1, 2, 4, 8, 1, 2]])

@@ -14,7 +14,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from motor_sampler import MotorSampler
-from retrieval_model import GestureEncoder, augment, build_encoder, features, load_recordings, vocabulary
+from retrieval_model import GestureEncoder, augment, build_encoder, encoder_features, features, load_recordings, vocabulary
 
 ROOT = Path(__file__).resolve().parents[1]
 RECORD = np.dtype([("label", "<u4"), ("difficulty", "<u4"), ("writer", "<u8"), ("points", "<f4", (64, 2))])
@@ -42,7 +42,7 @@ def evaluate(model, proxies, datasets):
     for name, (paths, labels) in datasets.items():
         hits = []
         for start in range(0, len(paths), 256):
-            ranked = (model(features(paths[start:start + 256])) @ bank.T).topk(5, dim=1).indices
+            ranked = (model(encoder_features(model, paths[start:start + 256])) @ bank.T).topk(5, dim=1).indices
             truth = labels[start:start + 256, None]
             hits.append(torch.stack([(ranked[:, :1] == truth).any(1), (ranked == truth).any(1)], 1))
         top1, top5 = torch.cat(hits).float().mean(0).tolist()
@@ -61,7 +61,7 @@ def main():
     parser.add_argument("--batch", type=int, default=768)
     parser.add_argument("--learning-rate", type=float, default=0.00015)
     parser.add_argument("--seed", type=int, default=812831)
-    parser.add_argument("--architecture", choices=["small", "large"], default="small")
+    parser.add_argument("--architecture", choices=["small", "large", "intrinsic"], default="small")
     parser.add_argument("--fresh-fraction", type=float, default=0.0)
     parser.add_argument("--resume", type=Path)
     parser.add_argument("--device", default="mps")
@@ -104,6 +104,10 @@ def main():
     if args.architecture != initial_architecture:
         compatible = {key: value for key, value in initial["model"].items() if key in model.state_dict() and model.state_dict()[key].shape == value.shape}
         model.load_state_dict(compatible, strict=False)
+        if args.architecture == "intrinsic" and initial["model"]["stages.0.weight"].shape[1] == 8:
+            with torch.no_grad():
+                model.stages[0].weight[:, :8].copy_(initial["model"]["stages.0.weight"])
+                model.stages[0].weight[:, 8:].zero_()
         teacher = build_encoder(initial_architecture).to(device).eval()
         teacher.load_state_dict(initial["model"])
         teacher.requires_grad_(False)
@@ -112,7 +116,7 @@ def main():
     model.eval()
     sampler = MotorSampler(words, device) if args.fresh_fraction else None
     with torch.no_grad():
-        initial_vectors = initial["proxies"].to(device) if "proxies" in initial else torch.cat([model(features(part)) for part in canonical.split(512)])
+        initial_vectors = initial["proxies"].to(device) if "proxies" in initial else torch.cat([model(encoder_features(model, part)) for part in canonical.split(512)])
     proxies = nn.Parameter(initial_vectors)
     optimizer = torch.optim.AdamW([{"params": model.parameters(), "lr": args.learning_rate},
                                   {"params": [proxies], "lr": args.learning_rate * 4}], weight_decay=0.0001)
@@ -153,12 +157,12 @@ def main():
                 fresh_labels = sampler.labels(nf)
                 paths = torch.cat([paths, sampler.sample(fresh_labels)])
                 labels = torch.cat([labels, fresh_labels])
-            query = model(features(paths))
+            query = model(encoder_features(model, paths))
             logits = 32.0 * query @ F.normalize(proxies, dim=1).T
             loss = F.cross_entropy(logits, labels)
             if teacher is not None:
                 with torch.no_grad():
-                    target_vectors = teacher(features(paths))
+                    target_vectors = teacher(encoder_features(teacher, paths))
                 # Preserve the useful coarse geometry while the larger model
                 # learns evidence that the smaller encoder cannot represent.
                 weight = 2.0 if epoch < 5 else 0.1
