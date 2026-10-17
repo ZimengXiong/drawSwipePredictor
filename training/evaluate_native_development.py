@@ -27,10 +27,13 @@ def main():
     manifest = json.loads(manifest_bytes)
     cli_hash = hashlib.sha256(args.retrieval_cli.read_bytes()).hexdigest()
     expected = json.loads(args.python_report.read_text())
+    if "geometry_ranker" in manifest:
+        expected = {**expected, "development": manifest["training"]["validation_corpus"],
+                    "selected": {"validation": expected["native_cost_formula_validation"]}}
     rows, info = corpus(args.data)
     if manifest["training"]["validation_corpus"]["sha256"] != info["sha256"] or expected["development"]["sha256"] != info["sha256"] or expected["test_data_used"]:
         raise ValueError("native replay requires the declared development corpus")
-    selection = manifest["spelling"] if "spelling" in manifest else manifest["complete_selection"]
+    selection = manifest.get("geometry_ranker") or manifest.get("spelling") or manifest["complete_selection"]
     if selection["selection_sha256"] != hashlib.sha256(args.python_report.read_bytes()).hexdigest():
         raise ValueError("native replay selection differs from the Python report")
     if manifest["vocabulary"] != info["vocabulary"]:
@@ -50,6 +53,8 @@ def main():
     if "spelling" in manifest:
         artifacts.update({"spelling.bin": manifest["spelling"]["sha256"],
                           "spelling/encoder.bin": manifest["spelling"]["context_encoder_sha256"]})
+    if "geometry_ranker" in manifest:
+        artifacts["geometry-ranker.json"] = manifest["geometry_ranker"]["sha256"]
     for name, digest in artifacts.items():
         if hashlib.sha256((args.model / name).read_bytes()).hexdigest() != digest:
             raise ValueError(f"native artifact hash differs: {name}")

@@ -62,6 +62,8 @@ pub struct RetrievalEngine {
     tta_degrees: f32,
     adaptive_prior: bool,
     ranker: Option<Ranker>,
+    geometry_ranker: Option<Ranker>,
+    geometry_ranker_tag: Option<u64>,
     character: Option<CharacterModel>,
     spelling: Option<(Encoder, SpellingModel)>,
     spelling_required: bool,
@@ -210,6 +212,28 @@ impl RetrievalEngine {
                 if error.kind() == std::io::ErrorKind::NotFound && !engine.spelling_required => {}
             Err(error) => return Err(error.to_string()),
         }
+        if let Some(tag) = engine.geometry_ranker_tag {
+            let json = std::fs::read(directory.as_ref().join("geometry-ranker.json"))
+                .map_err(|e| e.to_string())?;
+            if fingerprint(&json) != tag {
+                return Err("geometry weights differ from the exported manifest".into());
+            }
+            let text = std::str::from_utf8(&json).map_err(|e| e.to_string())?;
+            let metadata: serde_json::Value =
+                serde_json::from_str(text).map_err(|e| e.to_string())?;
+            let ranker = Ranker::parse(text)?;
+            if metadata["feature_schema"] != "complete_geometry_margin_v1"
+                || metadata["spelling_tag"].as_u64() != Some(engine.spelling_tag)
+                || ranker.encoder_tag != fingerprint(&encoder)
+                || ranker.bank_tag != engine.character_binding(&bank)
+                || ranker.shortlist != 128
+                || engine.spelling.is_none()
+                || engine.ranker.is_some()
+            {
+                return Err("geometry ranker belongs to a different complete model".into());
+            }
+            engine.geometry_ranker = Some(ranker);
+        }
         Ok(engine)
     }
 
@@ -343,6 +367,8 @@ impl RetrievalEngine {
             tta_degrees: 0.0,
             adaptive_prior: false,
             ranker: None,
+            geometry_ranker: None,
+            geometry_ranker_tag: None,
             character: None,
             spelling: None,
             spelling_required: false,
@@ -372,6 +398,8 @@ impl RetrievalEngine {
             auxiliary_bank_tag: u64,
             #[serde(default)]
             spelling: Option<serde_json::Value>,
+            #[serde(default)]
+            geometry_ranker: Option<serde_json::Value>,
             #[serde(default)]
             additional_models: Vec<AdditionalModel>,
         }
@@ -405,6 +433,14 @@ impl RetrievalEngine {
         self.auxiliary_weight = settings.auxiliary_weight;
         self.auxiliary_tags = [settings.auxiliary_encoder_tag, settings.auxiliary_bank_tag];
         self.additional_specs = settings.additional_models;
+        self.geometry_ranker_tag = settings
+            .geometry_ranker
+            .map(|value| {
+                value["tag"]
+                    .as_u64()
+                    .ok_or("missing geometry weight binding")
+            })
+            .transpose()?;
         self.spelling_required = settings.spelling.is_some();
         self.spelling_tag = match settings.spelling {
             Some(value) => value["tag"]
@@ -491,6 +527,7 @@ impl RetrievalEngine {
     /// Compare complete spelling predictions with geometry, excluding popularity.
     pub fn complete_ranking_features(&self, path: &[(f64, f64)], limit: usize) -> Vec<Candidate> {
         if self.spelling.is_none()
+            || self.geometry_ranker.is_some()
             || self.ranker.is_some()
             || self.prior_weight != 0.0
             || self.adaptive_prior
@@ -515,7 +552,9 @@ impl RetrievalEngine {
     }
 
     pub fn predict_from_path(&self, path: &[(f64, f64)], limit: usize) -> Vec<Prediction> {
-        if self.spelling_required && self.spelling.is_none() {
+        if (self.spelling_required && self.spelling.is_none())
+            || (self.geometry_ranker_tag.is_some() && self.geometry_ranker.is_none())
+        {
             return Vec::new();
         }
         if let Some((encoder, model)) = &self.spelling {
@@ -542,6 +581,37 @@ impl RetrievalEngine {
                     as f64;
             }
             candidates.sort_by(|a, b| a.rating.total_cmp(&b.rating).then(a.word.cmp(&b.word)));
+            if let Some(ranker) = &self.geometry_ranker {
+                let Some(geometry_query) = Query::new(path) else {
+                    return Vec::new();
+                };
+                let best = candidates.first().map_or(0.0, |p| p.rating as f32);
+                let mut features: Vec<_> = candidates
+                    .iter()
+                    .map(|prediction| {
+                        let index = self.word_ids[&prediction.word];
+                        geometry_query.features(
+                            &self.words[index].geometry,
+                            [
+                                prediction.raw_score as f32,
+                                prediction.rating as f32,
+                                0.0,
+                                prediction.rating as f32 - best,
+                            ],
+                        )
+                    })
+                    .collect();
+                let minimum = features
+                    .iter()
+                    .map(|row| row[4])
+                    .fold(f32::INFINITY, f32::min);
+                for (prediction, row) in candidates.iter_mut().zip(&mut features) {
+                    row[2] = row[4] - minimum;
+                    prediction.rating = ranker.score(row) as f64;
+                }
+                // Preserve the complete model's order when corrected costs tie.
+                candidates.sort_by(|a, b| a.rating.total_cmp(&b.rating));
+            }
             candidates.truncate(limit);
             return candidates;
         }

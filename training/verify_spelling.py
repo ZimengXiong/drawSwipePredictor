@@ -29,6 +29,8 @@ def main():
         folder = f"additional{index + 1}"
         extra = json.loads((model / folder / "manifest.json").read_text())
         artifacts.update({folder + "/encoder.bin": extra["encoder_sha256"], folder + "/words.bin": extra["words_sha256"]})
+    if "geometry_ranker" in manifest:
+        artifacts["geometry-ranker.json"] = manifest["geometry_ranker"]["sha256"]
     for name, expected in artifacts.items():
         if hashlib.sha256((model / name).read_bytes()).hexdigest() != expected:
             raise ValueError(f"artifact hash differs: {name}")
@@ -41,11 +43,31 @@ def main():
     probes = ["missing_decoder", "changed_decoder", "changed_context", "changed_mixture"]
     for index, _ in enumerate(manifest.get("additional_models", [])):
         probes.extend([f"missing_additional{index + 1}", f"changed_additional{index + 1}", f"reweighted_additional{index + 1}"])
+    if "geometry_ranker" in manifest:
+        probes.extend(["missing_geometry", "changed_geometry", "geometry_encoder_tag",
+                       "geometry_bank_tag", "geometry_spelling_tag", "geometry_feature_schema",
+                       "geometry_shortlist"])
     for name in probes:
         with tempfile.TemporaryDirectory(prefix="drawswipe-spelling-binding-") as directory:
             copied = Path(directory) / "model"
             shutil.copytree(model, copied)
-            if name == "missing_decoder":
+            if name == "missing_geometry":
+                (copied / "geometry-ranker.json").unlink()
+            elif name == "changed_geometry":
+                path = copied / "geometry-ranker.json"
+                path.write_text(path.read_text() + " ")
+            elif name.startswith("geometry_"):
+                from export_retrieval import fingerprint
+                path = copied / "geometry-ranker.json"
+                modified = json.loads(path.read_text())
+                field = name.removeprefix("geometry_")
+                modified[field] = "wrong_schema" if field == "feature_schema" else modified[field] + 1
+                content = json.dumps(modified).encode()
+                path.write_bytes(content)
+                config = json.loads((copied / "manifest.json").read_text())
+                config["geometry_ranker"]["tag"] = fingerprint(content)
+                (copied / "manifest.json").write_text(json.dumps(config))
+            elif name == "missing_decoder":
                 (copied / "spelling.bin").unlink()
             elif name in ["changed_decoder", "changed_context"]:
                 path = copied / ("spelling.bin" if name == "changed_decoder" else "spelling/encoder.bin")
