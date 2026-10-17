@@ -100,7 +100,9 @@ class MotorFitter:
     def fit(self, query, candidates, steps=80, learning_rate=0.08, regularization=0.0002):
         """Return fit errors and parameter penalties for exact candidate lists."""
         keys, lengths, valid, variants = self.hypotheses(candidates)
-        repeated = query[:, None, None].expand(-1, candidates.shape[1], variants, -1, -1).reshape(-1, 64, 2)
+        keep = valid.reshape(-1)
+        keys, lengths = keys[keep], lengths[keep]
+        repeated = query[:, None, None].expand(-1, candidates.shape[1], variants, -1, -1).reshape(-1, 64, 2)[keep]
         parameters = torch.zeros(len(keys), 70, device=self.device, requires_grad=True)
         optimizer = torch.optim.Adam([parameters], lr=learning_rate)
         best = torch.full((len(keys),), torch.inf, device=self.device)
@@ -119,4 +121,7 @@ class MotorFitter:
             objective.sum().backward()
             optimizer.step()
         shape = (*candidates.shape, variants)
-        return best_error.reshape(shape).masked_fill(~valid.reshape(shape), torch.inf), best_penalty.reshape(shape)
+        errors = torch.full((keep.numel(),), torch.inf, device=self.device)
+        penalties = torch.zeros_like(errors)
+        errors[keep], penalties[keep] = best_error, best_penalty
+        return errors.reshape(shape), penalties.reshape(shape)
