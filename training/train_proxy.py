@@ -2,6 +2,7 @@
 """Learn full-vocabulary word proxies from fresh synthetic writers and real traces."""
 import argparse
 import hashlib
+import io
 import json
 from pathlib import Path
 import struct
@@ -50,6 +51,21 @@ def sample_corpora(shards, count, rng, device):
     return torch.tensor(points, device=device), torch.tensor(labels, device=device)
 
 
+def real_word_groups(labels, device):
+    """Keep every recording, grouped by its training word label."""
+    order = np.argsort(labels, kind="stable")
+    _, starts, counts = np.unique(labels[order], return_index=True, return_counts=True)
+    return tuple(torch.tensor(values, dtype=torch.long, device=device) for values in [order, starts, counts])
+
+
+def balanced_real_indices(groups, count):
+    """Sample observed word types uniformly, then a recording of that word."""
+    order, starts, counts = groups
+    chosen = torch.randint(len(starts), (count,), device=order.device)
+    within = (torch.rand(count, device=order.device) * counts[chosen]).long()
+    return order[starts[chosen] + within]
+
+
 def proxy_scores(query, proxies):
     """Score one or several equally weighted route centers per word."""
     normalized = F.normalize(proxies, dim=-1)
@@ -79,6 +95,7 @@ def main():
     parser.add_argument("--train", type=Path, default=ROOT / "training/data/memory-proxy/train.bin")
     parser.add_argument("--extra-train", type=Path, action="append", default=[])
     parser.add_argument("--stream-corpus", action="store_true")
+    parser.add_argument("--balance-real", action="store_true")
     parser.add_argument("--validation", type=Path, default=ROOT / "training/data/memory-proxy/validation.bin")
     parser.add_argument("--init-model", type=Path, default=ROOT / "training/checkpoints/retrieval-v3/best.pt")
     parser.add_argument("--output", type=Path, required=True)
@@ -126,6 +143,7 @@ def main():
     ids = {word: i for i, word in enumerate(words)}
     real_path = ROOT / "training/data/futo-large/train.jsonl"
     real, real_labels = load_recordings(real_path, ids)
+    real_groups = real_word_groups(real_labels, device) if args.balance_real else None
     real = torch.tensor(real, device=device)
     real_labels = torch.tensor(real_labels, device=device)
     if not args.stream_corpus:
@@ -137,7 +155,10 @@ def main():
         mask = validation["difficulty"] == difficulty
         datasets[name] = (torch.tensor(np.array(validation["points"][mask]), device=device), torch.tensor(np.array(validation["label"][mask], dtype=np.int64), device=device))
     model = build_encoder(args.architecture).to(device)
-    initial = torch.load(args.init_model, map_location=device, weights_only=False)
+    initial_content = args.init_model.read_bytes()
+    initial_hash = hashlib.sha256(initial_content).hexdigest()
+    initial = torch.load(io.BytesIO(initial_content), map_location="cpu", weights_only=False)
+    del initial_content
     if initial["words"] != words:
         raise ValueError("initial model vocabulary differs from the training corpus")
     initial_architecture = initial["metadata"]["arguments"].get("architecture", "small")
@@ -173,6 +194,7 @@ def main():
     if tuple(initial_vectors.shape) != expected:
         raise ValueError("proxy center dimensions differ from the requested model")
     proxies = nn.Parameter(F.normalize(initial_vectors, dim=-1))
+    del initial, initial_vectors
     optimizer = torch.optim.AdamW([{"params": model.parameters(), "lr": args.learning_rate},
                                   {"params": [proxies], "lr": args.learning_rate * 4}], weight_decay=0.0001)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=0.00001)
@@ -193,6 +215,8 @@ def main():
     metadata = {"arguments": {k: [str(item) for item in v] if k == "extra_train" else str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
         "train_corpus": train_info, "extra_train_corpora": [info for _, info in shards[1:]], "validation_corpus": validation_info,
         "real_training_sha256": hashlib.sha256(real_path.read_bytes()).hexdigest(),
+        "real_sampling": "uniform observed word types; all recordings retained" if args.balance_real else "uniform recordings",
+        "initialization_sha256": initial_hash,
         "test_data_used": False, "selection": "uniform full-vocabulary memory validation top1",
         "input_features": "geometry only; labels and writer identities are never model inputs",
         "motor_sampler_sha256": hashlib.sha256((ROOT / "training/motor_sampler.py").read_bytes()).hexdigest() if sampler else None,
@@ -200,7 +224,17 @@ def main():
         "resume_sha256": hashlib.sha256(args.resume.read_bytes()).hexdigest() if args.resume else None,
         "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()}
     (args.output / "run.json").write_text(json.dumps(metadata, indent=2) + "\n")
-    print(json.dumps({"initial_validation": evaluate(model, proxies, datasets)}), flush=True)
+    initial_metrics = evaluate(model, proxies, datasets)
+    print(json.dumps({"initial_validation": initial_metrics}), flush=True)
+    if start == 0:
+        best = initial_metrics["memory"]["top1"]
+        baseline = {"model": model.state_dict(), "proxies": F.normalize(proxies.detach(), dim=-1),
+            "optimizer": optimizer.state_dict(), "scheduler": scheduler.state_dict(), "epoch": -1,
+            "best_score": best, "words": words, "counts": counts, "metadata": metadata}
+        temporary = args.output / "best.pt.tmp"
+        torch.save(baseline, temporary); temporary.replace(args.output / "best.pt")
+        (args.output / "best-metrics.json").write_text(json.dumps({"epoch": 0, "validation": initial_metrics, "best_score": best}, indent=2) + "\n")
+        del baseline
     for epoch in range(start, args.epochs):
         model.train()
         began, loss_sum = time.monotonic(), 0.0
@@ -208,7 +242,7 @@ def main():
             nr, nc = args.batch * 15 // 100, args.batch // 10
             nf = int(args.batch * args.fresh_fraction)
             ns = args.batch - nr - nc - nf
-            ri = torch.randint(len(real), (nr,), device=device)
+            ri = balanced_real_indices(real_groups, nr) if args.balance_real else torch.randint(len(real), (nr,), device=device)
             if args.stream_corpus:
                 synthetic_paths, synthetic_labels = sample_corpora(shards, ns, rng, device)
             else:

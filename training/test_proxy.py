@@ -20,7 +20,7 @@ from character_model import character_targets, candidate_ctc_cost
 from motor_sampler import MotorSampler
 from retrieval_model import curve, build_encoder, encoder_features
 from train_pair import evaluate
-from train_proxy import RECORD, corpus, proxy_scores
+from train_proxy import RECORD, corpus, proxy_scores, real_word_groups, balanced_real_indices
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -144,6 +144,15 @@ class ProxyTests(unittest.TestCase):
             if step == 1:
                 self.assertGreater(model.view[1].weight.grad.abs().sum().item(), 0)
             optimizer.step()
+
+    def test_real_sampling_balances_words_without_discarding_recordings(self):
+        torch.manual_seed(11237)
+        labels = np.array([5] * 100 + [77] * 3 + [420], dtype=np.int64)
+        groups = real_word_groups(labels, "cpu")
+        self.assertEqual(set(groups[0].tolist()), set(range(len(labels))))
+        indices = balanced_real_indices(groups, 9000).numpy()
+        _, counts = np.unique(labels[indices], return_counts=True)
+        np.testing.assert_allclose(counts / len(indices), np.full(3, 1 / 3), atol=0.025)
 
     def test_word_mode_order_cannot_change_scores(self):
         query = torch.nn.functional.normalize(torch.randn(8, 128), dim=1)
