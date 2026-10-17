@@ -7,6 +7,7 @@ from torch import nn
 
 from visited_route_model import RouteBank, route_variants
 from autoregressive_model import SpellingDecoder
+from analyze_route_ambiguity import route_oracle
 from evaluate_visited_routes import score_trials
 
 
@@ -16,6 +17,12 @@ class UniformDecoder(nn.Module):
 
 
 class VisitedRouteTests(unittest.TestCase):
+    def test_analytic_oracle_counts_indistinguishable_spellings(self):
+        repeated = route_oracle(['abcd', 'abccd'], 0.35)
+        self.assertEqual(repeated['visited_identity_oracle_accuracy'], 0.5)
+        omitted = route_oracle(['abcde', 'abde'], 0.35)
+        self.assertAlmostEqual(omitted['visited_identity_oracle_accuracy'], (0.65 + 1 + 2*0.35/3)/2)
+
     def test_omissions_conserve_probability_and_retain_created_duplicates(self):
         rows = route_variants('abaca')
         self.assertAlmostEqual(sum(math.exp(prior) for _, prior in rows), 1.0)

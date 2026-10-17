@@ -1,0 +1,14 @@
+{
+  "test_data_used": false,
+  "recordings_read": 0,
+  "deployment_vocabulary": 60000,
+  "dictionary_sha256": "51df159fd3de12b20e403c108f526e96dbd723d9cabdd5f17955cdc16059e690",
+  "omission_probability": 0.35,
+  "words": 52469,
+  "unique_canonical_routes": 51520,
+  "canonical_identity_oracle_accuracy": 0.9819131296575121,
+  "visited_identity_oracle_accuracy": 0.9452407400348565,
+  "possible_visited_routes": 280725,
+  "assumptions": "Uniform training-policy target words; exact visited letter sequence supplied by an oracle; one optional uniformly selected interior omission for routes longer than four keys.",
+  "limits": "Analytic route-channel diagnostic only, not recognition accuracy or a proven bound for all continuous stroke evidence. The target-policy prior and oracle labels are never used by a deployed predictor."
+}

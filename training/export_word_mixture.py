@@ -82,10 +82,10 @@ def main():
                                         "development_sha256": selection["development"]["sha256"],
                                         "proxy_weight": None, "deletion_probability": 0.0,
                                         "validation": selection["selected"]["validation"]})
-    for key in ["character", "spelling", "reranker"]:
+    for key in ["character", "spelling", "reranker", "geometry_ranker"]:
         manifest.pop(key, None)
     for filename in ["character.bin", "character-verification.json", "spelling.bin", "spelling-verification.json",
-                     "reranker.json", "reranker-verification.json"]:
+                     "reranker.json", "reranker-verification.json", "geometry-ranker.json"]:
         (args.output / filename).unlink(missing_ok=True)
     (args.output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(json.dumps({"word_models": len(paths), "weights": weights}), flush=True)

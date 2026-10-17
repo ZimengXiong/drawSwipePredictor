@@ -1,0 +1,35 @@
+{
+  "test_data_used": false,
+  "stage": "proxy-real-expanded-v1",
+  "pid": 46700,
+  "last_completed_epoch": 136,
+  "best_epoch": 55,
+  "epochs_without_improvement": 81,
+  "best": {
+    "epoch": 55,
+    "loss": 0.9382168766856194,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9616666436195374,
+        "top5": 0.9983333349227905
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8654166460037231,
+        "top5": 0.9604166746139526
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7250000238418579,
+        "top5": 0.8899999856948853
+      }
+    },
+    "best_score": 0.7250000238418579,
+    "seconds": 80.35943829099415,
+    "improved": true
+  },
+  "history_sha256": "ebc01e1a03d973f7074732ba54cd839383dfa123fd68ca1b1af08621ac29141b",
+  "reason": "Stop after at least 80 completed epochs without a development gain; preserve best and latest weights. Prioritize the larger decoder and new structural supervision.",
+  "limits": "Expanded real data reaches72.50% here; this does not establish a causal data effect. No benchmark or confirmation evaluation."
+}

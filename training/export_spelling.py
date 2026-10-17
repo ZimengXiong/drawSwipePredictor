@@ -113,7 +113,7 @@ def main():
             raise ValueError("spelling vocabulary or data provenance differs")
         if record["metadata"]["validation_corpus"]["sha256"] != selection["development"]["sha256"]:
             raise ValueError("spelling development corpus differs")
-    if any((args.output / name).exists() for name in ["reranker.json", "character.bin"]):
+    if "geometry_ranker" in manifest or any((args.output / name).exists() for name in ["reranker.json", "character.bin", "geometry-ranker.json"]):
         raise ValueError("export spelling into a word-only model directory")
     if manifest["prior_weight"] or manifest.get("tta_degrees", 0) or manifest.get("adaptive_prior", False):
         raise ValueError("spelling requires the selected base retrieval settings")
