@@ -22,7 +22,7 @@ from character_model import character_targets, candidate_ctc_cost
 from motor_sampler import MotorSampler
 from retrieval_model import curve, build_encoder, encoder_features
 from train_pair import evaluate
-from train_proxy import RECORD, corpus, proxy_scores, real_word_groups, balanced_real_indices, proxy_checkpoint_state, training_proxy_vectors
+from train_proxy import RECORD, corpus, proxy_scores, real_word_groups, balanced_real_indices, proxy_checkpoint_state, training_proxy_vectors, optimizer_groups
 from reference_density import mixture_similarity
 from evaluate_training_exposure import exposure_bias
 from average_word_models import average_state
@@ -36,6 +36,22 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_added_gate_groups_cover_parameters_once_and_preserve_old_rates(self):
+        from large_encoder import LargeGestureEncoder
+        model = LargeGestureEncoder(giant=True, hidden=8)
+        proxies = nn.Parameter(torch.randn(3, 128))
+        plain = optimizer_groups(model, proxies, 1e-5, 2e-5)
+        self.assertEqual([group["lr"] for group in plain], [1e-5, 2e-5])
+        grouped = optimizer_groups(model, proxies, 1e-5, 2e-5, 1e-3)
+        self.assertEqual([group["lr"] for group in grouped], [1e-5, 2e-5, 1e-3])
+        parameters = [id(parameter) for group in grouped for parameter in group["params"]]
+        self.assertEqual(len(parameters), len(set(parameters)))
+        self.assertEqual(set(parameters), {id(parameter) for parameter in model.parameters()} | {id(proxies)})
+        expected = {id(parameter) for block in model.blocks[6:] for parameter in block.layers[-1].parameters()}
+        self.assertEqual({id(parameter) for parameter in grouped[2]["params"]}, expected)
+        with self.assertRaisesRegex(ValueError, "expanded residual"):
+            optimizer_groups(nn.Linear(2, 2), proxies, 1e-5, 1e-5, 1e-3)
+
     def test_spelling_preserves_every_component_of_a_four_model_selection(self):
         selection = {"test_data_used": False, "development": {"sha256": "dev"}, "full_vocabulary": 60000,
                      "checkpoints": [{"sha256": key} for key in ["a", "b", "c", "d"]],

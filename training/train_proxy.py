@@ -22,6 +22,21 @@ ROOT = Path(__file__).resolve().parents[1]
 RECORD = np.dtype([("label", "<u4"), ("difficulty", "<u4"), ("writer", "<u8"), ("points", "<f4", (64, 2))])
 
 
+def optimizer_groups(model, proxies, encoder_rate, proxy_rate, gate_rate=None):
+    """Let added residual blocks open their output gates independently."""
+    gates = []
+    if gate_rate is not None:
+        if not hasattr(model, "blocks") or len(model.blocks) <= 6:
+            raise ValueError("gate learning rates require an expanded residual encoder")
+        gates = [parameter for block in model.blocks[6:] for parameter in block.layers[-1].parameters()]
+    gate_ids = {id(parameter) for parameter in gates}
+    groups = [{"params": [parameter for parameter in model.parameters() if id(parameter) not in gate_ids],
+               "lr": encoder_rate}, {"params": [proxies], "lr": proxy_rate}]
+    if gates:
+        groups.append({"params": gates, "lr": gate_rate})
+    return groups
+
+
 def corpus(path):
     with path.open("rb") as source:
         magic, count, size, seed = struct.unpack("<8sQIQ", source.read(28))
@@ -125,6 +140,8 @@ def main():
     parser.add_argument("--batch", type=int, default=768)
     parser.add_argument("--learning-rate", type=float, default=0.00015)
     parser.add_argument("--proxy-learning-rate", type=float)
+    parser.add_argument("--new-block-gate-learning-rate", type=float,
+                        help="Learning rate for output normalization gates in added residual blocks")
     parser.add_argument("--seed", type=int, default=812831)
     parser.add_argument("--real-train", type=Path, default=ROOT / "training/data/futo-large/train.jsonl")
     parser.add_argument("--architecture", choices=["small", "large", "intrinsic", "giant", "massive", "attention", "wide512"], default="small")
@@ -137,6 +154,10 @@ def main():
     if min(args.epochs, args.steps, args.batch) < 1:
         parser.error("counts must be positive")
     rates = [args.learning_rate] + ([] if args.proxy_learning_rate is None else [args.proxy_learning_rate])
+    if args.new_block_gate_learning_rate is not None:
+        rates.append(args.new_block_gate_learning_rate)
+        if args.architecture not in ["giant", "massive"]:
+            parser.error("new block gates require a giant or massive encoder")
     if any(not math.isfinite(rate) or rate <= 0 for rate in rates):
         parser.error("learning rates must be finite and positive")
     if not 1 <= args.centers <= 8:
@@ -240,8 +261,8 @@ def main():
     proxies = nn.Parameter(initial_vectors if preserve_raw else F.normalize(initial_vectors, dim=-1), requires_grad=not args.freeze_proxies)
     del initial, initial_vectors
     proxy_rate = args.proxy_learning_rate if args.proxy_learning_rate is not None else args.learning_rate * 4
-    optimizer = torch.optim.AdamW([{"params": model.parameters(), "lr": args.learning_rate},
-                                  {"params": [proxies], "lr": proxy_rate}], weight_decay=0.0001)
+    optimizer = torch.optim.AdamW(optimizer_groups(model, proxies, args.learning_rate, proxy_rate,
+                                                  args.new_block_gate_learning_rate), weight_decay=0.0001)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=0.00001)
     start, best = 0, -1.0
     legacy_resume = False
@@ -254,6 +275,8 @@ def main():
             raise ValueError("resume checkpoint training shards differ")
         if saved["metadata"]["real_training_sha256"] != real_hash:
             raise ValueError("resume checkpoint real recordings differ; use --init-model for a new data stage")
+        if saved["metadata"]["arguments"].get("new_block_gate_learning_rate") != args.new_block_gate_learning_rate:
+            raise ValueError("resume checkpoint gate learning rate differs; use --init-model for a new training stage")
         model.load_state_dict(saved["model"])
         proxies.data.copy_(training_proxy_vectors(saved))
         legacy_resume = "raw_proxies" not in saved

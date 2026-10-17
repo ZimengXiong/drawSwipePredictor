@@ -1,0 +1,57 @@
+{
+  "test_data_used": false,
+  "run": "proxy-exact-v1",
+  "reason": "No improvement over the preserved initializer after more than 90 completed development evaluations. Release resources for the diagnosed added-gate experiment.",
+  "last_completed": {
+    "epoch": 93,
+    "loss": 0.8200173464417457,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9649999737739563,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8687499761581421,
+        "top5": 0.9587500095367432
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7176190614700317,
+        "top5": 0.8879761695861816
+      }
+    },
+    "best_score": 0.7232142686843872,
+    "seconds": 86.85098262500833,
+    "improved": false
+  },
+  "best": {
+    "epoch": 0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9641666412353516,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8695833086967468,
+        "top5": 0.9595833420753479
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7232142686843872,
+        "top5": 0.8885714411735535
+      }
+    },
+    "best_score": 0.7232142686843872
+  },
+  "artifacts_sha256": {
+    "best.pt": "e74ac58d124551246894e50b721cceb73d6f2a6e9df0d770f350723b2dc6a18c",
+    "latest.pt": "3721533f0ac8ae3fceff5bada7ca340303fca7674c9fc9f63fc93ef3bb17f593",
+    "run.json": "f754c7c3953b82595c662d0c2f875541b5e3e8ac01260639581eabf2487d5e48",
+    "history.jsonl": "2975c2d54f1203b32c1653713e101aa5ac0721db911a9f222bf65b8af2b65134"
+  },
+  "action": "Send SIGINT after verifying the live process command; preserve all checkpoints."
+}
