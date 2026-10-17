@@ -317,10 +317,12 @@ class ProxyTests(unittest.TestCase):
         subprocess.run(["cargo", "build", "--release", "-p", "swipe-engine", "--example", "memory_corpus"], cwd=ROOT, check=True, capture_output=True)
         with tempfile.TemporaryDirectory() as directory:
             output, verification = Path(directory) / "tiny.bin", Path(directory) / "reference.json"
-            subprocess.run([str(ROOT / "target/release/examples/memory_corpus"), "--output", str(output), "--samples", "16", "--seed", "800019", "--verification", str(verification)], check=True, capture_output=True)
+            subprocess.run([str(ROOT / "target/release/examples/memory_corpus"), "--output", str(output), "--samples", "16", "--seed", "800019", "--verification", str(verification), "--verification-limit", "16"], check=True, capture_output=True)
             rows, info = corpus(output)
             self.assertEqual(info["samples"], 16)
-            for row, case in zip(rows, json.loads(verification.read_text())):
+            references = json.loads(verification.read_text())
+            self.assertEqual(len(references), 16)
+            for row, case in zip(rows, references):
                 np.testing.assert_allclose(row["points"], curve(case["points"]), atol=1e-6)
 
 

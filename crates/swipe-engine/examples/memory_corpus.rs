@@ -56,6 +56,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .ok_or("--seed is required")?
         .parse()?;
     let vocab: usize = option(&args, "--vocab").unwrap_or("60000").parse()?;
+    let verification_limit: u64 = option(&args, "--verification-limit")
+        .unwrap_or("8")
+        .parse()?;
     if samples == 0 || samples >= 1_000_003 || seed > u64::MAX / 1_000_003 - 1 {
         return Err("use 1 to 1,000,002 writers and a valid seed block".into());
     }
@@ -104,7 +107,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         file.write_all(&difficulty_id.to_le_bytes())?;
         file.write_all(&writer.to_le_bytes())?;
         let normalized = resample(&points);
-        if option(&args, "--verification").is_some() && i < 8 {
+        if option(&args, "--verification").is_some() && i < verification_limit {
             verification.push(serde_json::json!({"word": word, "points": points, "normalized": normalized.to_vec()}));
         }
         for point in normalized {

@@ -148,6 +148,8 @@ Cross-attention models are not yet exported to native inference. A selected comp
 
 `evaluate_proxy_ensemble.py` compares prediction mixtures on full development. When exactly two word models receive positive weights, its report can be passed directly to `export_ensemble.py`. The exporter requires both selected components and rejects a report that would silently discard a third model. `verify_word_ensemble.py --primary <checkpoint> --auxiliary <checkpoint> --model <export-directory> --output <report>` checks artifact hashes, exact top-five words, and word costs against the native CLI. Only points are sent to native inference.
 
+`evaluate_native_development.py --model <export-directory> --python-report <selection-report> --output <report>` replays every development drawing through the native CLI. It regenerates raw strokes from the declared development seed and requires the resulting binary corpus hash to match the original. `memory_corpus --verification-limit <count>` controls raw-reference export only; it changes neither generated drawings nor corpus bytes. Native requests contain points only. The evaluator keeps every row and requires exact agreement with Python's top-one and top-five hit counts in each difficulty group. The confirmation corpus is rejected by the development-hash guard.
+
 `evaluate_complete.py` compares a joint checkpoint with an auxiliary word model on the entire declared development corpus. It retrieves all candidates naturally from the full vocabulary, selects blend settings on development data, and retains exact-word scoring.
 
 ```sh
