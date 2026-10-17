@@ -60,7 +60,7 @@ def main():
     if initial_decoder["raw_channels"] != channels:
         raise ValueError("transferred decoder input channels differ")
     decoder = CharacterDecoder(channels).to(device)
-    decoder.load_state_dict(initial_decoder["model"])
+    decoder.load_state_dict(initial_decoder.get("character_model", initial_decoder["model"]))
     proxies = torch.nn.Parameter(saved["proxies"].to(device))
     words, counts = saved["words"], saved["counts"]
     targets, lengths, aliases = character_targets(words)
@@ -147,7 +147,7 @@ def main():
             temporary = args.output / "best.pt.tmp"
             torch.save({"model": encoder.state_dict(), "character_model": decoder.state_dict(),
                 "proxies": F.normalize(proxies.detach(), dim=-1), "words": words, "counts": counts,
-                "metadata": metadata, "epoch": epoch, "best_score": best, "selected": result}, temporary)
+                "metadata": metadata, "epoch": epoch, "best_score": best, "selected": result, "raw_channels": channels}, temporary)
             temporary.replace(args.output / "best.pt")
             (args.output / "best-metrics.json").write_text(json.dumps({**report, "trials": trials}, indent=2) + "\n")
 
