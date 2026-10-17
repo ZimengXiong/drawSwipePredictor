@@ -27,7 +27,7 @@ from reference_density import mixture_similarity
 from evaluate_training_exposure import exposure_bias
 from average_word_models import average_state
 from export_ensemble import pair_configuration
-from evaluate_spelling import retrieval_pair_weight
+from evaluate_spelling import retrieval_pair_weight, selected_word_weights
 from covariance_density import factor_covariance, gaussian_costs
 from train_autoregressive import differentiable_context
 from fetch_additional_real_swipes import training_record
@@ -36,6 +36,21 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_spelling_preserves_every_component_of_a_four_model_selection(self):
+        selection = {"test_data_used": False, "development": {"sha256": "dev"}, "full_vocabulary": 60000,
+                     "checkpoints": [{"sha256": key} for key in ["a", "b", "c", "d"]],
+                     "selected": {"weights": [0.25] * 4}}
+        self.assertEqual(selected_word_weights(selection, ["d", "b", "a", "c"], "dev", 60000), [0.25] * 4)
+        with self.assertRaisesRegex(ValueError, "every selected word component"):
+            selected_word_weights(selection, ["a", "b", "c"], "dev", 60000)
+        with self.assertRaisesRegex(ValueError, "every selected word component"):
+            selected_word_weights(selection, ["a", "b", "c", "c"], "dev", 60000)
+        with self.assertRaisesRegex(ValueError, "declared development"):
+            selected_word_weights(selection, ["a", "b", "c", "d"], "confirmation", 60000)
+        selection["selected"]["weights"][0] = float("nan")
+        with self.assertRaisesRegex(ValueError, "invalid word selection"):
+            selected_word_weights(selection, ["a", "b", "c", "d"], "dev", 60000)
+
     def test_additional_human_data_excludes_held_sessions_without_distance_filtering(self):
         row = {"word": "hello", "id": "record1", "session": "donor1", "canvas_width": 100,
                "canvas_height": 50, "distance": 100000,

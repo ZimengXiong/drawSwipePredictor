@@ -1,0 +1,74 @@
+{
+  "checkpoints": [
+    {
+      "path": "checkpoints/completed-intrinsic-v1.pt",
+      "sha256": "89a68311ded7735485a232d212691ea5e941c7fdee11318ff6f0358fcb741727",
+      "architecture": "intrinsic",
+      "epoch": 178
+    },
+    {
+      "path": "checkpoints/balanced-averaging-source-v1.pt",
+      "sha256": "b86c9d1cab7d56cd50b23bc8cf38f6a47824427ab36c4a145a049b1951064156",
+      "architecture": "large",
+      "epoch": 112
+    },
+    {
+      "path": "checkpoints/exact-low-probe-v1.pt",
+      "sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+      "architecture": "large",
+      "epoch": 53
+    },
+    {
+      "path": "checkpoints/wide512-probe-v1.pt",
+      "sha256": "be02eac8fa11d5dc1bd29613fcba7de1456ce1dbfd698fb9f11f3e1426f13dee",
+      "architecture": "wide512",
+      "epoch": 86
+    }
+  ],
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "selection": "Full-vocabulary exact-word memory development top1",
+  "selected": {
+    "weights": [
+      0.25,
+      0.25,
+      0.25,
+      0.25
+    ],
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9608333110809326,
+        "top5": 0.9991666674613953,
+        "top32": 1.0,
+        "top128": 1.0
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8695833086967468,
+        "top5": 0.9608333110809326,
+        "top32": 0.9937499761581421,
+        "top128": 1.0
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7265475988388062,
+        "top5": 0.8919047713279724,
+        "top32": 0.9769047498703003,
+        "top128": 0.9955952167510986
+      }
+    }
+  },
+  "raw_report_sha256": "50b46e212f3977e5e2cb2a313f8c98387efe1b87fdb55c3fafb2fb4b3d9a9efa",
+  "native_verified": false,
+  "promoted_to_app": false,
+  "limits": "Development-only snapshot comparison. Includes128- and512-dimensional word models. Full-system spelling evaluation and complete native support are required before promotion. Training continues."
+}

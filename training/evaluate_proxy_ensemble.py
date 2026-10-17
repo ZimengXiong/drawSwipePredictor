@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import io
+import itertools
 import json
 from pathlib import Path
 
@@ -46,6 +47,8 @@ def main():
         for b in range(a + 1, count):
             for fraction in [0.25, 0.5, 0.75]:
                 weights.append(tuple(fraction if i == a else 1 - fraction if i == b else 0 for i in range(count)))
+    # Include three-component mixtures as well as pairs and the uniform mixture.
+    weights.extend(tuple(value / 4 for value in parts) for parts in itertools.product(range(5), repeat=count) if sum(parts) == 4)
     weights = list(dict.fromkeys(weights))
     paths = torch.tensor(np.array(rows["points"]), device="mps")
     labels = torch.tensor(np.array(rows["label"], dtype=np.int64), device="mps")
@@ -71,6 +74,8 @@ def main():
             metrics[name] = {"samples": size, **dict(zip(["top1", "top5", "top32", "top128"], (correct[i] / size).tolist()))}
         trials.append({"weights": mixing, "validation": metrics})
     report = {"checkpoints": reports, "development": info, "test_data_used": False, "full_vocabulary": len(words),
+        "weight_grid": "All quarter-weight simplex mixtures, plus the equal-weight mixture",
+        "source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "selection": "Full-vocabulary exact-word memory development top1", "trials": trials,
         "selected": max(trials, key=lambda row: row["validation"]["memory"]["top1"])}
     args.output.parent.mkdir(parents=True, exist_ok=True)
