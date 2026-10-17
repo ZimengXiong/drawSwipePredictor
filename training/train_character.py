@@ -37,7 +37,7 @@ def evaluate(decoder, validation, targets, lengths):
     best, trials = None, []
     for weight in [None, 0.0, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 4.0]:
         logits = validation["similarity"] if weight is None else -costs + weight * 32 * validation["similarity"]
-        ranked = validation["candidates"].gather(1, logits.topk(5, dim=1).indices)
+        ranked = validation["candidates"].gather(1, logits.argsort(dim=1, descending=True, stable=True)[:, :5])
         hits = ranked == validation["labels"][:, None]
         metrics = {}
         for i, name in enumerate(["clean", "loose", "memory"]):
@@ -85,7 +85,7 @@ def main():
     selected = chooser.choice(len(val_rows), 3000, replace=False)
     val_paths = torch.tensor(np.array(val_rows["points"][selected]), device=device)
     validation = {"labels": torch.tensor(np.array(val_rows["label"][selected], dtype=np.int64), device=device),
-                  "difficulty": torch.tensor(np.array(val_rows["difficulty"][selected]), device=device)}
+                  "difficulty": torch.tensor(np.array(val_rows["difficulty"][selected], dtype=np.int64), device=device)}
     with torch.no_grad():
         sequence, raw, embeddings = [], [], []
         for part in val_paths.split(256):
@@ -114,6 +114,9 @@ def main():
         "source": "CTC and ranking supervision; no evaluation target is inserted into a shortlist"}
     (args.output / "run.json").write_text(json.dumps(metadata, indent=2) + "\n")
     best = -1.0
+    decoder.eval()
+    initial, _ = evaluate(decoder, validation, targets, lengths)
+    print(json.dumps({"initial_validation": initial}), flush=True)
     for epoch in range(args.epochs):
         began = time.monotonic()
         decoder.train()
