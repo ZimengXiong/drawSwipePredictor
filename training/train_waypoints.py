@@ -58,10 +58,12 @@ def main():
     parser.add_argument('--width',type=int,choices=[192,384],default=192)
     parser.add_argument('--layers',type=int,choices=[3,6],default=3)
     parser.add_argument('--seed',type=int,default=900941)
+    parser.add_argument('--learning-rate',type=float,default=0.0003)
     parser.add_argument('--with-progress',action='store_true')
     parser.add_argument('--init-model',type=Path)
     args = parser.parse_args()
-    if args.output.exists() or min(args.epochs,args.steps,args.batch)<1:
+    if (args.output.exists() or min(args.epochs,args.steps,args.batch)<1
+            or not np.isfinite(args.learning_rate) or args.learning_rate<=0):
         raise ValueError('use a new output directory and positive training counts')
     torch.set_num_threads(4)
     torch.manual_seed(args.seed)
@@ -109,8 +111,8 @@ def main():
         if previous!=data_info['data_sha256'] and (previous!=data_info.get('reference_data_sha256') or not data_info.get('base_arrays_identical_to_reference')):
             raise ValueError('warm start requires unchanged query and corner arrays')
         model.warm_start(initial['model'])
-    optimizer=torch.optim.AdamW(model.parameters(),lr=0.0003,weight_decay=0.001)
-    scheduler=torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,args.epochs,eta_min=0.00001)
+    optimizer=torch.optim.AdamW(model.parameters(),lr=args.learning_rate,weight_decay=0.001)
+    scheduler=torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,args.epochs,eta_min=min(0.00001,args.learning_rate*0.1))
     metadata={'test_data_used':False,'encoder_sha256':context_hash,'data':data_info,
               'parameters':sum(p.numel() for p in model.parameters()),
               'model_type':'aligned_waypoints_v2' if args.with_progress else 'waypoints_v1',
