@@ -1,0 +1,49 @@
+{
+  "experiment": "Candidate cross attention with normalized keyboard geometry",
+  "test_data_used": false,
+  "initial_development": {
+    "clean": {
+      "samples": 291,
+      "top1": 0.9347078800201416,
+      "top5": 0.993127167224884
+    },
+    "loose": {
+      "samples": 620,
+      "top1": 0.8387096524238586,
+      "top5": 0.9338709712028503
+    },
+    "memory": {
+      "samples": 2089,
+      "top1": 0.6376256346702576,
+      "top5": 0.8228817582130432
+    }
+  },
+  "best_development": {
+    "epoch": 18,
+    "loss": 1.00783859928449,
+    "validation": {
+      "clean": {
+        "samples": 291,
+        "top1": 0.931271493434906,
+        "top5": 0.993127167224884
+      },
+      "loose": {
+        "samples": 620,
+        "top1": 0.8387096524238586,
+        "top5": 0.9338709712028503
+      },
+      "memory": {
+        "samples": 2089,
+        "top1": 0.639540433883667,
+        "top5": 0.821445643901825
+      }
+    },
+    "best_score": 0.639540433883667,
+    "improved": true,
+    "seconds": 90.84862237502239
+  },
+  "completed_epochs": 18,
+  "checkpoint_sha256": "37fe7767be8fc6dc2cf1698d7ec3df75c0e429e34c41b47f2c709fada8cd3cc1",
+  "disposition": "Stop this trial. The small development gain does not justify its training and inference cost; prioritize stronger word models and check the independent motor-fit evidence.",
+  "limits": "3000-query development subset; no benchmark evaluation or app replacement."
+}
