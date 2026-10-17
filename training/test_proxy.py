@@ -101,7 +101,7 @@ class ProxyTests(unittest.TestCase):
 
     def test_cross_ranker_cannot_use_candidate_position(self):
         torch.set_num_threads(2)
-        model = RouteCrossRanker().eval()
+        model = RouteCrossRanker(route_geometry=True).eval()
         # Use a nonzero score head so the test covers the learned correction.
         torch.nn.init.normal_(model.head[-1].weight, std=0.1)
         targets, lengths, _ = character_targets(["hello", "world", "helical"])

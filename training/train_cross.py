@@ -45,6 +45,7 @@ def main():
     parser.add_argument("--steps", type=int, default=150)
     parser.add_argument("--batch", type=int, default=48)
     parser.add_argument("--candidates", type=int, default=16)
+    parser.add_argument("--route-geometry", action="store_true")
     parser.add_argument("--seed", type=int, default=900347)
     args = parser.parse_args()
     if not 2 <= args.candidates <= 128:
@@ -85,7 +86,7 @@ def main():
     real_path = ROOT / "training/data/futo-large/train.jsonl"
     real, real_labels = load_recordings(real_path, {word: i for i, word in enumerate(words)})
     real, real_labels = torch.tensor(real, device=device), torch.tensor(real_labels, device=device)
-    model = RouteCrossRanker(getattr(encoder, "input_channels", 8)).to(device)
+    model = RouteCrossRanker(getattr(encoder, "input_channels", 8), route_geometry=args.route_geometry).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.0003, weight_decay=0.001)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=0.00001)
     args.output.mkdir(parents=True, exist_ok=True)
