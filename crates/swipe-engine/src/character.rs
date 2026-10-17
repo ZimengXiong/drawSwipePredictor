@@ -85,7 +85,10 @@ impl CharacterModel {
     }
 
     pub(crate) fn log_probabilities(&self, context: &EncoderContext) -> Option<Vec<[f32; 27]>> {
-        if context.features.len() != self.channels * 64 || context.sequence.len() != 128 * 32 {
+        if context.features.len() != self.channels * 64
+            || context.sequence.len() != 128 * 32
+            || context.embedding.len() != 128
+        {
             return None;
         }
         let mut input = vec![0.0; (256 + self.channels) * 64];

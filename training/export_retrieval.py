@@ -37,11 +37,12 @@ def main():
     torch.set_num_threads(8)
     checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     architecture = checkpoint["metadata"]["arguments"].get("architecture", "small")
-    if architecture not in ["small", "large", "intrinsic", "giant"]:
+    if architecture not in ["small", "large", "intrinsic", "giant", "wide512", "massive"]:
         raise ValueError(f"{architecture} requires a native implementation before export")
     model = build_encoder(architecture).eval()
     model.load_state_dict(checkpoint["model"])
-    encoded = bytearray({"small": b"SWPRT001", "large": b"SWPRT002", "intrinsic": b"SWPRT003", "giant": b"SWPRT004"}[architecture])
+    encoded = bytearray({"small": b"SWPRT001", "large": b"SWPRT002", "intrinsic": b"SWPRT003", "giant": b"SWPRT004",
+                         "wide512": b"SWPRT005", "massive": b"SWPRT006"}[architecture])
     # Fold normalization into convolution weights; the native runtime uses only
     # convolution, ReLU, dense layers, and vector normalization.
     def convolution(conv, norm):
@@ -50,7 +51,7 @@ def main():
         encoded.extend(floats((conv.bias - norm.running_mean) * factor + norm.bias))
     for i in range(0, len(model.stages), 3):
         convolution(model.stages[i], model.stages[i + 1])
-    if architecture in ["large", "intrinsic", "giant"]:
+    if architecture in ["large", "intrinsic", "giant", "wide512", "massive"]:
         for block in model.blocks:
             convolution(block.layers[0], block.layers[1])
             convolution(block.layers[3], block.layers[4])
@@ -85,6 +86,8 @@ def main():
             raise ValueError("calibrated vocabulary differs from exported vocabulary")
         vectors = saved["vectors"]
     centers = vectors.shape[1] if vectors.ndim == 3 else 1
+    if vectors.shape[-1] != getattr(model, "embedding_dim", 128):
+        raise ValueError("word-vector width differs from the encoder output")
     bank = bytearray(b"SWPBK002" if centers > 1 else b"SWPBK001")
     bank.extend(struct.pack("<QII", fingerprint(encoded), len(words), vectors.shape[-1]))
     if centers > 1:
@@ -110,7 +113,7 @@ def main():
     report = {
         "schema_version": 1, "architecture": architecture,
         "checkpoint_sha256": hashlib.sha256(args.checkpoint.read_bytes()).hexdigest(),
-        "points": 64, "channels": 16 if architecture in ["intrinsic", "giant"] else 8, "embedding": 128, "vocabulary": len(words), "route_centers": centers,
+        "points": 64, "channels": getattr(model, "input_channels", 8), "embedding": vectors.shape[-1], "vocabulary": len(words), "route_centers": centers,
         "checkpoint_epoch": checkpoint["epoch"] + 1,
         "validation_score": checkpoint.get("retriever_validation", {}).get("memory", {}).get("top1", checkpoint["best_score"]),
         "validation_score_includes_character": "character_model" in checkpoint and "retriever_validation" not in checkpoint,

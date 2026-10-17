@@ -18,7 +18,7 @@ An evaluation shortlist contains only words retrieved from the observed stroke. 
 
 The larger encoder starts with the smaller encoder's predictions intact. Added channels contribute zero at initialization, and added residual blocks start as identities. Learned word proxies remain separate from the encoder parameter count.
 
-`wide512` instead expands the retrieval space from 128 to 512 coordinates. It retains the completed `large` encoder's old coordinates and pads word vectors with zeros, preserving initial candidate rankings. Small nonzero added query coordinates let the new word coordinates receive gradients immediately. Word vectors must remain trainable during expansion. Distillation compares the normalized old coordinates with the frozen teacher; it leaves the added coordinates free to learn. This architecture requires a native implementation before export.
+`wide512` instead expands the retrieval space from 128 to 512 coordinates. It retains the completed `large` encoder's old coordinates and pads word vectors with zeros, preserving initial candidate rankings. Small nonzero added query coordinates let the new word coordinates receive gradients immediately. Word vectors must remain trainable during expansion. Distillation compares the normalized old coordinates with the frozen teacher; it leaves the added coordinates free to learn. Native export retains all 512 coordinates. Reference checks verify embeddings and full-vocabulary word costs before a wider model can enter a complete native mixture.
 
 ```sh
 uv run --directory training python train_proxy.py \
@@ -56,7 +56,7 @@ Repeat `--extra-train` for more shards. Each run records their hashes and writer
 
 `--proxy-learning-rate` controls word-vector updates separately from encoder updates. Its default remains four times `--learning-rate`. Run metadata records actual starting optimizer rates, raw-vector preservation, and legacy normalized resumes. The raw-state regression test checks that a serialized optimizer and its word vectors produce the same next update while preserving inference scores.
 
-`--architecture massive` uses sixteen residual blocks with 2,048 hidden channels per block: 36,236,176 encoder parameters and a separate 7,680,000-parameter word bank. It can expand the completed `large` model while preserving its initial predictions. Added channels receive nonzero gradients in the regression test. A training stage must improve development accuracy before the larger size counts as a gain. Its native exporter is not implemented; the exporter rejects this architecture explicitly. The exact-data experiment uses the same starting checkpoint and corpus as the smaller low-rate control, with smaller batches to limit activation memory. The architecture and batch size both differ.
+`--architecture massive` uses sixteen residual blocks with 2,048 hidden channels per block: 36,236,176 encoder parameters and a separate 7,680,000-parameter word bank. It can expand the completed `large` model while preserving its initial predictions. Added channels receive nonzero gradients in the regression test. A training stage must improve development accuracy before the larger size counts as a gain. Its native export passes canonical embedding, score, and top-five checks for the initializer; these checks do not establish a trained recognition gain. The exact-data experiment uses the same starting checkpoint and corpus as the smaller low-rate control, with smaller batches to limit activation memory. The architecture and batch size both differ.
 
 `covariance_density.py build --references <reference-bank> --output <directory>` fits word-specific error covariance from the equal-count synthetic reference bank. A shared variance scale and every word parameter use references only. The factorization avoids storing a full inverse for each word. A regression test compares its Gaussian costs with direct matrix solves and determinants. `evaluate --checkpoint <word-model> --bank <directory> --output <report>` compares regularized covariance scores with the unchanged retrieval control on all development rows. Candidates come from the natural full-vocabulary top 128. This is an experimental ranking model; its costs are not calibrated probabilities and it is not exported to the app.
 
@@ -101,7 +101,7 @@ uv run --directory training python train_autoregressive.py \
   --epochs 120 --steps 200 --batch 512 --seed 900419
 ```
 
-The decoder receives stroke features and candidate letters. It receives no target label, writer identity, or word rank at evaluation. Its histories distinguish the fixed development subset from the full development set. It has no native exporter yet and cannot replace the app model until native verification is implemented.
+The decoder receives stroke features and candidate letters. It receives no target label, writer identity, or word rank at evaluation. Its histories distinguish the fixed development subset from the full development set. Native spelling export currently supports one or two word-retrieval models, with a separately bound context encoder. Larger mixtures need complete native integration and verification before promotion.
 
 After training, use `evaluate_spelling.py --checkpoint <word-checkpoint> --decoder <spelling-checkpoint> --output <report>` to select scores on all 12,000 development drawings. The evaluator checks both checkpoint bindings and the development hash. It rejects other corpora, including the reserved confirmation set.
 
@@ -141,7 +141,7 @@ Evaluation uses the existing full-vocabulary retriever's natural top 128 candida
 
 ## Verify without computer use
 
-All checks use the command line. The native exporter supports the compact, large, intrinsic, and giant word encoders. Export to a separate directory, then compare native embeddings with PyTorch reference values:
+All checks use the command line. The native exporter supports the compact, large, intrinsic, giant, wide512, and massive word encoders. Word-bank widths must match their encoder outputs. `verify_word_model.py --checkpoint <checkpoint> --model <directory> --output <report>` also verifies exact top-five words and costs over the full dictionary. Export to a separate directory, then compare native embeddings with PyTorch reference values:
 
 ```sh
 uv run --directory training python export_retrieval.py \

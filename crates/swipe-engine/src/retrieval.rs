@@ -16,7 +16,7 @@ struct Word {
 
 struct Auxiliary {
     encoder: Encoder,
-    vectors: Vec<[f32; DIM]>,
+    vectors: Vec<f32>,
     centers: usize,
 }
 
@@ -29,7 +29,7 @@ pub struct RetrievalEngine {
     encoder: Encoder,
     words: Vec<Word>,
     word_ids: HashMap<String, usize>,
-    vectors: Vec<[f32; DIM]>,
+    vectors: Vec<f32>,
     centers: usize,
     prior_weight: f32,
     tta_degrees: f32,
@@ -197,7 +197,11 @@ impl RetrievalEngine {
         }
         let count = u32::from_le_bytes(bank[16..20].try_into().unwrap()) as usize;
         let dimension = u32::from_le_bytes(bank[20..24].try_into().unwrap()) as usize;
-        if dimension != DIM || count == 0 || count > bank.len() / (2 + 4 + DIM * 4) {
+        if ![DIM, 512].contains(&dimension)
+            || dimension != encoder.dimension()
+            || count == 0
+            || count > bank.len() / (2 + 4 + dimension * 4)
+        {
             return Err("invalid route word-bank dimensions".into());
         }
         let centers = if multiple {
@@ -209,11 +213,11 @@ impl RetrievalEngine {
             return Err("invalid number of word-route centers".into());
         }
         let mut position = if multiple { 28 } else { 24 };
-        if count > (bank.len() - position) / (2 + 1 + 4 + DIM * centers * 4) {
+        if count > (bank.len() - position) / (2 + 1 + 4 + dimension * centers * 4) {
             return Err("word-bank count exceeds its payload".into());
         }
         let mut words = Vec::with_capacity(count);
-        let mut vectors = Vec::with_capacity(count * centers);
+        let mut vectors = Vec::with_capacity(count * centers * dimension);
         let mut seen = HashSet::new();
         for _ in 0..count {
             let length = bank
@@ -235,7 +239,7 @@ impl RetrievalEngine {
             }
             position += length;
             let values = bank
-                .get(position..position + (DIM * centers + 1) * 4)
+                .get(position..position + (dimension * centers + 1) * 4)
                 .ok_or("truncated word-bank vector")?;
             let values: Vec<_> = values
                 .as_chunks::<4>()
@@ -246,13 +250,12 @@ impl RetrievalEngine {
             if values.iter().any(|v| !v.is_finite()) || !(0.0..=1.0).contains(&values[0]) {
                 return Err("invalid word-bank values".into());
             }
-            for center in values[1..].as_chunks::<DIM>().0 {
-                let vector = *center;
-                let norm = vector.iter().map(|v| v * v).sum::<f32>();
+            for center in values[1..].chunks_exact(dimension) {
+                let norm = center.iter().map(|v| v * v).sum::<f32>();
                 if !(0.99..=1.01).contains(&norm) {
                     return Err("word-bank vector is not normalized".into());
                 }
-                vectors.push(vector);
+                vectors.extend_from_slice(center);
             }
             if text.bytes().all(|b| b == text.as_bytes()[0]) {
                 return Err("stationary word-bank route".into());
@@ -262,7 +265,7 @@ impl RetrievalEngine {
                 text,
                 popularity: values[0],
             });
-            position += (DIM * centers + 1) * 4;
+            position += (dimension * centers + 1) * 4;
         }
         if position != bank.len() {
             return Err("word bank has trailing data".into());
@@ -338,9 +341,12 @@ impl RetrievalEngine {
     /// Restrict the frequency-ordered vocabulary, for paired benchmarks.
     pub fn truncate_vocabulary(&mut self, count: usize) {
         self.words.truncate(count);
-        self.vectors.truncate(count * self.centers);
+        self.vectors
+            .truncate(count * self.centers * self.encoder.dimension());
         if let Some(auxiliary) = &mut self.auxiliary {
-            auxiliary.vectors.truncate(count * auxiliary.centers);
+            auxiliary
+                .vectors
+                .truncate(count * auxiliary.centers * auxiliary.encoder.dimension());
         }
     }
 
@@ -351,7 +357,7 @@ impl RetrievalEngine {
     }
 
     /// Expose the normalized encoder output for cross-runtime verification.
-    pub fn embedding(&self, path: &[(f64, f64)]) -> Option<[f32; DIM]> {
+    pub fn embedding(&self, path: &[(f64, f64)]) -> Option<Vec<f32>> {
         self.encoder.embed(path)
     }
 
@@ -528,7 +534,7 @@ impl RetrievalEngine {
 
     fn rank_query(
         &self,
-        query: &[f32; DIM],
+        query: &[f32],
         path: &[(f64, f64)],
         limit: usize,
         geometry_union: bool,
@@ -546,14 +552,14 @@ impl RetrievalEngine {
         };
         let mut ranked: Vec<_> = self
             .vectors
-            .chunks_exact(self.centers)
+            .chunks_exact(self.centers * query.len())
             .enumerate()
             .map(|(index, centers)| {
                 let mut similarity = center_similarity(query, centers);
                 if let (Some(model), Some(embedding)) = (&self.auxiliary, &auxiliary_query) {
-                    let start = index * model.centers;
-                    let other =
-                        center_similarity(embedding, &model.vectors[start..start + model.centers]);
+                    let width = model.centers * embedding.len();
+                    let start = index * width;
+                    let other = center_similarity(embedding, &model.vectors[start..start + width]);
                     similarity =
                         (1.0 - self.auxiliary_weight) * similarity + self.auxiliary_weight * other;
                 }
@@ -608,20 +614,21 @@ impl RetrievalEngine {
 }
 
 /// Soft assignment preserves distinct motor modes without adding word priors.
-fn center_similarity(query: &[f32; DIM], centers: &[[f32; DIM]]) -> f32 {
-    if centers.len() == 1 {
-        return dot(query, &centers[0]);
+fn center_similarity(query: &[f32], centers: &[f32]) -> f32 {
+    let count = centers.len() / query.len();
+    if count == 1 {
+        return dot(query, centers);
     }
     let mut scores = [0.0_f32; 8];
-    for (score, center) in scores.iter_mut().zip(centers) {
+    for (score, center) in scores.iter_mut().zip(centers.chunks_exact(query.len())) {
         *score = dot(query, center);
     }
-    let maximum = scores[..centers.len()]
+    let maximum = scores[..count]
         .iter()
         .copied()
         .fold(f32::NEG_INFINITY, f32::max);
     let (mut numerator, mut denominator) = (0.0, 0.0);
-    for score in &scores[..centers.len()] {
+    for score in &scores[..count] {
         let weight = ((score - maximum) / 0.1).exp();
         numerator += weight * score;
         denominator += weight;
@@ -638,6 +645,24 @@ fn fingerprint(data: &[u8]) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn word_bank_width_must_match_its_encoder() {
+        let model = include_bytes!("../models/retrieval/encoder.bin");
+        let mut bank = b"SWPBK001".to_vec();
+        bank.extend(fingerprint(model).to_le_bytes());
+        bank.extend(1_u32.to_le_bytes());
+        bank.extend(512_u32.to_le_bytes());
+        bank.extend(5_u16.to_le_bytes());
+        bank.extend(b"hello");
+        bank.extend(0.5_f32.to_le_bytes());
+        bank.extend(1.0_f32.to_le_bytes());
+        bank.extend(vec![0; 511 * 4]);
+        assert!(RetrievalEngine::from_bytes(model, &bank)
+            .err()
+            .unwrap()
+            .contains("dimensions"));
+    }
 
     #[test]
     fn bundled_model_matches_pytorch_and_recognizes_reference_routes() {
@@ -724,7 +749,7 @@ mod tests {
         assert!(engine.predict_from_path(&path, 3).is_empty());
         let vectors = [[1.0_f32, 0.0], [0.0, 1.0], [-1.0, 0.0]]
             .into_iter()
-            .map(|xy| {
+            .flat_map(|xy| {
                 let mut vector = [0.0; DIM];
                 vector[..2].copy_from_slice(&xy);
                 vector

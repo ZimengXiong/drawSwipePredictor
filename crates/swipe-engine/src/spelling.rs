@@ -297,7 +297,10 @@ impl SpellingModel {
     }
 
     pub(crate) fn prepare(&self, context: &EncoderContext) -> Option<SpellingMemory> {
-        if context.features.len() != self.channels * 64 || context.sequence.len() != 128 * MEMORY {
+        if context.features.len() != self.channels * 64
+            || context.sequence.len() != 128 * MEMORY
+            || context.embedding.len() != 128
+        {
             return None;
         }
         let mut input = Vec::with_capacity(MEMORY * (256 + self.channels));

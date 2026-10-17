@@ -1,0 +1,16 @@
+{
+  "test_data_used": false,
+  "checkpoint_sha256": "be02eac8fa11d5dc1bd29613fcba7de1456ce1dbfd698fb9f11f3e1426f13dee",
+  "artifacts": {
+    "encoder.bin": "07ea8db7702e6219a7be8352f84f19cbcaaaadfaae8c4da4216bf67710332bb7",
+    "words.bin": "0fa937bcf4de75d6286d3e1f3bb4b9f3ba57d6c0a4d2bdc4e6e390c703a2bc1f"
+  },
+  "native_manifest_sha256": "709b649999ab070f6f241ed3ff103b7efc6a752e6bc3290d06003fdd0235a1d6",
+  "native_cli_sha256": "d186772d1afdfdeda01600dcdd3b92ffd49cd1c32f1af34bb973a08f790ffe52",
+  "full_vocabulary": 60000,
+  "embedding_dimension": 512,
+  "cases": 5,
+  "exact_top5": true,
+  "maximum_cost_error": 4.172325134277344e-07,
+  "limits": "Canonical implementation parity only. Normal inference receives points only. This is not development or benchmark accuracy."
+}

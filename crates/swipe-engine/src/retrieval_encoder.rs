@@ -15,7 +15,7 @@ pub(crate) struct Layer {
 pub(crate) struct EncoderContext {
     pub(crate) features: Vec<f32>,
     pub(crate) sequence: Vec<f32>,
-    pub(crate) embedding: [f32; DIM],
+    pub(crate) embedding: Vec<f32>,
 }
 
 pub(crate) struct Encoder {
@@ -29,10 +29,17 @@ impl Encoder {
     pub(crate) fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
         let large = match bytes.get(..8) {
             Some(b"SWPRT001") => false,
-            Some(b"SWPRT002") | Some(b"SWPRT003") | Some(b"SWPRT004") => true,
+            Some(b"SWPRT002") | Some(b"SWPRT003") | Some(b"SWPRT004") | Some(b"SWPRT005")
+            | Some(b"SWPRT006") => true,
             _ => return Err("unsupported route encoder format".into()),
         };
-        let giant = bytes.get(..8) == Some(b"SWPRT004");
+        let massive = bytes.get(..8) == Some(b"SWPRT006");
+        let giant = bytes.get(..8) == Some(b"SWPRT004") || massive;
+        let embedding = if bytes.get(..8) == Some(b"SWPRT005") {
+            512
+        } else {
+            DIM
+        };
         let input_channels = if giant || bytes.get(..8) == Some(b"SWPRT003") {
             16
         } else {
@@ -90,7 +97,13 @@ impl Encoder {
             } else {
                 vec![1, 2, 4, 8, 1, 2]
             };
-            let hidden = if giant { 512 } else { 192 };
+            let hidden = if massive {
+                2048
+            } else if giant {
+                512
+            } else {
+                192
+            };
             for dilation in dilations {
                 residual.push([
                     layer(128, hidden, 5, 1, dilation)?,
@@ -104,7 +117,7 @@ impl Encoder {
             None
         };
         let dimensions = if large {
-            [(3072, 768), (768, DIM)]
+            [(3072, 768), (768, embedding)]
         } else {
             [(1024, 256), (256, DIM)]
         };
@@ -123,7 +136,11 @@ impl Encoder {
         })
     }
 
-    pub(crate) fn embed(&self, raw: &[(f64, f64)]) -> Option<[f32; DIM]> {
+    pub(crate) fn dimension(&self) -> usize {
+        self.dense.last().unwrap().outputs
+    }
+
+    pub(crate) fn embed(&self, raw: &[(f64, f64)]) -> Option<Vec<f32>> {
         self.context(raw).map(|context| context.embedding)
     }
 
@@ -171,7 +188,7 @@ impl Encoder {
         Some(EncoderContext {
             features,
             sequence,
-            embedding: vector.try_into().ok()?,
+            embedding: vector,
         })
     }
 }
