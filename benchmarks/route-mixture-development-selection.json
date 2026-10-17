@@ -1,0 +1,74 @@
+{
+  "primary_sha256": "139e5072ce1c6cc55dc80f663269b8b7dc0401f9dbe57ecb9adef41b7ffcfadf",
+  "auxiliary_sha256": "f52d8dbf1f7a594f9ee537cd742135a2a0aec10b298355e8a268023aa46facac",
+  "fit_retriever_sha256": "57c94b93375c25c1818dda66972b4c86cd16990f84b9c433028b94d1c38e2f50",
+  "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "writer_selection": {
+    "difficulty": "memory",
+    "offset": 0,
+    "samples": 512
+  },
+  "test_data_used": false,
+  "calibration_frozen": false,
+  "omission_prior": 0.35,
+  "regularization": 0.02,
+  "motor_weight": 32.0,
+  "baseline_complete_top1": 0.619140625,
+  "trials": [
+    {
+      "temperature": 0.0,
+      "top1": 0.662109375,
+      "top5": 0.84765625,
+      "gained": 34,
+      "lost": 12
+    },
+    {
+      "temperature": 0.0001,
+      "top1": 0.669921875,
+      "top5": 0.841796875,
+      "gained": 36,
+      "lost": 10
+    },
+    {
+      "temperature": 0.0003,
+      "top1": 0.654296875,
+      "top5": 0.837890625,
+      "gained": 31,
+      "lost": 13
+    },
+    {
+      "temperature": 0.001,
+      "top1": 0.630859375,
+      "top5": 0.81640625,
+      "gained": 22,
+      "lost": 16
+    },
+    {
+      "temperature": 0.003,
+      "top1": 0.609375,
+      "top5": 0.79296875,
+      "gained": 18,
+      "lost": 23
+    },
+    {
+      "temperature": 0.01,
+      "top1": 0.599609375,
+      "top5": 0.765625,
+      "gained": 19,
+      "lost": 29
+    }
+  ],
+  "selected": {
+    "temperature": 0.0001,
+    "top1": 0.669921875,
+    "top5": 0.841796875,
+    "gained": 36,
+    "lost": 10
+  },
+  "source_sha256": {
+    "fits": "e67f31b766017d4a649f43011f5e5560be34abb9f415792101bee4f9d0c8a360",
+    "combination": "9e39645cd35fedeefffe15866494ad8ead3371cea6616c52341eaa079b8b9775",
+    "motor_calibration": "9711159b3898d21ad9b2be51acb6f83f8bd0344278a9dde3807404e40b379aec"
+  },
+  "limits": "Reused development data for component selection; not an untouched benchmark or confirmation result."
+}
