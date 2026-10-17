@@ -291,3 +291,11 @@ Motor fitting and ranking can use different penalties. `fit_development.py --opt
 The first five training rounds reach 6,146/8,400 hard first choices, compared with 6,141 for the fixed mature pair and 6,113 for the uniform four-model initializer. This is a word-only experiment; it trails the 6,171-hit complete system. It has no native export and remains in training. Candidate-permutation tests check that word-bank order cannot affect query weights.
 
 The expanded-real-data stage stopped after 136 completed rounds, 81 beyond its best checkpoint at round 55. Its best 72.50% and latest weights remain preserved. Two larger encoder controls, the wider encoder, synthetic-only training, and the decoder experiments continue independently.
+
+## Combine route and spelling evidence
+
+`combine_route_spelling.py` adds visited-route costs to a previously selected spelling configuration. It binds both systems to the same context, word mixture, development corpus, and natural candidate lists. The zero-route setting must reproduce the existing spelling counts before a full-development comparison is accepted. Missing words remain misses. No target word or true visited route enters inference.
+
+The first 512-row diagnostic improves six hard first choices over its spelling control: 270 versus 264 out of 349. This supports a full comparison; it does not establish 77.36% accuracy across all hard development rows. The full visited-route replay is still running. The combination has no native exporter yet. Scored arrays are retained so reporting repairs do not require another model pass.
+
+The initial wide encoder completed all 180 rounds, with its best at round 174 (73.04% hard development). Its weights are frozen before a follow-up stage using all 31 million exact-generator writers. That stage retains real recordings and augmented canonical routes, including positive examples outside the cached target-length range. It changes the data mixture as well as the schedule and is not a controlled width-only experiment.

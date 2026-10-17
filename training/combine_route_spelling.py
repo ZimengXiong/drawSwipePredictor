@@ -66,6 +66,9 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     torch.set_num_threads(4)
+    source_hashes = {name: digest(Path(name)) for name in [Path(__file__).name,
+                     'autoregressive_model.py', 'retrieval_model.py', 'large_encoder.py', 'train_character.py']}
+    route_hash, selection_hash = digest(args.route_report), digest(args.spelling_selection)
     saved, context_hash = load_checkpoint(args.checkpoint)
     decoded, decoder_hash = load_checkpoint(args.decoder)
     route, spelling = [json.loads(path.read_text()) for path in [args.route_report, args.spelling_selection]]
@@ -93,9 +96,9 @@ def main():
     full = np.array_equal(selected, np.arange(len(rows)))
     if not full and not args.allow_development_subset:
         raise ValueError('full development is required unless a subset diagnostic is explicit')
-    model = load_decoder(decoded['model'], 8).to('mps').eval().requires_grad_(False)
     encoder = build_encoder(saved['metadata']['arguments']['architecture']).to('mps').eval().requires_grad_(False)
     encoder.load_state_dict(saved['model'])
+    model = load_decoder(decoded['model'], getattr(encoder, 'input_channels', 8)).to('mps').eval().requires_grad_(False)
     inputs, targets, lengths = [part.to('mps') for part in word_tokens(saved['words'])]
     costs, began = [], time.monotonic()
     with torch.no_grad():
@@ -124,13 +127,19 @@ def main():
             for key in ['top1', 'top5']:
                 if round(values[key]*values['samples']) != round(fixed['validation'][name][key]*values['samples']):
                     raise ValueError('zero-route baseline differs from the full spelling selection; saved costs retained')
+    unchanged = (digest(args.route_report) == route_hash and digest(args.spelling_selection) == selection_hash
+                 and digest(args.checkpoint) == context_hash and digest(args.decoder) == decoder_hash
+                 and digest(cache_path) == route['score_cache_sha256']
+                 and all(digest(Path(name)) == value for name, value in source_hashes.items()))
+    if not unchanged:
+        raise ValueError('source, checkpoint, selection, or cached evidence changed during inference')
     report = {'test_data_used': False, 'development': info, 'samples': count, 'full_development': full,
               'full_vocabulary': 60000, 'encoder_sha256': context_hash, 'spelling_decoder_sha256': decoder_hash,
-              'route_decoder_sha256': route['decoder_sha256'], 'route_report_sha256': digest(args.route_report),
-              'spelling_selection_sha256': digest(args.spelling_selection), 'score_cache_sha256': digest(output_cache),
+              'route_decoder_sha256': route['decoder_sha256'], 'route_report_sha256': route_hash,
+              'spelling_selection_sha256': selection_hash, 'score_cache_sha256': digest(output_cache),
               'baseline_full_counts_verified': full, 'fixed_spelling_settings': {key: fixed[key] for key in ['length_power', 'proxy_weight']},
               'selected': max(trials, key=lambda trial: trial['validation']['memory']['correct_top1']), 'trials': trials,
-              'native_supported': False, 'source_sha256': digest(Path(__file__)),
+              'native_supported': False, 'source_sha256': source_hashes, 'inputs_unchanged_through_scoring': True,
               'limits': 'Development evidence fusion only. Same natural128 candidates and complete words; no target insertion or route oracle. Subset diagnostics are not full-development or benchmark accuracy.'}
     args.output.write_text(json.dumps(report, indent=2)+'\n')
     print(json.dumps(report['selected']), flush=True)
