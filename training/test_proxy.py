@@ -24,11 +24,20 @@ from train_pair import evaluate
 from train_proxy import RECORD, corpus, proxy_scores, real_word_groups, balanced_real_indices
 from reference_density import mixture_similarity
 from evaluate_training_exposure import exposure_bias
+from average_word_models import average_state
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_word_model_averaging_preserves_tracking_buffers_and_rejects_shape_changes(self):
+        first = {"weights": torch.randn(3, 2), "tracked": torch.tensor(7)}
+        second = {"weights": torch.randn(3, 2), "tracked": torch.tensor(11)}
+        self.assertEqual(int(average_state(first, second, 0.5)["tracked"]), 11)
+        torch.testing.assert_close(average_state(first, first, 0.4)["weights"], first["weights"])
+        with self.assertRaisesRegex(ValueError, "incompatible state tensor"):
+            average_state(first, {"weights": torch.randn(4, 2), "tracked": torch.tensor(11)}, 0.5)
+
     def test_training_exposure_uses_recordings_and_respects_word_permutations(self):
         counts = torch.tensor([100.0, 3.0, 1.0, 0.0])
         for balanced in [False, True]:

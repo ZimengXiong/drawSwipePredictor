@@ -144,6 +144,8 @@ Cross-attention models are not yet exported to native inference. A selected comp
 
 ## Combine complementary word models
 
+`average_word_models.py --first <checkpoint> --second <checkpoint> --output <directory>` compares two aligned models from the same training lineage. It includes both unchanged source models as controls, then tests parameter and word-vector averages. Batch-normalization statistics are refreshed using declared training paths only. The selected checkpoint must beat the source controls on full development; otherwise the utility preserves the better source file. These single-model averages complement the prediction ensembles below.
+
 `evaluate_complete.py` compares a joint checkpoint with an auxiliary word model on the entire declared development corpus. It retrieves all candidates naturally from the full vocabulary, selects blend settings on development data, and retains exact-word scoring.
 
 ```sh
