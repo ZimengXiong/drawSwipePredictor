@@ -28,11 +28,31 @@ from evaluate_training_exposure import exposure_bias
 from average_word_models import average_state
 from export_ensemble import pair_configuration
 from evaluate_spelling import retrieval_pair_weight
+from covariance_density import factor_covariance, gaussian_costs
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_factored_covariance_matches_direct_gaussian_likelihood(self):
+        torch.manual_seed(900593)
+        references = torch.randn(4, 8, 7)
+        deviation = torch.rand(7) + 0.5
+        means, factors, eigenvalues = factor_covariance(references, deviation)
+        query = torch.randn(3, 7)
+        candidates = torch.tensor([[0, 2], [1, 3], [2, 1]])
+        scales = [0.25, 1.0, 4.0]
+        actual = gaussian_costs(query, candidates, means, factors, eigenvalues, deviation, scales)
+        centered = (references / deviation - means[:, None]) / 7 ** 0.5
+        covariance = centered.transpose(1, 2) @ centered
+        for row in range(3):
+            for column, word in enumerate(candidates[row]):
+                delta = query[row] / deviation - means[word]
+                for i, scale in enumerate(scales):
+                    matrix = covariance[word] + scale * torch.eye(7)
+                    expected = 0.5 * (delta @ torch.linalg.solve(matrix, delta) + torch.linalg.slogdet(matrix).logabsdet) / 7
+                    torch.testing.assert_close(actual[row, column, i], expected, atol=2e-5, rtol=2e-5)
+
     def test_spelling_retrieval_selection_preserves_models_and_development_split(self):
         selection = {"test_data_used": False, "development": {"sha256": "dev"},
                      "full_vocabulary": 60000,
