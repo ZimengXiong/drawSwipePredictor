@@ -32,11 +32,23 @@ from evaluate_spelling import retrieval_pair_weight, selected_word_weights
 from covariance_density import factor_covariance, gaussian_costs
 from train_autoregressive import differentiable_context, validate_retrieval_source
 from fetch_additional_real_swipes import training_record
+from evaluate_proxy_ensemble import word_mixtures
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_six_candidate_selection_never_exceeds_native_component_limit(self):
+        trials = word_mixtures(6)
+        self.assertEqual(len(trials), 126)
+        self.assertTrue(all(sum(weight > 0 for weight in trial) <= 4 for trial in trials))
+        self.assertTrue(all(sum(trial) == 1.0 for trial in trials))
+        self.assertIn((0.25, 0.25, 0.25, 0.25, 0.0, 0.0), trials)
+        self.assertNotIn((1 / 6,) * 6, trials)
+        self.assertEqual(len(word_mixtures(3)), 16)
+        self.assertIn((1 / 3,) * 3, word_mixtures(3))
+        self.assertEqual(len(word_mixtures(4)), 35)
+
     def test_independent_negative_mining_rejects_other_writers_and_word_order(self):
         source = {"words": ["cat", "dog"], "metadata": {"test_data_used": False,
                   "train_corpus": {"sha256": "train"}, "validation_corpus": {"sha256": "development"}}}
