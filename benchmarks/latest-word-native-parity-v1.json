@@ -1,0 +1,35 @@
+{
+  "primary_sha256": "5d223181ccae3aeb34cabff4dc05e8e12c84fdce10a8da822ab3c440f4cc12f6",
+  "auxiliary_sha256": "6731ce056e97cf13712cd34b9e58184386dc6c4694e796509b5f4af2dddcf8ec",
+  "auxiliary_weight": 0.75,
+  "full_vocabulary": 60000,
+  "test_data_used": false,
+  "references": [
+    {
+      "reference_word": "hello",
+      "exact_top5_matches": true,
+      "maximum_cost_error": 0.0
+    },
+    {
+      "reference_word": "world",
+      "exact_top5_matches": true,
+      "maximum_cost_error": 1.1920928955078125e-07
+    },
+    {
+      "reference_word": "keyboard",
+      "exact_top5_matches": true,
+      "maximum_cost_error": 5.960464477539063e-08
+    },
+    {
+      "reference_word": "lunchbox",
+      "exact_top5_matches": true,
+      "maximum_cost_error": 1.1920928955078125e-07
+    },
+    {
+      "reference_word": "alpacas",
+      "exact_top5_matches": true,
+      "maximum_cost_error": 1.7881393432617188e-07
+    }
+  ],
+  "limits": "Transformed canonical reference paths verify implementation parity only; no benchmark accuracy claim"
+}

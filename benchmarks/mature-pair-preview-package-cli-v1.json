@@ -1,0 +1,50 @@
+{
+  "test_data_used": false,
+  "native_manifest_sha256": "6637e4b28f7575e9572ea6e09bbc07db23cd79ff9e5e65a4f790762c7e174ba4",
+  "native_cli_sha256": "46ceabb14bcda6254d7e1a7aeb5b7510e410dcd9fd5bd369fde9164bd492243e",
+  "artifacts": {
+    "encoder.bin": "cc2d2fbde7c7aa3f222ab062380366666f9d5aeae67db8844f44e7cb4b3c4b73",
+    "words.bin": "037778bbcee05f11beba4ea2f317ba7aada53af1f86a639c154876416355341f",
+    "spelling.bin": "624bebd86d07afefa859a61741edccb49e450af253aed175f8509a1ca95e0729",
+    "spelling/encoder.bin": "1eddedc4a75670b45609154ff934621df29c60182326fddf5675d68b91a5a822",
+    "spelling-verification.json": "a1f5510febb76575d0fcc89252c9be0b4a177cd7f5e104a3e08cd26aaf30af44",
+    "auxiliary/encoder.bin": "d78ddb3b4afa00756009e6bcf69de1f792b6e5e9aba1195cd721bd37158965c4",
+    "auxiliary/words.bin": "96c41e82785f4432547af383376c717e87013275a87bcaf6d6f0d67899205cb8"
+  },
+  "cases": 5,
+  "verification_stdout": "hello: maximum spelling cost error 0.00002289; exact top-five ranking matches\nworld: maximum spelling cost error 0.00000763; exact top-five ranking matches\nkeyboard: maximum spelling cost error 0.00001907; exact top-five ranking matches\nlunchbox: maximum spelling cost error 0.00001907; exact top-five ranking matches\nalpacas: maximum spelling cost error 0.00002289; exact top-five ranking matches\n",
+  "binding_rejections": {
+    "missing_decoder": {
+      "exit_code": 1,
+      "reason": "Error: \"No such file or directory (os error 2)\""
+    },
+    "changed_decoder": {
+      "exit_code": 1,
+      "reason": "Error: \"spelling weights differ from the exported manifest\""
+    },
+    "changed_context": {
+      "exit_code": 1,
+      "reason": "Error: \"spelling decoder belongs to a different retrieval context\""
+    },
+    "changed_mixture": {
+      "exit_code": 1,
+      "reason": "Error: \"spelling decoder belongs to a different retrieval context\""
+    }
+  },
+  "normal_inference_milliseconds": [
+    191.022875,
+    194.27975,
+    225.23637499999998,
+    224.65574999999998,
+    220.98862499999998
+  ],
+  "limits": "Packaged model canonical parity and binding checks only. Full development replay is recorded separately for the same model manifest. Preview updated; originally bundled benchmark model unchanged. No benchmark or confirmation evaluation.",
+  "package": {
+    "app_path": "/Users/xzm/Projects/drawSwipePredictor/build/Draw from Memory Preview.app",
+    "executable_sha256": "5d91a9281063da447cd6106f523bac739b38f5285c7dfcd7df4dd618442bf5c0",
+    "plist_sha256": "e3a885b21b6284a6bb97d1b8b97956f58792836a19deb8c6552b707e716e08ac",
+    "receipt_sha256": "87a6c82a66a974c48012430ac1fbac7af2851dc3521f8a43ef8c11a3b9fbe12e",
+    "all_receipt_hashes_verified": true,
+    "window_opened": false
+  }
+}

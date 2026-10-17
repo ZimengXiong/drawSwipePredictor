@@ -1,0 +1,312 @@
+{
+  "eligible_targets": 8800,
+  "results": [
+    {
+      "baseline": {
+        "median_ms": 665.5975,
+        "p95_ms": 836.382375,
+        "top1": 0.79,
+        "top5": 0.91
+      },
+      "difficulty": "clean",
+      "example_errors": [
+        {
+          "predicted": [
+            "behavior",
+            "behaviour",
+            "behavoir",
+            "behavour",
+            "berhampur"
+          ],
+          "target": "behaviour"
+        }
+      ],
+      "memory": {
+        "median_ms": 13.718124999999999,
+        "p95_ms": 14.049125,
+        "top1": 0.99,
+        "top5": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "median_ms": 819.399,
+        "p95_ms": 894.97575,
+        "top1": 0.48,
+        "top5": 0.66
+      },
+      "difficulty": "loose",
+      "example_errors": [
+        {
+          "predicted": [
+            "hasting",
+            "haying",
+            "hating",
+            "hauing",
+            "hsting"
+          ],
+          "target": "having"
+        },
+        {
+          "predicted": [
+            "lvoe",
+            "lvoire",
+            "mckee",
+            "mcvie",
+            "kbit"
+          ],
+          "target": "lycos"
+        },
+        {
+          "predicted": [
+            "tnr",
+            "enew",
+            "dvds",
+            "rbe",
+            "endes"
+          ],
+          "target": "rules"
+        },
+        {
+          "predicted": [
+            "ebbed",
+            "ened",
+            "emed",
+            "webnews",
+            "enes"
+          ],
+          "target": "engaged"
+        },
+        {
+          "predicted": [
+            "perrotta",
+            "pepys",
+            "prwora",
+            "pereira",
+            "proud"
+          ],
+          "target": "proud"
+        },
+        {
+          "predicted": [
+            "xave",
+            "cdvt",
+            "decr",
+            "cvsnt",
+            "genny"
+          ],
+          "target": "cant"
+        },
+        {
+          "predicted": [
+            "wave",
+            "wabe",
+            "wace",
+            "wavre",
+            "wane"
+          ],
+          "target": "wage"
+        },
+        {
+          "predicted": [
+            "netpivotal",
+            "nytdigital",
+            "nosocomial",
+            "nonjudicial",
+            "besuchen"
+          ],
+          "target": "beneficial"
+        },
+        {
+          "predicted": [
+            "longa",
+            "kinga",
+            "llonga",
+            "kinda",
+            "konq"
+          ],
+          "target": "kings"
+        },
+        {
+          "predicted": [
+            "mple",
+            "mpls",
+            "nooks",
+            "mole",
+            "molds"
+          ],
+          "target": "maple"
+        },
+        {
+          "predicted": [
+            "capm",
+            "casson",
+            "cason",
+            "casdon",
+            "cassim"
+          ],
+          "target": "calm"
+        },
+        {
+          "predicted": [
+            "ageing",
+            "agreeing",
+            "agreing",
+            "adhering",
+            "sheeting"
+          ],
+          "target": "sharing"
+        }
+      ],
+      "memory": {
+        "median_ms": 13.770584000000001,
+        "p95_ms": 14.146417,
+        "top1": 0.72,
+        "top5": 0.79
+      }
+    },
+    {
+      "baseline": {
+        "median_ms": 827.0584170000001,
+        "p95_ms": 908.902917,
+        "top1": 0.18,
+        "top5": 0.28
+      },
+      "difficulty": "memory",
+      "example_errors": [
+        {
+          "predicted": [
+            "caval",
+            "cabal",
+            "canal",
+            "freehep",
+            "canall"
+          ],
+          "target": "canal"
+        },
+        {
+          "predicted": [
+            "jarring",
+            "jaring",
+            "hartung",
+            "jstring",
+            "karting"
+          ],
+          "target": "having"
+        },
+        {
+          "predicted": [
+            "nchs",
+            "ncvhs",
+            "mvie",
+            "nche",
+            "ncha"
+          ],
+          "target": "lycos"
+        },
+        {
+          "predicted": [
+            "databg",
+            "dattani",
+            "hayami",
+            "freetech",
+            "gritsenko"
+          ],
+          "target": "tsunami"
+        },
+        {
+          "predicted": [
+            "enid",
+            "eenid",
+            "cmiv",
+            "ebmud",
+            "emif"
+          ],
+          "target": "while"
+        },
+        {
+          "predicted": [
+            "comple",
+            "cookoff",
+            "compiler",
+            "cumple",
+            "cupid"
+          ],
+          "target": "comply"
+        },
+        {
+          "predicted": [
+            "tnr",
+            "rbe",
+            "wcq",
+            "tmr",
+            "ebbw"
+          ],
+          "target": "rules"
+        },
+        {
+          "predicted": [
+            "advice",
+            "above",
+            "achive",
+            "anice",
+            "abobe"
+          ],
+          "target": "above"
+        },
+        {
+          "predicted": [
+            "ened",
+            "ebbed",
+            "emed",
+            "eves",
+            "enes"
+          ],
+          "target": "engaged"
+        },
+        {
+          "predicted": [
+            "beautful",
+            "beautyful",
+            "beautyfull",
+            "macidol",
+            "measureup"
+          ],
+          "target": "beautiful"
+        },
+        {
+          "predicted": [
+            "fivers",
+            "divers",
+            "dmcra",
+            "ficers",
+            "fficers"
+          ],
+          "target": "rivers"
+        },
+        {
+          "predicted": [
+            "nenw",
+            "leow",
+            "lettow",
+            "perrotta",
+            "berghe"
+          ],
+          "target": "proud"
+        }
+      ],
+      "memory": {
+        "median_ms": 13.862,
+        "p95_ms": 14.337209,
+        "top1": 0.31,
+        "top5": 0.46
+      }
+    }
+  ],
+  "samples_per_difficulty": 100,
+  "seed": 9002,
+  "synthetic_only": true,
+  "target_policy": "uniform over 4–12 letter words in target vocabulary",
+  "target_vocabulary_limit": 10000,
+  "vocabulary": 333229
+}

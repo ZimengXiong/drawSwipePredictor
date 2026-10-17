@@ -1,0 +1,64 @@
+{
+  "kind": "Completed models combined on development; native parity after precise resampling",
+  "test_data_used": false,
+  "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "primary_sha256": "c85a84ced59681e5dcc0ae470eb250a5ea42ec8d35c1f5adb50f8727e7c7b6e9",
+  "auxiliary_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "full_vocabulary": 60000,
+  "selected": {
+    "auxiliary_weight": 1.0,
+    "proxy_weight": 4.0,
+    "deletion_probability": 0.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9633333086967468,
+        "top5": 0.9958333373069763
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8670833110809326,
+        "top5": 0.9587500095367432
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7145237922668457,
+        "top5": 0.8808333277702332
+      }
+    },
+    "shortlist_recall": {
+      "clean": 1.0,
+      "loose": 0.9991666674613953,
+      "memory": 0.9920238256454468
+    }
+  },
+  "native_reference_checks": [
+    {
+      "word": "hello",
+      "maximum_log_probability_error": 3.242e-05,
+      "exact_top5_matches": true
+    },
+    {
+      "word": "world",
+      "maximum_log_probability_error": 4.435e-05,
+      "exact_top5_matches": true
+    },
+    {
+      "word": "keyboard",
+      "maximum_log_probability_error": 1.335e-05,
+      "exact_top5_matches": true
+    },
+    {
+      "word": "lunchbox",
+      "maximum_log_probability_error": 4.673e-05,
+      "exact_top5_matches": true
+    },
+    {
+      "word": "alpacas",
+      "maximum_log_probability_error": 1.717e-05,
+      "exact_top5_matches": true
+    }
+  ],
+  "numerical_correction": "Keep raw path arc-length interpolation, centering, and radius normalization in f64 before casting to f32, matching training preprocessing. The prior f32 resampling exceeded the existing 0.0002 character parity tolerance; the tolerance is unchanged.",
+  "limits": "Development only. Five transformed reference routes verify implementation parity, not benchmark accuracy. Experimental directory export; bundled app unchanged."
+}

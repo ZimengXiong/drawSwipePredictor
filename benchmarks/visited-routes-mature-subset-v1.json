@@ -1,0 +1,255 @@
+{
+  "test_data_used": false,
+  "kind": "visited_routes",
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "samples": 512,
+  "full_development": false,
+  "full_vocabulary": 60000,
+  "encoder_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "evidence_sha256": "2cf41bdd8a804b27c3dc2131741b831f006635740c5e038c7d146dc1e9828cb6",
+  "evidence_epoch": 85,
+  "source_sha256": {
+    "evaluate_candidate_evidence.py": "b3df2d8e5fcb00a16b6a39f3a44317c7d89cc423b69b81ada048f05a6c5bec62",
+    "candidate_model.py": "df881d7b7fdd9247a6c2f3472f0bcd7dd4b5376fc5b9f44f903e22ce791debc0",
+    "autoregressive_model.py": "ed7359182c6d3cbb842e3e9c5b4353367e1f752649b000743dc05173d6856a7d",
+    "visited_route_model.py": "a82b1601bffec3448c0632cc9945c0d91cf7a1671c2f19ea474d99e36d39de7e",
+    "retrieval_model.py": "6be42de79e9777a97ef5cebcba60ce8b96fc840cdbf43aee532501e25cd87d4d",
+    "large_encoder.py": "41767ccc94c0d872490cb8a76866fb5f564d6c3179218bd0e2b0ed51c284a7e4",
+    "train_character.py": "cc7be7cc0cdda75cc37fbb90dd2b487853c09ff721a82e3e2b1d1c94defcb6fc"
+  },
+  "inputs_sha256": {
+    "checkpoints/proxy-giant-strong-init.pt": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+    "checkpoints/visited-routes-mature-probe-v1.pt": "2cf41bdd8a804b27c3dc2131741b831f006635740c5e038c7d146dc1e9828cb6",
+    "checkpoints/route-spelling-full-v1.json": "7b2d5f60f53d6536f161d3e0242ce892535fa3e569a6643f97b8dab1d8cbba20",
+    "checkpoints/visited-routes-full-development-v1.json": "d9fc3207332fd6a7c5b03f2c9ebf8b8ac2d80db0111b46ef59238333a8065d2e",
+    "data/memory-proxy/validation.bin": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+    "checkpoints/route-spelling-full-v1.scores.npz": "5939d4d876aa40d8874329237217cdff6f016a2ce3cb92634939f8020e3f7397",
+    "checkpoints/visited-routes-full-development-v1.scores.npz": "c087ef87ebc223d7b09ff955489a0533eb1da7772bceeb9a965092ffcf006977"
+  },
+  "score_cache_sha256": "d594e10d716bde9a5c352cec2a06f3d5904c8894c1b0e47afa84e143c9b867fb",
+  "fixed_spelling_settings": {
+    "length_power": 0.3,
+    "proxy_weight": 4.0
+  },
+  "baseline_full_counts_verified": true,
+  "inputs_unchanged_through_scoring": true,
+  "trials": [
+    {
+      "evidence_weight": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 60,
+          "correct_top1": 58,
+          "correct_top5": 60,
+          "top1": 0.9666666666666667,
+          "top5": 1.0
+        },
+        "loose": {
+          "samples": 103,
+          "correct_top1": 91,
+          "correct_top5": 97,
+          "top1": 0.883495145631068,
+          "top5": 0.941747572815534
+        },
+        "memory": {
+          "samples": 349,
+          "correct_top1": 264,
+          "correct_top5": 316,
+          "top1": 0.7564469914040115,
+          "top5": 0.9054441260744985
+        }
+      }
+    },
+    {
+      "evidence_weight": 0.1,
+      "validation": {
+        "clean": {
+          "samples": 60,
+          "correct_top1": 58,
+          "correct_top5": 60,
+          "top1": 0.9666666666666667,
+          "top5": 1.0
+        },
+        "loose": {
+          "samples": 103,
+          "correct_top1": 91,
+          "correct_top5": 97,
+          "top1": 0.883495145631068,
+          "top5": 0.941747572815534
+        },
+        "memory": {
+          "samples": 349,
+          "correct_top1": 265,
+          "correct_top5": 316,
+          "top1": 0.7593123209169055,
+          "top5": 0.9054441260744985
+        }
+      }
+    },
+    {
+      "evidence_weight": 0.25,
+      "validation": {
+        "clean": {
+          "samples": 60,
+          "correct_top1": 58,
+          "correct_top5": 60,
+          "top1": 0.9666666666666667,
+          "top5": 1.0
+        },
+        "loose": {
+          "samples": 103,
+          "correct_top1": 90,
+          "correct_top5": 97,
+          "top1": 0.8737864077669902,
+          "top5": 0.941747572815534
+        },
+        "memory": {
+          "samples": 349,
+          "correct_top1": 267,
+          "correct_top5": 317,
+          "top1": 0.7650429799426934,
+          "top5": 0.9083094555873925
+        }
+      }
+    },
+    {
+      "evidence_weight": 0.5,
+      "validation": {
+        "clean": {
+          "samples": 60,
+          "correct_top1": 58,
+          "correct_top5": 60,
+          "top1": 0.9666666666666667,
+          "top5": 1.0
+        },
+        "loose": {
+          "samples": 103,
+          "correct_top1": 90,
+          "correct_top5": 97,
+          "top1": 0.8737864077669902,
+          "top5": 0.941747572815534
+        },
+        "memory": {
+          "samples": 349,
+          "correct_top1": 267,
+          "correct_top5": 318,
+          "top1": 0.7650429799426934,
+          "top5": 0.9111747851002865
+        }
+      }
+    },
+    {
+      "evidence_weight": 1.0,
+      "validation": {
+        "clean": {
+          "samples": 60,
+          "correct_top1": 58,
+          "correct_top5": 60,
+          "top1": 0.9666666666666667,
+          "top5": 1.0
+        },
+        "loose": {
+          "samples": 103,
+          "correct_top1": 90,
+          "correct_top5": 97,
+          "top1": 0.8737864077669902,
+          "top5": 0.941747572815534
+        },
+        "memory": {
+          "samples": 349,
+          "correct_top1": 268,
+          "correct_top5": 318,
+          "top1": 0.7679083094555874,
+          "top5": 0.9111747851002865
+        }
+      }
+    },
+    {
+      "evidence_weight": 2.0,
+      "validation": {
+        "clean": {
+          "samples": 60,
+          "correct_top1": 59,
+          "correct_top5": 60,
+          "top1": 0.9833333333333333,
+          "top5": 1.0
+        },
+        "loose": {
+          "samples": 103,
+          "correct_top1": 90,
+          "correct_top5": 97,
+          "top1": 0.8737864077669902,
+          "top5": 0.941747572815534
+        },
+        "memory": {
+          "samples": 349,
+          "correct_top1": 268,
+          "correct_top5": 316,
+          "top1": 0.7679083094555874,
+          "top5": 0.9054441260744985
+        }
+      }
+    },
+    {
+      "evidence_weight": 4.0,
+      "validation": {
+        "clean": {
+          "samples": 60,
+          "correct_top1": 59,
+          "correct_top5": 59,
+          "top1": 0.9833333333333333,
+          "top5": 0.9833333333333333
+        },
+        "loose": {
+          "samples": 103,
+          "correct_top1": 89,
+          "correct_top5": 97,
+          "top1": 0.8640776699029126,
+          "top5": 0.941747572815534
+        },
+        "memory": {
+          "samples": 349,
+          "correct_top1": 268,
+          "correct_top5": 319,
+          "top1": 0.7679083094555874,
+          "top5": 0.9140401146131805
+        }
+      }
+    }
+  ],
+  "selected": {
+    "evidence_weight": 1.0,
+    "validation": {
+      "clean": {
+        "samples": 60,
+        "correct_top1": 58,
+        "correct_top5": 60,
+        "top1": 0.9666666666666667,
+        "top5": 1.0
+      },
+      "loose": {
+        "samples": 103,
+        "correct_top1": 90,
+        "correct_top5": 97,
+        "top1": 0.8737864077669902,
+        "top5": 0.941747572815534
+      },
+      "memory": {
+        "samples": 349,
+        "correct_top1": 268,
+        "correct_top5": 318,
+        "top1": 0.7679083094555874,
+        "top5": 0.9111747851002865
+      }
+    }
+  },
+  "native_supported": false,
+  "limits": "Fixed complete spelling baseline and identical natural128 lists from all60000 words. Every selected row counts, including missing targets. Prediction receives points and public candidate spellings only. No true target, visited count, writer identity, or difficulty enters inference. No benchmark or confirmation used. Subset scores are not full-development accuracy."
+}

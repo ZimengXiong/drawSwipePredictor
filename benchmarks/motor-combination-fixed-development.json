@@ -1,0 +1,37 @@
+{
+  "primary_sha256": "139e5072ce1c6cc55dc80f663269b8b7dc0401f9dbe57ecb9adef41b7ffcfadf",
+  "auxiliary_sha256": "f52d8dbf1f7a594f9ee537cd742135a2a0aec10b298355e8a268023aa46facac",
+  "fit_retriever_sha256": "57c94b93375c25c1818dda66972b4c86cd16990f84b9c433028b94d1c38e2f50",
+  "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "writer_selection": {
+    "difficulty": "memory",
+    "offset": 512,
+    "samples": 1024
+  },
+  "baseline_complete_top1": 0.6767578125,
+  "candidate_union_recall": 0.9931640625,
+  "trials": [
+    {
+      "motor_weight": 32.0,
+      "top1": 0.67578125,
+      "top5": 0.833984375,
+      "gained": 49,
+      "lost": 50
+    }
+  ],
+  "selected": {
+    "motor_weight": 32.0,
+    "top1": 0.67578125,
+    "top5": 0.833984375,
+    "gained": 49,
+    "lost": 50
+  },
+  "calibration_frozen": true,
+  "complete_selection_sha256": "9f2fed182c6e178352b33572acfa0bcb91ff6a57015c7c764fdc6b45a3807a61",
+  "motor_calibration_sha256": "9711159b3898d21ad9b2be51acb6f83f8bd0344278a9dde3807404e40b379aec",
+  "rules": "Union of naturally retrieved lists; absent motor evidence is neutral; no target insertion or alias credit",
+  "disposition": "Reject this fixed blend as a default: 49 answers improved and 50 worsened. Keep the word-and-character system unchanged.",
+  "limits": "Reused development data for component assessment; not a final benchmark or confirmation result."
+}

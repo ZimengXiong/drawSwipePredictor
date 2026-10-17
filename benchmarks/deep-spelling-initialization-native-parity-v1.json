@@ -1,0 +1,13 @@
+{
+  "test_data_used": false,
+  "decoder_checkpoint_sha256": "d06540bd32a3575abf092d131623e4d0826729852886761ba1f08721a4fe4fa9",
+  "source_manifest_sha256": "e77149fdda0c22ca19c2fd26e6cd2be7b7deef53e595908a11570a18ec8e0157",
+  "native_cli_sha256": "71d51b72b63062af8dd958000134b10cbe007a7dd16fec4b9c83786dcc34c215",
+  "expanded_weights_sha256": "43c19cf1d96626f88d55def527f9d95c0bcad33cd1f2f4c0c3b5d25a8030049d",
+  "layers": 9,
+  "decoder_parameters": 5422109,
+  "legacy_bytes_unchanged": true,
+  "cases": 5,
+  "verification_stdout": "hello: maximum spelling cost error 0.00001907; exact top-five ranking matches\nworld: maximum spelling cost error 0.00001240; exact top-five ranking matches\nkeyboard: maximum spelling cost error 0.00001526; exact top-five ranking matches\nlunchbox: maximum spelling cost error 0.00002289; exact top-five ranking matches\nalpacas: maximum spelling cost error 0.00001907; exact top-five ranking matches\n",
+  "limits": "Initialization and serialization parity only. Temporary fixture is removed. No trained gain, development evaluation, benchmark evaluation, or app promotion."
+}

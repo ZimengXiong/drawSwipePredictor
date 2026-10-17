@@ -1,0 +1,48 @@
+{
+  "kind": "Expanded word-space initialization, not a completed training result",
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "embedding": 512,
+  "encoder_parameters": 4056080,
+  "word_bank_parameters": 30720000,
+  "source_checkpoint_sha256": "1970620aa0ac8e31da5c5668d0c57902587e83afa8bed0afdd1bda618d362237",
+  "source_epoch": 91,
+  "source_architecture": "large",
+  "source_development": {
+    "clean": {
+      "samples": 1200,
+      "top1": 0.9591666460037231,
+      "top5": 0.9975000023841858
+    },
+    "loose": {
+      "samples": 2400,
+      "top1": 0.8662499785423279,
+      "top5": 0.9570833444595337
+    },
+    "memory": {
+      "samples": 8400,
+      "top1": 0.7165476083755493,
+      "top5": 0.885952353477478
+    }
+  },
+  "expansion_initial_validation": {
+    "clean": {
+      "samples": 1200,
+      "top1": 0.9591666460037231,
+      "top5": 0.9975000023841858
+    },
+    "loose": {
+      "samples": 2400,
+      "top1": 0.8662499785423279,
+      "top5": 0.9570833444595337
+    },
+    "memory": {
+      "samples": 8400,
+      "top1": 0.7165476083755493,
+      "top5": 0.885952353477478
+    }
+  },
+  "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "gradient_check": "Added word coordinates and added query coordinates receive finite nonzero gradients; initial candidate order matches original model in regression test.",
+  "limits": "Full declared development only. The 512-coordinate model retains the stronger initializer score but has not yet demonstrated a trained improvement. No native export, benchmark rerun, or blind confirmation."
+}

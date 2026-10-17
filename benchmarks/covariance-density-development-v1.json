@@ -1,0 +1,66 @@
+{
+  "encoder_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "bank_manifest_sha256": "99242d416e9a74532a5dde529b539bb8884871afa3ac70bdb9cec639a89efdca",
+  "test_data_used": false,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "full_vocabulary": 60000,
+  "selected": {
+    "regularizer": 1.0,
+    "covariance_fraction": 0.3,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9616666436195374,
+        "top5": 0.9983333349227905
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8641666769981384,
+        "top5": 0.949999988079071
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7132142782211304,
+        "top5": 0.881428599357605
+      }
+    }
+  },
+  "paired_memory": {
+    "gained": 250,
+    "lost": 224,
+    "net": 26
+  },
+  "rules": "All development rows; natural top128 from full vocabulary; exact full words. Fitted covariance uses independent references only. No target insertion.",
+  "retrieval_only_control": {
+    "regularizer": 0.25,
+    "covariance_fraction": 0.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9624999761581421,
+        "top5": 0.9975000023841858
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8637499809265137,
+        "top5": 0.9579166769981384
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7101190686225891,
+        "top5": 0.8745238184928894
+      }
+    }
+  },
+  "raw_report_sha256": "a55b7c7b693039f75aa61b3e277df9f2b40722cdc55067bfe058ff6dc750ada3",
+  "native_verified": false,
+  "promoted_to_app": false,
+  "disposition": "Small full-development gain; below the selected spelling ensemble. Retain as an experiment; no larger reference-bank build or native promotion."
+}

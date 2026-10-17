@@ -1,0 +1,83 @@
+{
+  "kind": "Equal-count independent synthetic reference-bank development experiment",
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "encoder_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "bank_sha256": "5d555475793386ba76ee4e5f619dea7d42d4744cd96d9063a96a6e2d7ca71133",
+  "references_per_word": 32,
+  "reference_drawings": 1920000,
+  "build_seed": 900433,
+  "build_manifest_sha256": "50b1daae6389120efc27168f556ebec6be9932b5161ab30e8cdc4de37d960806",
+  "raw_report_sha256": "a7f7feb561f861f0a01c6f4b5f691692eaf1246b3e7742e12369770c5d7c0bf6",
+  "baseline": {
+    "clean": {
+      "samples": 1200,
+      "top1": 0.9624999761581421,
+      "top5": 0.9975000023841858
+    },
+    "loose": {
+      "samples": 2400,
+      "top1": 0.8637499809265137,
+      "top5": 0.9579166769981384
+    },
+    "memory": {
+      "samples": 8400,
+      "top1": 0.7101190686225891,
+      "top5": 0.8745238184928894
+    }
+  },
+  "selected": {
+    "temperature": 0.0,
+    "reference_fraction": 0.1,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9624999761581421,
+        "top5": 0.9975000023841858
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8654166460037231,
+        "top5": 0.9579166769981384
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7123809456825256,
+        "top5": 0.8801190257072449
+      }
+    }
+  },
+  "paired_memory": {
+    "gained": 64,
+    "lost": 45,
+    "net": 19
+  },
+  "calibration_grid": {
+    "temperatures": [
+      0.0,
+      0.005,
+      0.01,
+      0.03,
+      0.1
+    ],
+    "reference_fractions": [
+      0.0,
+      0.1,
+      0.25,
+      0.5,
+      0.75,
+      1.0
+    ]
+  },
+  "policy": "Same reference count and strength mixture for all 60000 words, including short and long words. Bank construction uses no development drawings. Evaluation uses only naturally retrieved candidates.",
+  "decision": "Keep experimental. Modest gain over its frozen baseline; below the best balanced-real continuation. No native export or bundled-model change.",
+  "limits": "Settings selected on this same development corpus; no benchmark or blind-confirmation claim."
+}

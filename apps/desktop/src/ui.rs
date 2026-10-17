@@ -10,6 +10,7 @@ pub async fn run_app<P: Predictor + Send>(mut predictor: P, backend_name: &str) 
     let mut drawing = false;
     let mut predictions: Vec<Prediction> = Vec::new();
     let mut selected: usize = 0;
+    let mut show_keyboard = !matches!(backend_name, "Memory" | "Learned");
 
     loop {
         clear_background(Color::from_rgba(30, 30, 35, 255));
@@ -36,11 +37,15 @@ pub async fn run_app<P: Predictor + Send>(mut predictor: P, backend_name: &str) 
 
         if drawing && is_mouse_button_released(MouseButton::Left) {
             drawing = false;
+            path.push((mouse_x as f64, mouse_y as f64));
             if path.len() >= 2 {
                 predictions = predictor.predict(&path, 10);
             }
         }
 
+        if is_key_pressed(KeyCode::H) {
+            show_keyboard = !show_keyboard;
+        }
         if is_key_pressed(KeyCode::Space) {
             path.clear();
             predictions.clear();
@@ -74,15 +79,15 @@ pub async fn run_app<P: Predictor + Send>(mut predictor: P, backend_name: &str) 
         let instructions = if drawing {
             "Drawing... release to predict"
         } else if path.is_empty() {
-            "Draw a swipe pattern | Space=clear | Up/Down=select"
+            "Draw a word from memory | Space: clear | H: keyboard"
         } else {
-            "Space=clear | Up/Down=select | Draw again for new word"
+            "Space: clear | Up/Down: alternatives | H: keyboard"
         };
         draw_text(instructions, 20.0, screen_height() - 20.0, 18.0, GRAY);
         draw_text(&format!("Backend: {}", backend_name), 20.0, screen_height() - 40.0, 16.0,
             Color::from_rgba(120, 180, 220, 255));
 
-        draw_keyboard_ghost();
+        if show_keyboard { draw_keyboard_ghost(); }
 
         next_frame().await
     }
@@ -149,12 +154,13 @@ fn draw_breakdown_panel(pred: &Prediction, backend: &str) {
     if backend == "DTW" {
         let b = &pred.breakdown;
         let items = [
-            ("Shape (20%)", b.shape, 0.20),
-            ("Angles (15%)", b.angles, 0.15),
-            ("Displacements (15%)", b.displacements, 0.15),
+            ("Shape (15%)", b.shape, 0.15),
+            ("Location (15%)", b.location, 0.15),
+            ("Angles (12%)", b.angles, 0.12),
+            ("Displacements (12%)", b.displacements, 0.12),
             ("Start Angle (15%)", b.start_angle, 0.15),
-            ("Turns (10%)", b.turns, 0.10),
-            ("Seg Ratios (10%)", b.segment_ratios, 0.10),
+            ("Turns (8%)", b.turns, 0.08),
+            ("Seg Ratios (8%)", b.segment_ratios, 0.08),
             ("Histogram (5%)", b.histogram, 0.05),
             ("End Vector (10%)", b.end_vector, 0.10),
         ];
@@ -170,6 +176,17 @@ fn draw_breakdown_panel(pred: &Prediction, backend: &str) {
             draw_rectangle(box_x + 210.0, y - 9.0, bar_w, 10.0,
                 Color::from_rgba(100, 150, 200, 200));
             draw_text(&format!("{:.4}", contribution), box_x + 295.0, y, 12.0, WHITE);
+        }
+    } else if matches!(backend, "Memory" | "Learned") {
+        let lines = [
+            "Draw the motion you remember.",
+            "Draw anywhere, at any size.",
+            "Use Up/Down to inspect alternatives.",
+            "Lower rating means a closer match.",
+            "Scores are distances, not probabilities.",
+        ];
+        for (i, line) in lines.iter().enumerate() {
+            draw_text(line, box_x + 10.0, box_y + 50.0 + i as f32 * 24.0, 16.0, GRAY);
         }
     } else {
         draw_text("CTC decodes sequence directly; breakdown unavailable.",

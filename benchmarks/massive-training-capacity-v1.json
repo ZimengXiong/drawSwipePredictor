@@ -1,0 +1,147 @@
+{
+  "checkpoint_sha256": "03b62133f5b9337393f00eaf00ecb9d2141188fb1bdf64b31c14946a3ed578f0",
+  "epoch": 10,
+  "architecture": "massive",
+  "training_corpus": {
+    "samples": 1000000,
+    "vocabulary": 60000,
+    "seed": 700001,
+    "writer_start": 700003100003,
+    "writer_end": 700004100003,
+    "sha256": "557eb33b55d76c7c0b27b792f26b17b163006ca1ba13435a9a4e62436d6ce235"
+  },
+  "samples": 32,
+  "loss": 0.8091921210289001,
+  "blocks": [
+    {
+      "block": 0,
+      "residual_rms": 0.169240802526474,
+      "input_rms": 0.5168994069099426,
+      "gradient_norm": 4.469955135636919,
+      "added_hidden_output_gradient_norm": 3.910896062850952,
+      "added_hidden_output_weight_norm": 0.27479052543640137
+    },
+    {
+      "block": 1,
+      "residual_rms": 0.14715778827667236,
+      "input_rms": 0.4610888957977295,
+      "gradient_norm": 4.4382796989821625,
+      "added_hidden_output_gradient_norm": 3.97575044631958,
+      "added_hidden_output_weight_norm": 0.3085419833660126
+    },
+    {
+      "block": 2,
+      "residual_rms": 0.12973244488239288,
+      "input_rms": 0.43386465311050415,
+      "gradient_norm": 3.507157042615176,
+      "added_hidden_output_gradient_norm": 3.0779612064361572,
+      "added_hidden_output_weight_norm": 0.3438052535057068
+    },
+    {
+      "block": 3,
+      "residual_rms": 0.15046681463718414,
+      "input_rms": 0.4229908883571625,
+      "gradient_norm": 3.436192323454701,
+      "added_hidden_output_gradient_norm": 3.0021920204162598,
+      "added_hidden_output_weight_norm": 0.3646107614040375
+    },
+    {
+      "block": 4,
+      "residual_rms": 0.1750820279121399,
+      "input_rms": 0.42435145378112793,
+      "gradient_norm": 4.2291951327313315,
+      "added_hidden_output_gradient_norm": 3.8255395889282227,
+      "added_hidden_output_weight_norm": 0.3279641270637512
+    },
+    {
+      "block": 5,
+      "residual_rms": 0.18247854709625244,
+      "input_rms": 0.43655067682266235,
+      "gradient_norm": 4.785662265998106,
+      "added_hidden_output_gradient_norm": 4.31138277053833,
+      "added_hidden_output_weight_norm": 0.345424085855484
+    },
+    {
+      "block": 6,
+      "residual_rms": 0.00043569490662775934,
+      "input_rms": 0.47527995705604553,
+      "gradient_norm": 0.4672758956343184,
+      "added_hidden_output_gradient_norm": 0.006277885753661394,
+      "added_hidden_output_weight_norm": 6.241567134857178
+    },
+    {
+      "block": 7,
+      "residual_rms": 0.00043069268576800823,
+      "input_rms": 0.47524625062942505,
+      "gradient_norm": 0.48269236557693024,
+      "added_hidden_output_gradient_norm": 0.00646175304427743,
+      "added_hidden_output_weight_norm": 6.239217281341553
+    },
+    {
+      "block": 8,
+      "residual_rms": 0.0004367935471236706,
+      "input_rms": 0.4752103388309479,
+      "gradient_norm": 0.4701600664990177,
+      "added_hidden_output_gradient_norm": 0.005399084649980068,
+      "added_hidden_output_weight_norm": 6.238928318023682
+    },
+    {
+      "block": 9,
+      "residual_rms": 0.00043462985195219517,
+      "input_rms": 0.47518351674079895,
+      "gradient_norm": 0.4909407739628049,
+      "added_hidden_output_gradient_norm": 0.005783104803413153,
+      "added_hidden_output_weight_norm": 6.239872932434082
+    },
+    {
+      "block": 10,
+      "residual_rms": 0.00043584435479715466,
+      "input_rms": 0.4751553535461426,
+      "gradient_norm": 0.4815152408081583,
+      "added_hidden_output_gradient_norm": 0.006736164912581444,
+      "added_hidden_output_weight_norm": 6.2406325340271
+    },
+    {
+      "block": 11,
+      "residual_rms": 0.0004205749719403684,
+      "input_rms": 0.47512030601501465,
+      "gradient_norm": 0.5128154804816014,
+      "added_hidden_output_gradient_norm": 0.005292419344186783,
+      "added_hidden_output_weight_norm": 6.239851474761963
+    },
+    {
+      "block": 12,
+      "residual_rms": 0.00040110203553922474,
+      "input_rms": 0.47509506344795227,
+      "gradient_norm": 0.48939450803554124,
+      "added_hidden_output_gradient_norm": 0.0063496981747448444,
+      "added_hidden_output_weight_norm": 6.244754314422607
+    },
+    {
+      "block": 13,
+      "residual_rms": 0.00040962587809190154,
+      "input_rms": 0.475081205368042,
+      "gradient_norm": 0.5040194124666549,
+      "added_hidden_output_gradient_norm": 0.0065470472909510136,
+      "added_hidden_output_weight_norm": 6.241372108459473
+    },
+    {
+      "block": 14,
+      "residual_rms": 0.00042290534474886954,
+      "input_rms": 0.47507330775260925,
+      "gradient_norm": 0.4905962541989474,
+      "added_hidden_output_gradient_norm": 0.00757711473852396,
+      "added_hidden_output_weight_norm": 6.243587493896484
+    },
+    {
+      "block": 15,
+      "residual_rms": 0.00043006037594750524,
+      "input_rms": 0.4750497043132782,
+      "gradient_norm": 0.4881458807029948,
+      "added_hidden_output_gradient_norm": 0.0064139701426029205,
+      "added_hidden_output_weight_norm": 6.248380184173584
+    }
+  ],
+  "test_data_used": false,
+  "limits": "Training-only activation and gradient diagnostic in evaluation mode; no accuracy estimate or parameter update."
+}

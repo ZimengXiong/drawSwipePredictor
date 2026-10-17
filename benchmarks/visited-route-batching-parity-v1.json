@@ -1,0 +1,10 @@
+{
+  "test_data_used": false,
+  "samples": 512,
+  "memory_samples": 349,
+  "same_all_trial_counts": true,
+  "maximum_cost_error": 1.1444091796875e-05,
+  "single_query_report_sha256": "d584b616d0a689ee4fdfcf059835e9540f65229b7a9de2894bf0012e225d122d",
+  "batched_report_sha256": "6dddfd764047257c37c4fc2c23b19695d811e55a75cc5ce16da9ff49d12a8526",
+  "limits": "Development-subset implementation parity only; not full-development or benchmark accuracy."
+}

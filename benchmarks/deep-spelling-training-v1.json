@@ -1,0 +1,234 @@
+{
+  "test_data_used": false,
+  "run": "autoregressive-deep-v1",
+  "run_manifest_sha256": "47eabf4d5251d21e939d369bce30eb4ed1dd03635da90d08d018b696192945b4",
+  "decoder_layers": 9,
+  "decoder_parameters": 5422109,
+  "context_encoder_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "frozen_retrieval_sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+  "decoder_initialization_sha256": "d06540bd32a3575abf092d131623e4d0826729852886761ba1f08721a4fe4fa9",
+  "train_corpora": [
+    {
+      "seed": 700001,
+      "samples": 1000000,
+      "sha256": "557eb33b55d76c7c0b27b792f26b17b163006ca1ba13435a9a4e62436d6ce235"
+    },
+    {
+      "seed": 700011,
+      "samples": 1000000,
+      "sha256": "0d91bdd336343ee335f602485e29b16b9b279bd1a3cc8da667f5b204e83c3a13"
+    },
+    {
+      "seed": 700012,
+      "samples": 1000000,
+      "sha256": "5e39835d5841fc998ca26bac8a5607b6c77b882c147f9cbec58e0f70c8d7a466"
+    },
+    {
+      "seed": 700013,
+      "samples": 1000000,
+      "sha256": "981b463e94de836a0e55b8c08de99c5ebfe008eddbc505e032bdc34a3355b5b2"
+    },
+    {
+      "seed": 700014,
+      "samples": 1000000,
+      "sha256": "3a9c0f9ebfd76c32349491f0be34375337eae6a56c79c60848f7b9fbfcd1f13c"
+    },
+    {
+      "seed": 700015,
+      "samples": 1000000,
+      "sha256": "cfc9d0626aa407ee56669450c628ae8785ae71b2f00e265ca5a659319ef440cf"
+    },
+    {
+      "seed": 700016,
+      "samples": 1000000,
+      "sha256": "57db41ac3cc96903bf60598a72941818e92b6d6460643d72d66f09b7706fc730"
+    },
+    {
+      "seed": 700017,
+      "samples": 1000000,
+      "sha256": "54299022c791b81aa93b1defe556ae42093024781061da84a0ea9a62d9b74c74"
+    },
+    {
+      "seed": 700018,
+      "samples": 1000000,
+      "sha256": "7434c5face1e4328d7d59b93c77bfc3b3f6ad2dba478d071c70ad8869b61258f"
+    },
+    {
+      "seed": 700019,
+      "samples": 1000000,
+      "sha256": "097413b791e4a7e26f6ce12f690b2125016e9bf3a06cc260c47cf4ce684f61c7"
+    },
+    {
+      "seed": 700020,
+      "samples": 1000000,
+      "sha256": "137f01942c269ee7d029e74ad50ce9ad613e39589d46ffeab58a27efd9c88fe6"
+    },
+    {
+      "seed": 700021,
+      "samples": 1000000,
+      "sha256": "17b8a8d8cfad1cf15d22b8b1a8e4f1db8939c9ae169a6682a5e0f044177c6ac7"
+    },
+    {
+      "seed": 700022,
+      "samples": 1000000,
+      "sha256": "8c6b12466685eaac6159d6bcff4d7f6878de946f1011abeda07e5f9c736afab3"
+    },
+    {
+      "seed": 700023,
+      "samples": 1000000,
+      "sha256": "2cc4c5b4a7ba792ce867ff63eb0c0cbf687a9dd20d6164cd743be1ee5df6df47"
+    },
+    {
+      "seed": 700024,
+      "samples": 1000000,
+      "sha256": "e61d9e8b9039ce6e43ba60343c288497c53a30f46ec74cf00f0f5886b241f925"
+    },
+    {
+      "seed": 700025,
+      "samples": 1000000,
+      "sha256": "7e446223af471b35356a55a24435e287da14fd06ec07deb5c41dd3e514f0e88e"
+    },
+    {
+      "seed": 700026,
+      "samples": 1000000,
+      "sha256": "6d4f1dd05e9eb08236e3bd7087a8b632383aa31f8a1411d6948659b3ef886678"
+    },
+    {
+      "seed": 700027,
+      "samples": 1000000,
+      "sha256": "f670cd37d8cc8f2e1bf51107015b5ded90c1babc36c0c2609f9bb0c1e748cb16"
+    },
+    {
+      "seed": 700028,
+      "samples": 1000000,
+      "sha256": "e69948ea9a868e81a87c9f50f75c178f16d0ad209b890c97a8d3117321aab2d5"
+    },
+    {
+      "seed": 700029,
+      "samples": 1000000,
+      "sha256": "37638de7e17a95f26184612211d2121c56f27537777a15ee09f680e095bf8185"
+    },
+    {
+      "seed": 700030,
+      "samples": 1000000,
+      "sha256": "5dbd495dfb90f876985778f4d86cf8a94fa2d322bd59f92e8b7b9a13c3a584ff"
+    },
+    {
+      "seed": 700031,
+      "samples": 1000000,
+      "sha256": "52c9585124ec1bdbaec0712e492b1cdd622d62a6434b2e49b99a21825a0bf3dc"
+    },
+    {
+      "seed": 700032,
+      "samples": 1000000,
+      "sha256": "1e88ef73ef9bb797be80b244fb614c011200566b475735ec1403ccea3b77ad1a"
+    },
+    {
+      "seed": 700033,
+      "samples": 1000000,
+      "sha256": "8d444418be6b223db91c8cc46cdc9c63149118403e8be0be4755f3017ce63d22"
+    },
+    {
+      "seed": 700034,
+      "samples": 1000000,
+      "sha256": "c12058b184c2c76fd2fece355ce4c48a0724591166a506d5ff3c0347df16ec96"
+    },
+    {
+      "seed": 700035,
+      "samples": 1000000,
+      "sha256": "dc3d2eba722174928a5728528921b81463cc7674fdc3674881d46e3b10387749"
+    },
+    {
+      "seed": 700036,
+      "samples": 1000000,
+      "sha256": "bac79de5ebd00e55167707d6b4e9b5ac9518f326a7b3eae75aa4fd667191fe08"
+    },
+    {
+      "seed": 700037,
+      "samples": 1000000,
+      "sha256": "f207de086ec47864a4ab68f4a055684878f09f018120bb46390a1394c290619b"
+    },
+    {
+      "seed": 700038,
+      "samples": 1000000,
+      "sha256": "8ee337b4553b38653e2e3fc94e6775bf8bac882ddc69e4bfdfcaaa0942f7999a"
+    },
+    {
+      "seed": 700039,
+      "samples": 1000000,
+      "sha256": "58281ad429dd467e164c6e64fbc94f53fb74a0f1fb00dbd54142f836811cf1e9"
+    },
+    {
+      "seed": 700040,
+      "samples": 1000000,
+      "sha256": "f56091991ffcbf2824dc4d420bf2b80d25679f490faee68b0d9b09253f04d5e7"
+    }
+  ],
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "arguments": {
+    "checkpoint": "checkpoints/proxy-giant-strong-init.pt",
+    "output": "checkpoints/autoregressive-deep-v1",
+    "extra_train": [
+      "data/memory-proxy/train-700011.bin",
+      "data/memory-proxy/train-700012.bin",
+      "data/memory-proxy/train-700013.bin",
+      "data/memory-proxy/train-700014.bin",
+      "data/memory-proxy/train-700015.bin",
+      "data/memory-proxy/train-700016.bin",
+      "data/memory-proxy/train-700017.bin",
+      "data/memory-proxy/train-700018.bin",
+      "data/memory-proxy/train-700019.bin",
+      "data/memory-proxy/train-700020.bin",
+      "data/memory-proxy-exact-v2/train-700021.bin",
+      "data/memory-proxy-exact-v2/train-700022.bin",
+      "data/memory-proxy-exact-v2/train-700023.bin",
+      "data/memory-proxy-exact-v2/train-700024.bin",
+      "data/memory-proxy-exact-v2/train-700025.bin",
+      "data/memory-proxy-exact-v2/train-700026.bin",
+      "data/memory-proxy-exact-v2/train-700027.bin",
+      "data/memory-proxy-exact-v2/train-700028.bin",
+      "data/memory-proxy-exact-v2/train-700029.bin",
+      "data/memory-proxy-exact-v2/train-700030.bin",
+      "data/memory-proxy-exact-v2/train-700031.bin",
+      "data/memory-proxy-exact-v2/train-700032.bin",
+      "data/memory-proxy-exact-v2/train-700033.bin",
+      "data/memory-proxy-exact-v2/train-700034.bin",
+      "data/memory-proxy-exact-v2/train-700035.bin",
+      "data/memory-proxy-exact-v2/train-700036.bin",
+      "data/memory-proxy-exact-v2/train-700037.bin",
+      "data/memory-proxy-exact-v2/train-700038.bin",
+      "data/memory-proxy-exact-v2/train-700039.bin",
+      "data/memory-proxy-exact-v2/train-700040.bin"
+    ],
+    "epochs": 120,
+    "steps": 200,
+    "batch": 32,
+    "evaluate_every": 5,
+    "validation_samples": 3000,
+    "seed": 900647,
+    "validation_seed": 900419,
+    "init_decoder": "checkpoints/autoregressive-ranking-full-probe-v1.pt",
+    "retrieval_checkpoint": "checkpoints/exact-low-probe-v1.pt",
+    "decoder_layers": 9,
+    "ranking_candidates": 16,
+    "learning_rate": 5e-05,
+    "fine_tune_encoder": false,
+    "encoder_learning_rate": 1e-05,
+    "fresh_fraction": 0.0,
+    "real_train": "/Users/xzm/Projects/drawSwipePredictor/training/data/futo-large/train.jsonl"
+  },
+  "source_sha256": {
+    "autoregressive_model.py": "70d8b89f8681a28f630193876ce1368b838f040b6ebeafd325233f09d272d93c",
+    "train_autoregressive.py": "592f2e01b78403eb9073c42e3571d070de6aded30dc93b2f37e771777a500bac",
+    "motor_sampler.py": "d470f6d3faed5d20a8558fc66110eb75cbf76dcf0cdad2af5d5e8e796e8ad75d"
+  },
+  "git_commit": "da586a7f721ff9382186c757a4df4a2481abf789",
+  "limits": "Live training. Fixed 3,000-row development subset, not full 8,400 hard development or benchmark. Adds depth and stronger negative mining; no isolated causal effect or trained accuracy gain claimed. Initialization native parity is recorded separately."
+}

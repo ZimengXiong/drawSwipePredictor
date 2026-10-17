@@ -1,0 +1,109 @@
+{
+  "primary_sha256": "139e5072ce1c6cc55dc80f663269b8b7dc0401f9dbe57ecb9adef41b7ffcfadf",
+  "auxiliary_sha256": "f52d8dbf1f7a594f9ee537cd742135a2a0aec10b298355e8a268023aa46facac",
+  "fit_retriever_sha256": "57c94b93375c25c1818dda66972b4c86cd16990f84b9c433028b94d1c38e2f50",
+  "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "writer_selection": {
+    "difficulty": "memory",
+    "offset": 0,
+    "samples": 512
+  },
+  "baseline_complete_top1": 0.619140625,
+  "candidate_union_recall": 0.982421875,
+  "trials": [
+    {
+      "motor_weight": 0.0,
+      "top1": 0.619140625,
+      "top5": 0.837890625,
+      "gained": 0,
+      "lost": 0
+    },
+    {
+      "motor_weight": 0.25,
+      "top1": 0.6171875,
+      "top5": 0.837890625,
+      "gained": 0,
+      "lost": 1
+    },
+    {
+      "motor_weight": 0.5,
+      "top1": 0.619140625,
+      "top5": 0.837890625,
+      "gained": 1,
+      "lost": 1
+    },
+    {
+      "motor_weight": 1.0,
+      "top1": 0.619140625,
+      "top5": 0.837890625,
+      "gained": 1,
+      "lost": 1
+    },
+    {
+      "motor_weight": 2.0,
+      "top1": 0.626953125,
+      "top5": 0.849609375,
+      "gained": 5,
+      "lost": 1
+    },
+    {
+      "motor_weight": 4.0,
+      "top1": 0.630859375,
+      "top5": 0.859375,
+      "gained": 8,
+      "lost": 2
+    },
+    {
+      "motor_weight": 8.0,
+      "top1": 0.6328125,
+      "top5": 0.865234375,
+      "gained": 12,
+      "lost": 5
+    },
+    {
+      "motor_weight": 16.0,
+      "top1": 0.654296875,
+      "top5": 0.857421875,
+      "gained": 25,
+      "lost": 7
+    },
+    {
+      "motor_weight": 32.0,
+      "top1": 0.662109375,
+      "top5": 0.84765625,
+      "gained": 34,
+      "lost": 12
+    },
+    {
+      "motor_weight": 64.0,
+      "top1": 0.658203125,
+      "top5": 0.828125,
+      "gained": 40,
+      "lost": 20
+    },
+    {
+      "motor_weight": 128.0,
+      "top1": 0.65625,
+      "top5": 0.814453125,
+      "gained": 43,
+      "lost": 24
+    }
+  ],
+  "selected": {
+    "motor_weight": 32.0,
+    "top1": 0.662109375,
+    "top5": 0.84765625,
+    "gained": 34,
+    "lost": 12
+  },
+  "calibration_frozen": false,
+  "complete_selection_sha256": "9f2fed182c6e178352b33572acfa0bcb91ff6a57015c7c764fdc6b45a3807a61",
+  "motor_calibration_sha256": "9711159b3898d21ad9b2be51acb6f83f8bd0344278a9dde3807404e40b379aec",
+  "rules": "Union of naturally retrieved lists; absent motor evidence is neutral; no target insertion or alias credit",
+  "limits": [
+    "Blend weight selected on 512 hard development drawings; not full-development or benchmark accuracy.",
+    "The next development slice must use this weight and these source checkpoints unchanged."
+  ]
+}

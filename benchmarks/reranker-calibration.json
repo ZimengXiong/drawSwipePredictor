@@ -1,0 +1,434 @@
+{
+  "policy": "Preserve neural matches with cosine distance below 0.08; extend the fallback using validation only",
+  "selection": "Mean top1 across five sources, with clean and canonical accuracy within 0.2 percentage points of baseline",
+  "uncalibrated_ranker_sha256": "fa28069c6c65f3d401f536d1dc73569e346acff9baf1403a6980009069b98a63",
+  "baseline": {
+    "canonical": {
+      "top1": 0.8536666666666667,
+      "top5": 0.934
+    },
+    "distorted_real": {
+      "top1": 0.725,
+      "top5": 0.8985
+    },
+    "online": {
+      "top1": 0.6435,
+      "top5": 0.828
+    },
+    "real": {
+      "top1": 0.8355,
+      "top5": 0.9455
+    },
+    "synthetic": {
+      "top1": 0.6405,
+      "top5": 0.789
+    },
+    "synthetic_clean": {
+      "top1": 0.9405646359583952,
+      "top5": 0.9881129271916791
+    },
+    "synthetic_loose": {
+      "top1": 0.6737804878048781,
+      "top5": 0.8353658536585366
+    },
+    "synthetic_memory": {
+      "top1": 0.30700447093889716,
+      "top5": 0.5439642324888226
+    }
+  },
+  "selected": {
+    "trust_distance": 0.08,
+    "score": 0.7709666666666666,
+    "eligible": true,
+    "validation": {
+      "canonical": {
+        "top1": 0.8563333333333333,
+        "top5": 0.935
+      },
+      "distorted_real": {
+        "top1": 0.74,
+        "top5": 0.904
+      },
+      "online": {
+        "top1": 0.71,
+        "top5": 0.86
+      },
+      "real": {
+        "top1": 0.846,
+        "top5": 0.9495
+      },
+      "synthetic": {
+        "top1": 0.7025,
+        "top5": 0.8245
+      },
+      "synthetic_clean": {
+        "top1": 0.9405646359583952,
+        "top5": 0.9881129271916791
+      },
+      "synthetic_loose": {
+        "top1": 0.7103658536585366,
+        "top5": 0.8445121951219512
+      },
+      "synthetic_memory": {
+        "top1": 0.45603576751117736,
+        "top5": 0.6408345752608048
+      }
+    }
+  },
+  "trials": [
+    {
+      "trust_distance": 0.08,
+      "score": 0.7709666666666666,
+      "eligible": true,
+      "validation": {
+        "canonical": {
+          "top1": 0.8563333333333333,
+          "top5": 0.935
+        },
+        "distorted_real": {
+          "top1": 0.74,
+          "top5": 0.904
+        },
+        "online": {
+          "top1": 0.71,
+          "top5": 0.86
+        },
+        "real": {
+          "top1": 0.846,
+          "top5": 0.9495
+        },
+        "synthetic": {
+          "top1": 0.7025,
+          "top5": 0.8245
+        },
+        "synthetic_clean": {
+          "top1": 0.9405646359583952,
+          "top5": 0.9881129271916791
+        },
+        "synthetic_loose": {
+          "top1": 0.7103658536585366,
+          "top5": 0.8445121951219512
+        },
+        "synthetic_memory": {
+          "top1": 0.45603576751117736,
+          "top5": 0.6408345752608048
+        }
+      }
+    },
+    {
+      "trust_distance": 0.1,
+      "score": 0.7703666666666666,
+      "eligible": true,
+      "validation": {
+        "canonical": {
+          "top1": 0.8563333333333333,
+          "top5": 0.9346666666666666
+        },
+        "distorted_real": {
+          "top1": 0.7405,
+          "top5": 0.9035
+        },
+        "online": {
+          "top1": 0.7065,
+          "top5": 0.8595
+        },
+        "real": {
+          "top1": 0.8445,
+          "top5": 0.9495
+        },
+        "synthetic": {
+          "top1": 0.704,
+          "top5": 0.824
+        },
+        "synthetic_clean": {
+          "top1": 0.9405646359583952,
+          "top5": 0.9881129271916791
+        },
+        "synthetic_loose": {
+          "top1": 0.7134146341463414,
+          "top5": 0.8429878048780488
+        },
+        "synthetic_memory": {
+          "top1": 0.45752608047690013,
+          "top5": 0.6408345752608048
+        }
+      }
+    },
+    {
+      "trust_distance": 0.12,
+      "score": 0.7696333333333334,
+      "eligible": true,
+      "validation": {
+        "canonical": {
+          "top1": 0.8556666666666667,
+          "top5": 0.9343333333333333
+        },
+        "distorted_real": {
+          "top1": 0.741,
+          "top5": 0.9025
+        },
+        "online": {
+          "top1": 0.7035,
+          "top5": 0.856
+        },
+        "real": {
+          "top1": 0.845,
+          "top5": 0.95
+        },
+        "synthetic": {
+          "top1": 0.703,
+          "top5": 0.8225
+        },
+        "synthetic_clean": {
+          "top1": 0.9405646359583952,
+          "top5": 0.9881129271916791
+        },
+        "synthetic_loose": {
+          "top1": 0.711890243902439,
+          "top5": 0.8429878048780488
+        },
+        "synthetic_memory": {
+          "top1": 0.45603576751117736,
+          "top5": 0.6363636363636364
+        }
+      }
+    },
+    {
+      "trust_distance": 0.15,
+      "score": 0.7672666666666667,
+      "eligible": true,
+      "validation": {
+        "canonical": {
+          "top1": 0.8553333333333333,
+          "top5": 0.934
+        },
+        "distorted_real": {
+          "top1": 0.7385,
+          "top5": 0.903
+        },
+        "online": {
+          "top1": 0.698,
+          "top5": 0.854
+        },
+        "real": {
+          "top1": 0.8435,
+          "top5": 0.95
+        },
+        "synthetic": {
+          "top1": 0.701,
+          "top5": 0.8215
+        },
+        "synthetic_clean": {
+          "top1": 0.9405646359583952,
+          "top5": 0.9881129271916791
+        },
+        "synthetic_loose": {
+          "top1": 0.7073170731707317,
+          "top5": 0.8429878048780488
+        },
+        "synthetic_memory": {
+          "top1": 0.45454545454545453,
+          "top5": 0.6333830104321908
+        }
+      }
+    },
+    {
+      "trust_distance": 0.2,
+      "score": 0.7626999999999999,
+      "eligible": true,
+      "validation": {
+        "canonical": {
+          "top1": 0.855,
+          "top5": 0.934
+        },
+        "distorted_real": {
+          "top1": 0.7385,
+          "top5": 0.9015
+        },
+        "online": {
+          "top1": 0.6855,
+          "top5": 0.8495
+        },
+        "real": {
+          "top1": 0.844,
+          "top5": 0.9495
+        },
+        "synthetic": {
+          "top1": 0.6905,
+          "top5": 0.817
+        },
+        "synthetic_clean": {
+          "top1": 0.9405646359583952,
+          "top5": 0.9881129271916791
+        },
+        "synthetic_loose": {
+          "top1": 0.6935975609756098,
+          "top5": 0.836890243902439
+        },
+        "synthetic_memory": {
+          "top1": 0.4366616989567809,
+          "top5": 0.6259314456035767
+        }
+      }
+    },
+    {
+      "trust_distance": 0.3,
+      "score": 0.7488333333333334,
+      "eligible": true,
+      "validation": {
+        "canonical": {
+          "top1": 0.8536666666666667,
+          "top5": 0.934
+        },
+        "distorted_real": {
+          "top1": 0.733,
+          "top5": 0.9
+        },
+        "online": {
+          "top1": 0.6565,
+          "top5": 0.835
+        },
+        "real": {
+          "top1": 0.8355,
+          "top5": 0.948
+        },
+        "synthetic": {
+          "top1": 0.6655,
+          "top5": 0.803
+        },
+        "synthetic_clean": {
+          "top1": 0.9405646359583952,
+          "top5": 0.9881129271916791
+        },
+        "synthetic_loose": {
+          "top1": 0.6814024390243902,
+          "top5": 0.836890243902439
+        },
+        "synthetic_memory": {
+          "top1": 0.3740685543964232,
+          "top5": 0.5842026825633383
+        }
+      }
+    },
+    {
+      "trust_distance": 0.4,
+      "score": 0.7431333333333333,
+      "eligible": true,
+      "validation": {
+        "canonical": {
+          "top1": 0.8536666666666667,
+          "top5": 0.934
+        },
+        "distorted_real": {
+          "top1": 0.73,
+          "top5": 0.899
+        },
+        "online": {
+          "top1": 0.6465,
+          "top5": 0.8305
+        },
+        "real": {
+          "top1": 0.8355,
+          "top5": 0.947
+        },
+        "synthetic": {
+          "top1": 0.65,
+          "top5": 0.7935
+        },
+        "synthetic_clean": {
+          "top1": 0.9405646359583952,
+          "top5": 0.9881129271916791
+        },
+        "synthetic_loose": {
+          "top1": 0.6737804878048781,
+          "top5": 0.836890243902439
+        },
+        "synthetic_memory": {
+          "top1": 0.3353204172876304,
+          "top5": 0.555886736214605
+        }
+      }
+    },
+    {
+      "trust_distance": 0.6,
+      "score": 0.7400333333333333,
+      "eligible": true,
+      "validation": {
+        "canonical": {
+          "top1": 0.8536666666666667,
+          "top5": 0.934
+        },
+        "distorted_real": {
+          "top1": 0.725,
+          "top5": 0.8985
+        },
+        "online": {
+          "top1": 0.6445,
+          "top5": 0.828
+        },
+        "real": {
+          "top1": 0.8355,
+          "top5": 0.9455
+        },
+        "synthetic": {
+          "top1": 0.6415,
+          "top5": 0.79
+        },
+        "synthetic_clean": {
+          "top1": 0.9405646359583952,
+          "top5": 0.9881129271916791
+        },
+        "synthetic_loose": {
+          "top1": 0.6737804878048781,
+          "top5": 0.8353658536585366
+        },
+        "synthetic_memory": {
+          "top1": 0.30998509687034276,
+          "top5": 0.5469448584202683
+        }
+      }
+    },
+    {
+      "trust_distance": 1.0,
+      "score": 0.7396333333333333,
+      "eligible": true,
+      "validation": {
+        "canonical": {
+          "top1": 0.8536666666666667,
+          "top5": 0.934
+        },
+        "distorted_real": {
+          "top1": 0.725,
+          "top5": 0.8985
+        },
+        "online": {
+          "top1": 0.6435,
+          "top5": 0.828
+        },
+        "real": {
+          "top1": 0.8355,
+          "top5": 0.9455
+        },
+        "synthetic": {
+          "top1": 0.6405,
+          "top5": 0.789
+        },
+        "synthetic_clean": {
+          "top1": 0.9405646359583952,
+          "top5": 0.9881129271916791
+        },
+        "synthetic_loose": {
+          "top1": 0.6737804878048781,
+          "top5": 0.8353658536585366
+        },
+        "synthetic_memory": {
+          "top1": 0.30700447093889716,
+          "top5": 0.5439642324888226
+        }
+      }
+    }
+  ],
+  "test_data_used": false,
+  "validation_sha256": "209e3e9871ee8e5f46e781af49ea2b27b3d9ff98d79a231cc7b3d7c2a1a4f6f5",
+  "canonical_sha256": "0763dc14a7e32840b83a15061c9e8e7133f48149dac0670917d2eea83f095cb1"
+}

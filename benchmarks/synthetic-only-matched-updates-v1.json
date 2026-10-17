@@ -1,0 +1,67 @@
+{
+  "test_data_used": false,
+  "synthetic_only_snapshot_epoch": 11,
+  "scheduled_updates": 2200,
+  "samples_per_update": 512,
+  "synthetic_only": {
+    "clean": {
+      "samples": 1200,
+      "top1": 0.9616666436195374,
+      "top5": 0.9991666674613953
+    },
+    "loose": {
+      "samples": 2400,
+      "top1": 0.8675000071525574,
+      "top5": 0.9620833396911621
+    },
+    "memory": {
+      "samples": 8400,
+      "top1": 0.7244047522544861,
+      "top5": 0.8903571367263794
+    }
+  },
+  "control_same_epoch": {
+    "clean": {
+      "samples": 1200,
+      "top1": 0.9633333086967468,
+      "top5": 0.9991666674613953
+    },
+    "loose": {
+      "samples": 2400,
+      "top1": 0.8700000047683716,
+      "top5": 0.9604166746139526
+    },
+    "memory": {
+      "samples": 8400,
+      "top1": 0.7228571176528931,
+      "top5": 0.8904761672019958
+    }
+  },
+  "snapshot_sha256": "2efefd4f1382d883c6881a27b5b545ff07059ca326c01167ec152749b4ce7edd",
+  "limits": "Scheduled-update comparison on development only. Batch composition differs intentionally; this is one seed and an early checkpoint. The small initializer gain does not establish a reliable system improvement; the mixture selects zero weight.",
+  "control_best_trained_epoch_through_matched_updates": {
+    "epoch": 11,
+    "loss": 0.8267135062813759,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9633333086967468,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8700000047683716,
+        "top5": 0.9604166746139526
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7228571176528931,
+        "top5": 0.8904761672019958
+      }
+    },
+    "best_score": 0.7232142686843872,
+    "seconds": 73.44043350001448,
+    "improved": false
+  },
+  "initialized_hard_top1": 0.7232142857142857
+}

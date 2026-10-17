@@ -1,0 +1,33 @@
+{
+  "test_data_used": false,
+  "encoder_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "decoder_sha256": "680431d83a7a758ce77ffc14dbda066510abf6bdf649dd6b1e67dd28163c3760",
+  "reference_sha256": "93f53932f06395d48d689051f53c05734d745b75a9f70b1f94701ad0203d38e8",
+  "width": 384,
+  "layers": 12,
+  "symmetry_noise": 0.01,
+  "parameters": 28560797,
+  "cases": [
+    {
+      "case": "hello",
+      "maximum_cost_error": 1.52587890625e-05
+    },
+    {
+      "case": "world",
+      "maximum_cost_error": 1.9073486328125e-05
+    },
+    {
+      "case": "keyboard",
+      "maximum_cost_error": 1.52587890625e-05
+    },
+    {
+      "case": "lunchbox",
+      "maximum_cost_error": 1.71661376953125e-05
+    },
+    {
+      "case": "alpacas",
+      "maximum_cost_error": 1.71661376953125e-05
+    }
+  ],
+  "limits": "Canonical Python initialization parity only; no training, native compatibility, or recognition improvement claimed."
+}

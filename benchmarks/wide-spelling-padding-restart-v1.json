@@ -1,0 +1,9 @@
+{
+  "test_data_used": false,
+  "reason": "Restart width384/depth12 initialization with tested causal-padding removal; every candidate and word cost is retained.",
+  "pid": 93517,
+  "initial_log": "{\"initial_retrieval_memory_top1\": 0.7294002771377563, \"samples\": 2051}\n",
+  "had_latest_checkpoint": false,
+  "had_epoch_history": false,
+  "replacement": "autoregressive-wide-twelve-v2"
+}

@@ -1,0 +1,72 @@
+{
+  "source": "https://huggingface.co/datasets/futo-org/swipe.futo.org",
+  "revision": "d71bf5fd7f45b3e7c2ed2d76a21b0dbd3b4ba566",
+  "license": "MIT",
+  "test_data_used_for_training": false,
+  "original_train_sha256": "5d833110127d554d43e9a83843305e90b51f2022bddd880c7e1586c0761693da",
+  "held_out_file_sha256": {
+    "validation": "50f20dcbc612f955937da815ae2ea6df4b484cb6e783b610e942d5c2b76f6521",
+    "test": "ac2b2f3687c80e19ce78be828cb755c0ab5991d019726bfaf0796e8703e5f810"
+  },
+  "held_out_session_count": 464,
+  "held_out_session_overlap": 0,
+  "additional_sessions": 1642,
+  "all_training_sessions": 6746,
+  "baseline_rows": 150000,
+  "total_training_rows": 223550,
+  "baseline_word_types": 15865,
+  "total_word_types": 23958,
+  "full_vocabulary": 60000,
+  "collections": [
+    {
+      "collection": 2,
+      "source_file": "swipe-2/swipe2.jsonl",
+      "source_sha256": "c59beca97ba7014b3a882597208af115de0d38390960d1f91bb74153574dc967",
+      "accepted": 14347,
+      "word_types": 3906,
+      "rejected": {
+        "outside_vocabulary_or_invalid_geometry": 13748
+      }
+    },
+    {
+      "collection": 3,
+      "source_file": "swipe-3/swipe3.jsonl",
+      "source_sha256": "6e9f6dde97553077352faba30b309e3d7f2f129c53ee82e4d28fe72c8743f95a",
+      "accepted": 18637,
+      "word_types": 7730,
+      "rejected": {
+        "outside_vocabulary_or_invalid_geometry": 19591
+      }
+    },
+    {
+      "collection": 4,
+      "source_file": "swipe-4/swipe4.jsonl",
+      "source_sha256": "255994e4c79c42ec28656e2cbc5573b39a6c07087bc80a5361ff82339f109ca5",
+      "accepted": 40566,
+      "word_types": 14290,
+      "rejected": {
+        "outside_vocabulary_or_invalid_geometry": 9734
+      }
+    }
+  ],
+  "train_sha256": "3568ca7cc2a8cbd17a6b301d32bdacd35bcc57bb9b21e481553121e11d3218f0",
+  "importer_sha256": "7ed08bd43cd2cdf13ae520ac6c190c57075506f1e2f19db2f8ab25e8daada578",
+  "geometry_converter_sha256": "31eac8fe1f002d8e989d88aca44931b1231f06604e983ebac941a16b45564dec",
+  "policy": "Original training rows plus every valid full-vocabulary 4\u201312-letter recording from collections2\u20134, after held-session exclusion. No distance-score or model-performance filter. Held files supply session identifiers only; their words and trajectories never enter training.",
+  "limits": "These are visible-keyboard human recordings, not freehand-memory labels. Additional collections contain unverified user errors. Session separation does not prove distinct human identities across sessions.",
+  "independent_audit": {
+    "rows": 223550,
+    "word_types": 23958,
+    "sessions": 6746,
+    "source_rows": {
+      "futo_swipe_1": 150000,
+      "futo_swipe_2": 14347,
+      "futo_swipe_3": 18637,
+      "futo_swipe_4": 40566
+    },
+    "duplicate_identities": 0,
+    "held_out_session_overlap": 0,
+    "original_training_prefix_sha256": "5d833110127d554d43e9a83843305e90b51f2022bddd880c7e1586c0761693da"
+  },
+  "data_manifest_sha256": "c0fb7b7cfeaf06aab278117beadffafb136d7ba8232d3f802b67f14d5d092940"
+}

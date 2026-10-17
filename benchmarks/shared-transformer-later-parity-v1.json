@@ -1,0 +1,56 @@
+{
+  "test_data_used": false,
+  "native_manifest_sha256": "7f56bdc8abc6da4167f72759f6b03abdbbb18ea6f0caee20882dddf07449d494",
+  "native_cli_sha256": "e434fb28533f73b17884d8f97e4432e11c58067b6f6e5dd03ab8bccdcdd6b14c",
+  "artifacts": {
+    "encoder.bin": "cc2d2fbde7c7aa3f222ab062380366666f9d5aeae67db8844f44e7cb4b3c4b73",
+    "words.bin": "037778bbcee05f11beba4ea2f317ba7aada53af1f86a639c154876416355341f",
+    "spelling.bin": "879019794af4e31a7fde120526f9c9eb82d237b6ef48ee33ffac8298ba4731f4",
+    "spelling/encoder.bin": "1eddedc4a75670b45609154ff934621df29c60182326fddf5675d68b91a5a822",
+    "spelling-verification.json": "7c1023d1b29ae5e2c54c58f8fae5311bdf8d893eb70523c5c7ac9345c702c5a7",
+    "auxiliary/encoder.bin": "6c92b036d53ec9a984b13d2fb7f10bf06b19a9164c182ed49b22c2997960841a",
+    "auxiliary/words.bin": "c19ccce11268dc417beea1235cd8b46a636d6894947f10aebbec576950f6112a",
+    "additional1/encoder.bin": "0efded995406ab5de3db83df9413fa9b6b5f0f4e578bc5462205b76804346686",
+    "additional1/words.bin": "9eba8f9eb24eb5d5fecf416867cd2a4f094d9f1c593405a14b2f4332f9c13cae"
+  },
+  "cases": 5,
+  "verification_stdout": "hello: maximum spelling cost error 0.00002289; exact top-five ranking matches\nworld: maximum spelling cost error 0.00000763; exact top-five ranking matches\nkeyboard: maximum spelling cost error 0.00001907; exact top-five ranking matches\nlunchbox: maximum spelling cost error 0.00001907; exact top-five ranking matches\nalpacas: maximum spelling cost error 0.00002289; exact top-five ranking matches\n",
+  "binding_rejections": {
+    "missing_decoder": {
+      "exit_code": 1,
+      "reason": "Error: \"No such file or directory (os error 2)\""
+    },
+    "changed_decoder": {
+      "exit_code": 1,
+      "reason": "Error: \"spelling weights differ from the exported manifest\""
+    },
+    "changed_context": {
+      "exit_code": 1,
+      "reason": "Error: \"spelling decoder belongs to a different retrieval context\""
+    },
+    "changed_mixture": {
+      "exit_code": 1,
+      "reason": "Error: \"spelling decoder belongs to a different retrieval context\""
+    },
+    "missing_additional1": {
+      "exit_code": 1,
+      "reason": "Error: \"No such file or directory (os error 2)\""
+    },
+    "changed_additional1": {
+      "exit_code": 1,
+      "reason": "Error: \"additional model does not match the exported ensemble\""
+    },
+    "reweighted_additional1": {
+      "exit_code": 1,
+      "reason": "Error: \"spelling decoder belongs to a different retrieval context\""
+    }
+  },
+  "normal_inference_milliseconds": [
+    261.522041,
+    265.882,
+    278.67708400000004,
+    293.74770900000004,
+    286.98058399999996
+  ],
+  "limits": "Canonical implementation parity only; this is not development or benchmark accuracy."
+}

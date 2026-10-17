@@ -1,0 +1,57 @@
+{
+  "test_data_used": false,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "full_vocabulary": 60000,
+  "selection_sha256": "bfcf4928130aedf77fad60973d90af3a7c1e4ffa95b7a4c82189c32c20a5cab6",
+  "native_manifest_sha256": "a6142781f88a7ccf001bfa903abd1fa0d543a03bc27b1a250bab1405fe3187f8",
+  "native_cli_sha256": "00d9cf29c7d9a9d623afb9f786f712dac0bfb5d98ee27fa93377f26703fb2878",
+  "native_artifacts_sha256": {
+    "encoder.bin": "4b5f81e92f873cdf1c2794d898a1c3a66d6f958a8f71a30786ec373ae9038961",
+    "words.bin": "952efb2686de85bfd9fd34f21eca75c529268592e16ef4bbf74310ccee72204c",
+    "auxiliary/encoder.bin": "0063eec9c5628b6ce9b72526569e2f7c683f03441eb5fabb370abf12e41d9e49",
+    "auxiliary/words.bin": "327b41ae44cf07b5fffa27eb6ae467746a8ac1db02bf590fbc54ceb3e45f4d16",
+    "additional1/encoder.bin": "07ea8db7702e6219a7be8352f84f19cbcaaaadfaae8c4da4216bf67710332bb7",
+    "additional1/words.bin": "0fa937bcf4de75d6286d3e1f3bb4b9f3ba57d6c0a4d2bdc4e6e390c703a2bc1f",
+    "spelling.bin": "c0199b4c53bd684e7e7ea3ee4634e3a2860a14020dd05e9b4576c602e915f263",
+    "spelling/encoder.bin": "1eddedc4a75670b45609154ff934621df29c60182326fddf5675d68b91a5a822",
+    "geometry-ranker.json": "8546c4e4f7ae0ae98e87c3fd9eeb5a5126cecd56077c723e4ad54d31b0e5e5f8"
+  },
+  "regenerated_development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "validation": {
+    "clean": {
+      "samples": 1200,
+      "top1": 0.9575,
+      "top5": 1.0,
+      "correct_top1": 1149,
+      "correct_top5": 1200
+    },
+    "loose": {
+      "samples": 2400,
+      "top1": 0.8725,
+      "top5": 0.9608333333333333,
+      "correct_top1": 2094,
+      "correct_top5": 2306
+    },
+    "memory": {
+      "samples": 8400,
+      "top1": 0.7311904761904762,
+      "top5": 0.8966666666666666,
+      "correct_top1": 6142,
+      "correct_top5": 7532
+    }
+  },
+  "matches_python_hit_counts": true,
+  "evaluated_rows": 12000,
+  "native_files_unchanged_through_replay": true,
+  "median_milliseconds": 87.269,
+  "p95_milliseconds": 104.93141184999999,
+  "limits": "Development only; regenerated raw strokes reproduce the unchanged corpus hash. Concurrent training affects timing. No benchmark or blind-confirmation evaluation.",
+  "raw_report_sha256": "ac2b396235c1500e2d0c9120b343bdbb4316e92dcc39aeea2c2599920afed820"
+}

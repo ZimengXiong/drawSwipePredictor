@@ -1,0 +1,61 @@
+{
+  "test_data_used": false,
+  "run": "proxy-giant-strong-v1",
+  "reason": "The trained giant snapshot receives zero weight in full development mixture selection. Prioritize the diagnosed massive-gate experiment while retaining the improved giant checkpoint.",
+  "mixture_report": "exact-wide-giant-word-development-v1.json",
+  "last_completed": {
+    "epoch": 97,
+    "loss": 0.889904837012291,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9583333134651184,
+        "top5": 0.9983333349227905
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8691666722297668,
+        "top5": 0.9604166746139526
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7114285826683044,
+        "top5": 0.8802381157875061
+      }
+    },
+    "best_score": 0.7128571271896362,
+    "seconds": 239.5501524579886,
+    "improved": false
+  },
+  "best": {
+    "epoch": 85,
+    "loss": 0.881218318939209,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9624999761581421,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8687499761581421,
+        "top5": 0.9624999761581421
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7128571271896362,
+        "top5": 0.8788095116615295
+      }
+    },
+    "best_score": 0.7128571271896362,
+    "seconds": 193.09731849998934,
+    "improved": true
+  },
+  "artifacts_sha256": {
+    "best.pt": "7becefe39a66a84c1804ad0fd6dc2d2ba077a9c71b652783a2b38d602c4f2eae",
+    "latest.pt": "d3bca62f40874c907593c283c4128c342fd5da08b4655ccf2112514882ca1f04",
+    "run.json": "e20c4980275f64059dfe8ea67b4647c296703250891a08875c97903a7992ed99",
+    "history.jsonl": "67bde09f1f4c397072c88e641f7383db835062ce301f2ce6add3329331c5e6fb"
+  },
+  "action": "SIGINT after checking live process identity; checkpoints retained."
+}

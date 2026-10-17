@@ -1,0 +1,30 @@
+{
+  "reference": "Five transformed canonical routes, repeated; no benchmark recordings",
+  "test_data_used": false,
+  "queries_after_warmup": 25,
+  "vocabulary": 60000,
+  "median_ms": 32.139417,
+  "p95_ms": 33.715542,
+  "conditions": "M4 Max; several GPU training processes active; includes full native retrieval and character ranking",
+  "binding_mismatch_rejected": true,
+  "probability_and_ranking_parity": [
+    "hello: maximum character log-probability error 0.00003052; exact top-five ranking matches",
+    "world: maximum character log-probability error 0.00006008; exact top-five ranking matches",
+    "keyboard: maximum character log-probability error 0.00003815; exact top-five ranking matches",
+    "lunchbox: maximum character log-probability error 0.00012851; exact top-five ranking matches",
+    "alpacas: maximum character log-probability error 0.00003862; exact top-five ranking matches"
+  ],
+  "artifact_hashes": {
+    "checkpoint_sha256": "8a6702a232b8f1b3dbc167484b69ba369289aa1f2f35d50120355a09efd5dff5",
+    "encoder_sha256": "e664c11f53eef4803747d9b179bd2bab64ecd8f725926c27cad0cd126369f68a",
+    "words_sha256": "db1ee387cefe022721dba24997cd537f21923c7fc13993dc645d5d1fb57378f7",
+    "character": {
+      "sha256": "79b44adbe909b406286731fcdae072683baacb42b45db4ada74b84a62010feba",
+      "checkpoint_sha256": "8a6702a232b8f1b3dbc167484b69ba369289aa1f2f35d50120355a09efd5dff5",
+      "proxy_weight": 2.0,
+      "deletion_probability": 0.0,
+      "length_power": 0.3,
+      "selection": "Development only; exact-word scoring and naturally retrieved top128 candidates"
+    }
+  }
+}

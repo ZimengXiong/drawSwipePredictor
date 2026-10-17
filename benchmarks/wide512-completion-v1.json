@@ -1,0 +1,33 @@
+{
+  "test_data_used": false,
+  "stage": "proxy-wide512-v1",
+  "completed_epochs": 180,
+  "best": {
+    "epoch": 174,
+    "loss": 0.8153484460711479,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9583333134651184,
+        "top5": 0.9983333349227905
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8762500286102295,
+        "top5": 0.9637500047683716
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7303571701049805,
+        "top5": 0.8959524035453796
+      }
+    },
+    "best_score": 0.7303571701049805,
+    "seconds": 115.83532820901019,
+    "improved": true
+  },
+  "checkpoint_sha256": "51917dcb2739b2300a08c0e971c556024238f484f7dea2f61239e8f238f22bec",
+  "history_sha256": "733c81afba589422ea4d1737f9b2ea9f922694afe47d3c8ca5ea4c6eff1eef85",
+  "next_stage": "proxy-wide512-exact-v1",
+  "limits": "Full development only; no benchmark or confirmation evaluation. The new stage changes the training data mixture and is not a controlled width-only comparison."
+}

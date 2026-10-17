@@ -1,0 +1,29 @@
+{
+  "objective": "At least 80% exact-word top1 on synthetic_memory in the unchanged 60000-word benchmark",
+  "benchmark_sha256": "0dd181dfd6ee8be0c706bfe269504ddd6dbb1e0dc90ed587ebf3ba019ce1a63f",
+  "prior_result": "benchmarks/reranker-final-test.json",
+  "metric": "exact lowercase target word is the first prediction; no alias credit",
+  "rules": [
+    "Keep all benchmark rows, candidate words, generator errors, and scoring unchanged.",
+    "Use full-vocabulary fresh writers for training; do not restrict predictions to benchmark target ranks.",
+    "No benchmark labels, writer IDs, seeds, source IDs, or target ranks enter model inputs.",
+    "Select models and ranking settings on separate development writers, not benchmark predictions.",
+    "Do not run the benchmark during training. Gate a final run on strong development results.",
+    "Report misses, regressions, and any failure to reach 80% honestly."
+  ],
+  "development": {
+    "train_seed": 700001,
+    "train_writers": 1000000,
+    "validation_seed": 700003,
+    "validation_writers": 12000,
+    "targets": "uniform over all 4\u201312 letter words across the complete 60000-word deployment vocabulary"
+  },
+  "selection_gate": "Aim for at least 83% memory development top1 before testing the final model",
+  "limits": "The benchmark was evaluated in previous work; new experiments must not inspect its mistakes or tune against new benchmark runs.",
+  "confirmation_holdout": {
+    "seed": 700007,
+    "writers": 12000,
+    "sha256": "877bff4deee4847b4632140405c44f7b0183336dab3b7886cb2ce1cebfa3aa97",
+    "role": "Untouched confirmation after development selection; never fit weights, thresholds, or ranking settings on it."
+  }
+}

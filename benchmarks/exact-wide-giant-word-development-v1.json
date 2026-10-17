@@ -1,0 +1,77 @@
+{
+  "checkpoints": [
+    {
+      "path": "checkpoints/completed-intrinsic-v1.pt",
+      "sha256": "89a68311ded7735485a232d212691ea5e941c7fdee11318ff6f0358fcb741727",
+      "architecture": "intrinsic",
+      "epoch": 178
+    },
+    {
+      "path": "checkpoints/exact-low-probe-v1.pt",
+      "sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+      "architecture": "large",
+      "epoch": 53
+    },
+    {
+      "path": "checkpoints/wide512-probe-v2.pt",
+      "sha256": "9035e7f8637fce217ea1b240e35e4c3dd0db05979292e494d18e43e193231950",
+      "architecture": "wide512",
+      "epoch": 100
+    },
+    {
+      "path": "checkpoints/giant-strong-probe-v1.pt",
+      "sha256": "7becefe39a66a84c1804ad0fd6dc2d2ba077a9c71b652783a2b38d602c4f2eae",
+      "architecture": "giant",
+      "epoch": 85
+    }
+  ],
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "weight_grid": "All quarter-weight simplex mixtures, plus the equal-weight mixture",
+  "source_sha256": "166cc92307f9437a75d2a4ac6d9cf00edb4d5053f916813ef40f04fee6a06ac1",
+  "selection": "Full-vocabulary exact-word memory development top1",
+  "selected": {
+    "weights": [
+      0,
+      0.25,
+      0.75,
+      0
+    ],
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9624999761581421,
+        "top5": 0.9983333349227905,
+        "top32": 1.0,
+        "top128": 1.0
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8683333396911621,
+        "top5": 0.9624999761581421,
+        "top32": 0.9933333396911621,
+        "top128": 1.0
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.727142870426178,
+        "top5": 0.8922619223594666,
+        "top32": 0.9760714173316956,
+        "top128": 0.9954761862754822
+      }
+    }
+  },
+  "raw_report_sha256": "5e5b9d097ba559913e4a7286348b787e8baab5fb3dc1cf56441b402977c21a5a",
+  "native_verified": false,
+  "promoted_to_app": false,
+  "limits": "Full development only. No benchmark or blind-confirmation evaluation. The previous 6131/8400 hard spelling candidate remains selected.",
+  "outcome": "No stronger word mixture selected; giant component receives zero selected weight."
+}

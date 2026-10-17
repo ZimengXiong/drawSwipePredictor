@@ -1,0 +1,72 @@
+{
+  "encoder_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "decoder_sha256": "d06540bd32a3575abf092d131623e4d0826729852886761ba1f08721a4fe4fa9",
+  "retrieval_sha256": "b86c9d1cab7d56cd50b23bc8cf38f6a47824427ab36c4a145a049b1951064156",
+  "decoder_epoch": 30,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "samples": 12000,
+  "selected": {
+    "length_power": 0.7,
+    "proxy_weight": 4.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9624999761581421,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8695833086967468,
+        "top5": 0.9595833420753479
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.725595235824585,
+        "top5": 0.8898809552192688
+      }
+    }
+  },
+  "shortlist_recall": {
+    "clean": 1.0,
+    "loose": 0.9995833039283752,
+    "memory": 0.9948809742927551
+  },
+  "rules": "All development rows; natural top128; exact full words; no target insertion or alias credit",
+  "retrieval_only_control": {
+    "length_power": 0.0,
+    "proxy_weight": null,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9641666412353516,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8695833086967468,
+        "top5": 0.9595833420753479
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7232142686843872,
+        "top5": 0.8885714411735535
+      }
+    }
+  },
+  "full_trial_report_sha256": "ae55561b95acc712caeee8ad3d9eb2f4ce97a098d1b6aaddd327bf5d1e189a7c",
+  "full_trial_report_path": "training/checkpoints/autoregressive-ranking-balanced-full-v1.json",
+  "hard_top1_hits": 6095,
+  "baseline_hard_top1_hits": 6075,
+  "native_verified": false,
+  "promoted_to_app": false,
+  "status": "Development-only probe at decoder epoch30; training continues. Small gain does not meet target."
+}

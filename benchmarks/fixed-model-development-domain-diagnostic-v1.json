@@ -1,0 +1,97 @@
+{
+  "test_data_used": false,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "model_selection_unchanged": true,
+  "hard_full_correct": 6171,
+  "hard_full_samples": 8400,
+  "rank_groups": [
+    {
+      "vocabulary_start": 0,
+      "vocabulary_end": 10000,
+      "samples": 1450,
+      "correct": 993,
+      "accuracy": 0.6848275862068965,
+      "wilson95": [
+        0.66045312876708,
+        0.7082253105139024
+      ]
+    },
+    {
+      "vocabulary_start": 10000,
+      "vocabulary_end": 20000,
+      "samples": 1406,
+      "correct": 1038,
+      "accuracy": 0.7382645803698435,
+      "wilson95": [
+        0.7146605455157344,
+        0.7605701946558892
+      ]
+    },
+    {
+      "vocabulary_start": 20000,
+      "vocabulary_end": 30000,
+      "samples": 1328,
+      "correct": 1002,
+      "accuracy": 0.7545180722891566,
+      "wilson95": [
+        0.7306587680673664,
+        0.7769091526659149
+      ]
+    },
+    {
+      "vocabulary_start": 30000,
+      "vocabulary_end": 40000,
+      "samples": 1394,
+      "correct": 1035,
+      "accuracy": 0.742467718794835,
+      "wilson95": [
+        0.7188685803472528,
+        0.7647341885749936
+      ]
+    },
+    {
+      "vocabulary_start": 40000,
+      "vocabulary_end": 50000,
+      "samples": 1399,
+      "correct": 1055,
+      "accuracy": 0.7541100786275912,
+      "wilson95": [
+        0.7308698479273413,
+        0.7759586290394757
+      ]
+    },
+    {
+      "vocabulary_start": 50000,
+      "vocabulary_end": 60000,
+      "samples": 1423,
+      "correct": 1048,
+      "accuracy": 0.7364722417427969,
+      "wilson95": [
+        0.7129680236731218,
+        0.7587031601430848
+      ]
+    },
+    {
+      "vocabulary_start": 54000,
+      "vocabulary_end": 60000,
+      "samples": 849,
+      "correct": 628,
+      "accuracy": 0.7396937573616019,
+      "wilson95": [
+        0.7091445291481892,
+        0.7680836775607086
+      ]
+    }
+  ],
+  "limits": "Development reporting only; the fixed predictor retains all60000candidates and receives no rank metadata. No benchmark rows or predictions read.",
+  "raw_report_sha256": "bda80111c0481a47bbdc474887df5e63383eb6ca55e202ad5541b70c37d029fb",
+  "model_manifest_sha256": "6637e4b28f7575e9572ea6e09bbc07db23cd79ff9e5e65a4f790762c7e174ba4",
+  "rules": "Reporting slices only. Keep predictions and model selection fixed. Never feed rank intervals to the predictor or use them to exclude candidate words. The final benchmark stays unopened."
+}

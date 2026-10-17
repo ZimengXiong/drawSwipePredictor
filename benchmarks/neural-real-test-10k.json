@@ -1,0 +1,298 @@
+{
+  "dataset": "training/data/futo-large/test.jsonl",
+  "limitations": "Recorded data uses visible keyboards. Memory transfer adds synthetic distortions to real traces and does not measure freehand memory accuracy.",
+  "metric_override": null,
+  "neural_model": "crates/swipe-engine/models/retrieval",
+  "results": [
+    {
+      "baseline": {
+        "median_ms": 20.780542,
+        "p95_ms": 22.4115,
+        "top1": 0.457,
+        "top5": 0.695
+      },
+      "example_errors": [
+        {
+          "predicted": [
+            "bunny",
+            "cunt",
+            "holy",
+            "holly",
+            "built"
+          ],
+          "target": "built"
+        },
+        {
+          "predicted": [
+            "char",
+            "chat",
+            "chart",
+            "chase",
+            "blast"
+          ],
+          "target": "blast"
+        },
+        {
+          "predicted": [
+            "strike",
+            "stroke",
+            "child",
+            "duke",
+            "cold"
+          ],
+          "target": "style"
+        },
+        {
+          "predicted": [
+            "lord",
+            "lies",
+            "kits",
+            "lloyd",
+            "lots"
+          ],
+          "target": "lies"
+        },
+        {
+          "predicted": [
+            "anyway",
+            "correct",
+            "block",
+            "courage",
+            "cottage"
+          ],
+          "target": "first"
+        },
+        {
+          "predicted": [
+            "competent",
+            "company",
+            "compliant",
+            "completely",
+            "subject"
+          ],
+          "target": "company"
+        },
+        {
+          "predicted": [
+            "dirty",
+            "city",
+            "surrey",
+            "diet",
+            "forty"
+          ],
+          "target": "city"
+        },
+        {
+          "predicted": [
+            "tony",
+            "songs",
+            "bomb",
+            "tommy",
+            "wine"
+          ],
+          "target": "songs"
+        },
+        {
+          "predicted": [
+            "surrey",
+            "street",
+            "foto",
+            "dirty",
+            "goto"
+          ],
+          "target": "after"
+        },
+        {
+          "predicted": [
+            "relates",
+            "there",
+            "thats",
+            "related",
+            "trustees"
+          ],
+          "target": "there"
+        },
+        {
+          "predicted": [
+            "insurance",
+            "instance",
+            "instances",
+            "indians",
+            "indiana"
+          ],
+          "target": "instance"
+        },
+        {
+          "predicted": [
+            "level",
+            "label",
+            "radar",
+            "panel",
+            "kernel"
+          ],
+          "target": "label"
+        }
+      ],
+      "memory": {
+        "median_ms": 1.040584,
+        "p95_ms": 1.132166,
+        "top1": 0.615,
+        "top5": 0.839
+      },
+      "mode": "recorded",
+      "neural": {
+        "median_ms": 1.368666,
+        "p95_ms": 1.419292,
+        "top1": 0.879,
+        "top5": 0.974
+      }
+    },
+    {
+      "baseline": {
+        "median_ms": 20.427334,
+        "p95_ms": 22.078708,
+        "top1": 0.293,
+        "top5": 0.475
+      },
+      "example_errors": [
+        {
+          "predicted": [
+            "cunt",
+            "bunny",
+            "zone",
+            "holy",
+            "holly"
+          ],
+          "target": "built"
+        },
+        {
+          "predicted": [
+            "char",
+            "blast",
+            "chat",
+            "hist",
+            "chart"
+          ],
+          "target": "blast"
+        },
+        {
+          "predicted": [
+            "warrior",
+            "wait",
+            "rely",
+            "early",
+            "salt"
+          ],
+          "target": "early"
+        },
+        {
+          "predicted": [
+            "chrome",
+            "crime",
+            "crimes",
+            "holy",
+            "holly"
+          ],
+          "target": "style"
+        },
+        {
+          "predicted": [
+            "anyway",
+            "accurate",
+            "coaches",
+            "correct",
+            "cottage"
+          ],
+          "target": "first"
+        },
+        {
+          "predicted": [
+            "yeah",
+            "jean",
+            "iran",
+            "lean",
+            "tag"
+          ],
+          "target": "peak"
+        },
+        {
+          "predicted": [
+            "dirty",
+            "city",
+            "surrey",
+            "diet",
+            "forty"
+          ],
+          "target": "city"
+        },
+        {
+          "predicted": [
+            "surrey",
+            "after",
+            "dirty",
+            "cloudy",
+            "bloody"
+          ],
+          "target": "after"
+        },
+        {
+          "predicted": [
+            "insurance",
+            "instance",
+            "instances",
+            "indians",
+            "indiana"
+          ],
+          "target": "instance"
+        },
+        {
+          "predicted": [
+            "guest",
+            "first",
+            "hottest",
+            "footwear",
+            "forest"
+          ],
+          "target": "first"
+        },
+        {
+          "predicted": [
+            "non",
+            "bob",
+            "boob",
+            "noon",
+            "sees"
+          ],
+          "target": "ships"
+        },
+        {
+          "predicted": [
+            "insider",
+            "inside",
+            "investigate",
+            "induced",
+            "indices"
+          ],
+          "target": "inside"
+        }
+      ],
+      "memory": {
+        "median_ms": 1.037125,
+        "p95_ms": 1.1400830000000002,
+        "top1": 0.583,
+        "top5": 0.807
+      },
+      "mode": "memory_transfer",
+      "neural": {
+        "median_ms": 1.384709,
+        "p95_ms": 1.436709,
+        "top1": 0.822,
+        "top5": 0.947
+      }
+    }
+  ],
+  "samples": 1000,
+  "sessions": 158,
+  "skipped_oov": 132,
+  "vocabulary": 10000
+}

@@ -1,0 +1,77 @@
+{
+  "checkpoints": [
+    {
+      "path": "checkpoints/completed-intrinsic-v1.pt",
+      "sha256": "89a68311ded7735485a232d212691ea5e941c7fdee11318ff6f0358fcb741727",
+      "architecture": "intrinsic",
+      "epoch": 178
+    },
+    {
+      "path": "checkpoints/exact-low-probe-v1.pt",
+      "sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+      "architecture": "large",
+      "epoch": 53
+    },
+    {
+      "path": "checkpoints/wide512-probe-v2.pt",
+      "sha256": "9035e7f8637fce217ea1b240e35e4c3dd0db05979292e494d18e43e193231950",
+      "architecture": "wide512",
+      "epoch": 100
+    },
+    {
+      "path": "checkpoints/synthetic-only-probe-v1.pt",
+      "sha256": "2efefd4f1382d883c6881a27b5b545ff07059ca326c01167ec152749b4ce7edd",
+      "architecture": "large",
+      "epoch": 11
+    }
+  ],
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "weight_grid": "All quarter-weight simplex mixtures, plus the equal-weight mixture",
+  "source_sha256": "166cc92307f9437a75d2a4ac6d9cf00edb4d5053f916813ef40f04fee6a06ac1",
+  "selection": "Full-vocabulary exact-word memory development top1",
+  "selected": {
+    "weights": [
+      0,
+      0.25,
+      0.75,
+      0
+    ],
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9624999761581421,
+        "top5": 0.9983333349227905,
+        "top32": 1.0,
+        "top128": 1.0
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8683333396911621,
+        "top5": 0.9624999761581421,
+        "top32": 0.9933333396911621,
+        "top128": 1.0
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.727142870426178,
+        "top5": 0.8922619223594666,
+        "top32": 0.9760714173316956,
+        "top128": 0.9954761862754822
+      }
+    }
+  },
+  "raw_report_sha256": "3528942e30a7fdb6f0daf0d4235a49292657b15bfbc86352ca8a0d7bb22b2589",
+  "native_verified": false,
+  "promoted_to_app": false,
+  "outcome": "The early synthetic-only snapshot receives zero selected weight. The previously evaluated exact/wide pair remains selected on this grid.",
+  "limits": "All 12,000 development rows and 60,000 candidates. Early checkpoint only; training continues. No benchmark or blind-confirmation evaluation, and no change to the stronger native spelling candidate."
+}

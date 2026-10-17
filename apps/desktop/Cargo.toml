@@ -2,6 +2,16 @@
 name = "swipe-desktop"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
+default-run = "swipe-learned"
+
+[[bin]]
+name = "swipe-learned"
+path = "src/bin/swipe-learned.rs"
+
+[[bin]]
+name = "swipe-memory"
+path = "src/bin/swipe-memory.rs"
 
 [[bin]]
 name = "swipe-dtw"
@@ -25,7 +35,7 @@ name = "jagged"
 path = "src/bin/jagged.rs"
 
 [features]
-default = ["neural"]
+default = []
 neural = ["swipe-engine/neural"]
 
 [dependencies]

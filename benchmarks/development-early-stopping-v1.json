@@ -1,0 +1,156 @@
+{
+  "test_data_used": false,
+  "reason": "Prioritize promising training runs after the machine began swapping. Decisions use development evidence only; checkpoints and logs remain available.",
+  "stopped": [
+    {
+      "run": "proxy-attention-v1",
+      "status": "Early stopped by SIGINT after checking the live command; not a training failure.",
+      "reason": "No trained checkpoint beat its preserved initializer across the completed epochs; retain baseline and latest state.",
+      "last_completed": {
+        "epoch": 87,
+        "loss": 0.8678994616866111,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9616666436195374,
+            "top5": 0.9975000023841858
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8633333444595337,
+            "top5": 0.9579166769981384
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7085714340209961,
+            "top5": 0.8753571510314941
+          }
+        },
+        "best_score": 0.7101190686225891,
+        "seconds": 169.32829591701739,
+        "improved": false
+      },
+      "best": {
+        "epoch": 0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9624999761581421,
+            "top5": 0.9975000023841858
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8637499809265137,
+            "top5": 0.9579166769981384
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7101190686225891,
+            "top5": 0.8745238184928894
+          }
+        },
+        "best_score": 0.7101190686225891
+      },
+      "arguments": {
+        "train": "/Users/xzm/Projects/drawSwipePredictor/training/data/memory-proxy/train.bin",
+        "extra_train": [
+          "data/memory-proxy/train-700011.bin",
+          "data/memory-proxy/train-700012.bin",
+          "data/memory-proxy/train-700013.bin",
+          "data/memory-proxy/train-700014.bin",
+          "data/memory-proxy/train-700015.bin",
+          "data/memory-proxy/train-700016.bin",
+          "data/memory-proxy/train-700017.bin",
+          "data/memory-proxy/train-700018.bin",
+          "data/memory-proxy/train-700019.bin",
+          "data/memory-proxy/train-700020.bin"
+        ],
+        "stream_corpus": true,
+        "balance_real": false,
+        "freeze_proxies": true,
+        "validation": "/Users/xzm/Projects/drawSwipePredictor/training/data/memory-proxy/validation.bin",
+        "init_model": "checkpoints/proxy-giant-strong-init.pt",
+        "output": "checkpoints/proxy-attention-v1",
+        "epochs": 180,
+        "steps": 200,
+        "batch": 256,
+        "learning_rate": 5e-05,
+        "seed": 900409,
+        "architecture": "attention",
+        "centers": 1,
+        "proxy_init": null,
+        "fresh_fraction": 0.5,
+        "resume": null,
+        "device": "mps"
+      },
+      "latest_checkpoint_sha256": "756312bdae9dda022b6a5d9325bf3817602fe9e84906e0f3e3728546738ae5f2",
+      "best_checkpoint_sha256": "cdc1a607a990c0c691c699d32789d1d32901190b56ebf44ec9a77a28605b7176",
+      "history_sha256": "92b7af60800710e675fb8ee743c92160414f7e249dc3b59a3aa49dab023849a3"
+    },
+    {
+      "run": "autoregressive-v1",
+      "status": "Early stopped by SIGINT after checking the live command; not a training failure.",
+      "reason": "Late epoch85 teacher-forced snapshot added no value to the stronger word ensemble on full development. Keep the trained epoch30 ranking alternative and the new joint-context stage.",
+      "last_completed": {
+        "epoch": 89,
+        "loss": 0.46138333722949026,
+        "seconds": 147.69384120800532
+      },
+      "best": {
+        "epoch": 85,
+        "loss": 0.46382713615894317,
+        "seconds": 124.48770916700596,
+        "selected": {
+          "length_power": 1.0,
+          "proxy_weight": 1.0,
+          "validation": {
+            "clean": {
+              "samples": 323,
+              "top1": 0.9721361994743347,
+              "top5": 1.0
+            },
+            "loose": {
+              "samples": 626,
+              "top1": 0.8610223531723022,
+              "top5": 0.9584664702415466
+            },
+            "memory": {
+              "samples": 2051,
+              "top1": 0.7181862592697144,
+              "top5": 0.8844466209411621
+            }
+          }
+        },
+        "best_score": 0.7181862592697144,
+        "improved": true
+      },
+      "arguments": {
+        "checkpoint": "checkpoints/proxy-giant-strong-init.pt",
+        "output": "checkpoints/autoregressive-v1",
+        "extra_train": [
+          "data/memory-proxy/train-700011.bin",
+          "data/memory-proxy/train-700012.bin",
+          "data/memory-proxy/train-700013.bin",
+          "data/memory-proxy/train-700014.bin",
+          "data/memory-proxy/train-700015.bin",
+          "data/memory-proxy/train-700016.bin",
+          "data/memory-proxy/train-700017.bin",
+          "data/memory-proxy/train-700018.bin",
+          "data/memory-proxy/train-700019.bin",
+          "data/memory-proxy/train-700020.bin"
+        ],
+        "epochs": 120,
+        "steps": 200,
+        "batch": 512,
+        "evaluate_every": 5,
+        "validation_samples": 3000,
+        "seed": 900419
+      },
+      "latest_checkpoint_sha256": "711a72e70c1cd524147ed2488c9590ba89119bf6f9f78af4fc0772defd794516",
+      "best_checkpoint_sha256": "08fe85a354d634d9fc0e6c65f4054cf285a58774a6aed2c34d633f6cac246454",
+      "history_sha256": "9bdc627fd49fcd20f3f35071a7f6db8eb1d638510b75acabee0aff9f95cc1bec"
+    }
+  ],
+  "benchmark_evaluated": false,
+  "confirmation_opened": false
+}

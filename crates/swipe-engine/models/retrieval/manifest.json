@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "architecture": "conv-48-64-96-128-dense-256-128",
+  "points": 64,
+  "channels": 8,
+  "embedding": 128,
+  "vocabulary": 60000,
+  "checkpoint_epoch": 80,
+  "validation_score": 0.7136666774749756,
+  "encoder_sha256": "9573edad3f1319a491a2e6f3b474c64ef2753d7ab81132284488dfe8b7816ccd",
+  "words_sha256": "ccbf1e7e5788c5c22eb41d6f3b12592aa28d428a5c728aa5c047919467d446d2",
+  "training": {
+    "arguments": {
+      "real_dir": "training/data/futo-large",
+      "synthetic_dir": "training/data/memory",
+      "output": "checkpoints/retrieval-v3",
+      "epochs": 80,
+      "steps": 150,
+      "batch": 768,
+      "vocab": 60000,
+      "validation_samples": 2000,
+      "seed": 271828,
+      "resume": null,
+      "init_model": "checkpoints/retrieval-v2/best.pt",
+      "learning_rate": 0.0001,
+      "real_fraction": 0.5,
+      "device": "mps"
+    },
+    "git_commit": "33cecded66803e1dbaa4bce92ef46cda94aa8fb2",
+    "torch": "2.14.1",
+    "numpy": "2.5.4",
+    "device": "mps",
+    "training_recordings": {
+      "real": 150000,
+      "synthetic": 18000
+    },
+    "source_sha256": {
+      "real_train": "5d833110127d554d43e9a83843305e90b51f2022bddd880c7e1586c0761693da",
+      "real_validation": "50f20dcbc612f955937da815ae2ea6df4b484cb6e783b610e942d5c2b76f6521",
+      "synthetic_train": "01dfb33210ea74027c66b2776141bcc31b75f9b8d01e2840d9bb0a255d922787",
+      "synthetic_validation": "bef6c8f0c8507451c2357015924e13f54b675f3a6ef1f6a0f152b1160454f1ee"
+    },
+    "selection": "mean validation top1 over recorded real, distorted real, and synthetic gestures",
+    "test_data_used": false
+  },
+  "prior_weight": 2.0,
+  "tta_degrees": 10.0,
+  "adaptive_prior": true,
+  "calibration": {
+    "alpha": 0.25,
+    "prior": 2.0,
+    "prior_form": "adaptive",
+    "tta_degrees": 10.0,
+    "score": 0.8444562494754791,
+    "validation": {
+      "real": {
+        "top1": 0.8324999809265137,
+        "top5": 0.9380000233650208
+      },
+      "distorted_real": {
+        "top1": 0.7415000200271606,
+        "top5": 0.9010000228881836
+      },
+      "synthetic": {
+        "top1": 0.7055000066757202,
+        "top5": 0.8360000252723694
+      },
+      "canonical": {
+        "top1": 0.9154999852180481,
+        "top5": 0.9815000295639038
+      }
+    }
+  },
+  "calibration_sources": {
+    "real_train": "5d833110127d554d43e9a83843305e90b51f2022bddd880c7e1586c0761693da",
+    "real_validation": "50f20dcbc612f955937da815ae2ea6df4b484cb6e783b610e942d5c2b76f6521",
+    "synthetic_validation": "bef6c8f0c8507451c2357015924e13f54b675f3a6ef1f6a0f152b1160454f1ee"
+  },
+  "data_source": "https://huggingface.co/datasets/futo-org/swipe.futo.org",
+  "data_license": "MIT",
+  "word_frequency_sha256": "51df159fd3de12b20e403c108f526e96dbd723d9cabdd5f17955cdc16059e690",
+  "reranker": {
+    "architecture": "20-64-32-1 residual MLP",
+    "shortlist": {
+      "neural": 32,
+      "geometry": 32
+    },
+    "training_queries": 96000,
+    "validation_queries": 8000,
+    "selection": {
+      "epoch": 56,
+      "baseline": {
+        "distorted_real": {
+          "top1": 0.7250000238418579,
+          "top5": 0.8985000252723694
+        },
+        "online": {
+          "top1": 0.6434999704360962,
+          "top5": 0.828000009059906
+        },
+        "real": {
+          "top1": 0.8355000019073486,
+          "top5": 0.9455000162124634
+        },
+        "synthetic": {
+          "top1": 0.640500009059906,
+          "top5": 0.7889999747276306
+        }
+      },
+      "validation": {
+        "distorted_real": {
+          "top1": 0.7400000095367432,
+          "top5": 0.9035000205039978
+        },
+        "online": {
+          "top1": 0.7124999761581421,
+          "top5": 0.8615000247955322
+        },
+        "real": {
+          "top1": 0.847000002861023,
+          "top5": 0.9495000243186951
+        },
+        "synthetic": {
+          "top1": 0.7005000114440918,
+          "top5": 0.8230000138282776
+        }
+      },
+      "score": 0.75
+    },
+    "test_data_used": false,
+    "fallback": {
+      "trust_distance": 0.08,
+      "score": 0.7709666666666666,
+      "eligible": true,
+      "validation": {
+        "canonical": {
+          "top1": 0.8563333333333333,
+          "top5": 0.935
+        },
+        "distorted_real": {
+          "top1": 0.74,
+          "top5": 0.904
+        },
+        "online": {
+          "top1": 0.71,
+          "top5": 0.86
+        },
+        "real": {
+          "top1": 0.846,
+          "top5": 0.9495
+        },
+        "synthetic": {
+          "top1": 0.7025,
+          "top5": 0.8245
+        },
+        "synthetic_clean": {
+          "top1": 0.9405646359583952,
+          "top5": 0.9881129271916791
+        },
+        "synthetic_loose": {
+          "top1": 0.7103658536585366,
+          "top5": 0.8445121951219512
+        },
+        "synthetic_memory": {
+          "top1": 0.45603576751117736,
+          "top5": 0.6408345752608048
+        }
+      }
+    },
+    "sha256": "00dae2ba25720c8ea279d60d37a85b7238e6cd6e613fe02a5896ce214d82c917"
+  }
+}

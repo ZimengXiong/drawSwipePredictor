@@ -1,0 +1,37 @@
+{
+  "experiment": "Bounded motor-error fitting with latent interior omissions",
+  "test_data_used": false,
+  "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "frozen_retriever_sha256": "57c94b93375c25c1818dda66972b4c86cd16990f84b9c433028b94d1c38e2f50",
+  "source_artifact_sha256": "e67f31b766017d4a649f43011f5e5560be34abb9f415792101bee4f9d0c8a360",
+  "samples": 512,
+  "baseline_top1": 0.595703125,
+  "selected": {
+    "regularization": 0.02,
+    "proxy_weight": 0.005,
+    "top1": 0.666015625,
+    "top5": 0.841796875
+  },
+  "shortlist_recall": 0.958984375,
+  "paired_counts": {
+    "gained": 51,
+    "lost": 15,
+    "unchanged": 446
+  },
+  "paired_gain": 0.0703125,
+  "exploratory_bootstrap_95_interval": [
+    0.041015625,
+    0.1015625
+  ],
+  "limits": [
+    "Settings were selected on these development examples; the interval does not correct for that selection.",
+    "This uses a weaker frozen retriever and 512 drawings. It is not comparable to the full-development result of the newer combined system.",
+    "No benchmark or confirmation evaluation. No app model replacement."
+  ],
+  "next": "Keep settings fixed for a broader development check before selecting or amortizing the fitting method.",
+  "writer_selection": {
+    "difficulty": "memory",
+    "offset": 0,
+    "samples": 512
+  }
+}

@@ -1,0 +1,208 @@
+{
+  "checkpoints": [
+    {
+      "path": "checkpoints/wide512-probe-v3.pt",
+      "sha256": "5d223181ccae3aeb34cabff4dc05e8e12c84fdce10a8da822ab3c440f4cc12f6",
+      "architecture": "wide512",
+      "epoch": 150
+    },
+    {
+      "path": "checkpoints/synthetic-only-probe-v3.pt",
+      "sha256": "0368c06c3f1b2838d4c8215ac90ad2823bfb797ac789c369b488adebfb4bc837",
+      "architecture": "large",
+      "epoch": 88
+    }
+  ],
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "weight_grid": "Quarter-weight simplex mixtures with at most four active models; equal weights included for two to four candidates",
+  "native_component_limit": 4,
+  "source_sha256": "28a54a7fc00736d8cc591c37875b30bfc45a983aca3c4ee467f64afc55ec9a99",
+  "selection": "Full-vocabulary exact-word memory development top1",
+  "trials": [
+    {
+      "weights": [
+        1.0,
+        0.0
+      ],
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9616666436195374,
+          "top5": 0.9983333349227905,
+          "top32": 1.0,
+          "top128": 1.0
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8700000047683716,
+          "top5": 0.9612500071525574,
+          "top32": 0.9933333396911621,
+          "top128": 1.0
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7295238375663757,
+          "top5": 0.8947619199752808,
+          "top32": 0.9776190519332886,
+          "top128": 0.9959523677825928
+        }
+      }
+    },
+    {
+      "weights": [
+        0.0,
+        1.0
+      ],
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9591666460037231,
+          "top5": 0.9983333349227905,
+          "top32": 1.0,
+          "top128": 1.0
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.871666669845581,
+          "top5": 0.9620833396911621,
+          "top32": 0.9941666722297668,
+          "top128": 0.9995833039283752
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7294047474861145,
+          "top5": 0.8933333158493042,
+          "top32": 0.9758333563804626,
+          "top128": 0.9954761862754822
+        }
+      }
+    },
+    {
+      "weights": [
+        0.5,
+        0.5
+      ],
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9616666436195374,
+          "top5": 0.9983333349227905,
+          "top32": 1.0,
+          "top128": 1.0
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8741666674613953,
+          "top5": 0.9620833396911621,
+          "top32": 0.9941666722297668,
+          "top128": 1.0
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.731071412563324,
+          "top5": 0.8961904644966125,
+          "top32": 0.9779762029647827,
+          "top128": 0.9958333373069763
+        }
+      }
+    },
+    {
+      "weights": [
+        0.25,
+        0.75
+      ],
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9583333134651184,
+          "top5": 0.9983333349227905,
+          "top32": 1.0,
+          "top128": 1.0
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.871666669845581,
+          "top5": 0.9624999761581421,
+          "top32": 0.9941666722297668,
+          "top128": 0.9995833039283752
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7302380800247192,
+          "top5": 0.8964285850524902,
+          "top32": 0.977142870426178,
+          "top128": 0.9958333373069763
+        }
+      }
+    },
+    {
+      "weights": [
+        0.75,
+        0.25
+      ],
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9616666436195374,
+          "top5": 0.9983333349227905,
+          "top32": 1.0,
+          "top128": 1.0
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8704166412353516,
+          "top5": 0.9620833396911621,
+          "top32": 0.9945833086967468,
+          "top128": 1.0
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7307142615318298,
+          "top5": 0.8964285850524902,
+          "top32": 0.9780952334403992,
+          "top128": 0.9958333373069763
+        }
+      }
+    }
+  ],
+  "selected": {
+    "weights": [
+      0.5,
+      0.5
+    ],
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9616666436195374,
+        "top5": 0.9983333349227905,
+        "top32": 1.0,
+        "top128": 1.0
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8741666674613953,
+        "top5": 0.9620833396911621,
+        "top32": 0.9941666722297668,
+        "top128": 1.0
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.731071412563324,
+        "top5": 0.8961904644966125,
+        "top32": 0.9779762029647827,
+        "top128": 0.9958333373069763
+      }
+    }
+  },
+  "raw_report_sha256": "cb3b40b3166ef67a4bf4764f662884c61c465336eab5e710ce86bfca018f0244",
+  "limits": "Full development word-only comparison of fixed later checkpoints; no benchmark or confirmation evaluation."
+}

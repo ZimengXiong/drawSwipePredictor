@@ -38,3 +38,6 @@ __pycache__/
 # ONNX model files (should be in checkpoints)
 *.onnx
 *.onnx.data
+
+# Reproducible synthetic gesture datasets
+training/data/

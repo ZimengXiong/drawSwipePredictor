@@ -1,0 +1,207 @@
+{
+  "status": "Work in progress; the 80% benchmark target has not been reached or rerun",
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "development_samples": 12000,
+  "hard_development_samples": 8400,
+  "ensemble": {
+    "checkpoints": [
+      {
+        "path": "checkpoints/ensemble-large-frozen.pt",
+        "sha256": "1d05b878e2927642b483b28c974fcff8846f181f956c8dd4e048b432a5d1cd46",
+        "architecture": "large",
+        "epoch": 63
+      },
+      {
+        "path": "checkpoints/ensemble-intrinsic-frozen.pt",
+        "sha256": "a9be6278a94cee4289d76535d8c2ede17a48a07691155bcdce80f0850da6cf64",
+        "architecture": "intrinsic",
+        "epoch": 48
+      },
+      {
+        "path": "checkpoints/proxy-v1/best.pt",
+        "sha256": "dcff804b22d5c9e6ed4636b220724f95df9f3dcd03d55206a660c5da801d75ae",
+        "architecture": "small",
+        "epoch": 148
+      }
+    ],
+    "selected": {
+      "weights": [
+        0.5,
+        0.5,
+        0
+      ],
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9366666674613953,
+          "top5": 0.996666669845581,
+          "top32": 1.0,
+          "top128": 1.0
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8299999833106995,
+          "top5": 0.9412500262260437,
+          "top32": 0.9879166483879089,
+          "top128": 0.9975000023841858
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.6508333086967468,
+          "top5": 0.838690459728241,
+          "top32": 0.9471428394317627,
+          "top128": 0.9850000143051147
+        }
+      }
+    }
+  },
+  "giant_encoder": {
+    "parameters": 10996624,
+    "initialization_only_native_parity": [
+      "hello: maximum embedding error 0.00000022",
+      "world: maximum embedding error 0.00000054",
+      "keyboard: maximum embedding error 0.00000016",
+      "lunchbox: maximum embedding error 0.00000036",
+      "alpacas: maximum embedding error 0.00000031"
+    ],
+    "encoder_sha256": "34d7fa04af4b6ffd2e8ddd1cf91dbe05fe7323b20c9c1b547ed78151b99e439a",
+    "bank_sha256": "78e952febb44f57f3922420e66ecd94ca0509db28a4c51fa4a7f973a35b050b8"
+  },
+  "checks": {
+    "python_tests_passed": 18,
+    "rust_workspace_tests_passed": 20,
+    "engine_clippy": "passed with warnings denied"
+  },
+  "limits": [
+    "Development results are not benchmark results.",
+    "Experimental cross-attention decoders are not yet exported to native inference; character decoding has CLI parity support.",
+    "Training is still running; the app retains the previously validated bundled model."
+  ],
+  "complete_system": {
+    "primary_sha256": "139e5072ce1c6cc55dc80f663269b8b7dc0401f9dbe57ecb9adef41b7ffcfadf",
+    "auxiliary_sha256": "f52d8dbf1f7a594f9ee537cd742135a2a0aec10b298355e8a268023aa46facac",
+    "development": {
+      "samples": 12000,
+      "vocabulary": 60000,
+      "seed": 700003,
+      "writer_start": 700005100009,
+      "writer_end": 700005112009,
+      "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+    },
+    "full_vocabulary": 60000,
+    "test_data_used": false,
+    "selected": {
+      "auxiliary_weight": 0.5,
+      "proxy_weight": 2.0,
+      "deletion_probability": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9350000023841858,
+          "top5": 0.996666669845581
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8295833468437195,
+          "top5": 0.9487500190734863
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.6785714030265808,
+          "top5": 0.8530952334403992
+        }
+      },
+      "shortlist_recall": {
+        "clean": 1.0,
+        "loose": 0.997083306312561,
+        "memory": 0.9876190423965454
+      }
+    },
+    "native_validation": "benchmarks/complete-native-validation.json"
+  },
+  "word_encoder": {
+    "kind": "Word encoder before the balanced-data continuation",
+    "test_data_used": false,
+    "full_vocabulary": 60000,
+    "checkpoint_sha256": "71ddd1ed8147be03225cd3afc17c84e62a5b8e9c0043bf68f386276a5047d203",
+    "checkpoint_epoch": 153,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9608333110809326,
+        "top5": 0.996666669845581
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.85916668176651,
+        "top5": 0.9566666483879089
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7067857384681702,
+        "top5": 0.8728571534156799
+      }
+    },
+    "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+    "native_parity": [
+      "hello: maximum embedding error 0.00000033",
+      "world: maximum embedding error 0.00000085",
+      "keyboard: maximum embedding error 0.00000020",
+      "lunchbox: maximum embedding error 0.00000044",
+      "alpacas: maximum embedding error 0.00000038"
+    ],
+    "limits": "Development only. The balanced continuation is running; no claim that it improves this initializer. The fixed benchmark remains unopened during these experiments."
+  },
+  "motor_blend": "Rejected after fixed development cross-check; see benchmarks/motor-combination-fixed-development.json",
+  "completed_word_encoder": {
+    "kind": "Completed standard word encoder; strong enlarged-model initializer",
+    "test_data_used": false,
+    "full_vocabulary": 60000,
+    "checkpoint_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+    "checkpoint_epoch": 167,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9624999761581421,
+        "top5": 0.9975000023841858
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8637499809265137,
+        "top5": 0.9579166769981384
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7101190686225891,
+        "top5": 0.8745238184928894
+      }
+    },
+    "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+    "expansion_initial_validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9624999761581421,
+        "top5": 0.9975000023841858
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8637499809265137,
+        "top5": 0.9579166769981384
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7101190686225891,
+        "top5": 0.8745238184928894
+      }
+    },
+    "expanded_initialization_native_parity": [
+      "hello: maximum embedding error 0.00000042",
+      "world: maximum embedding error 0.00000102",
+      "keyboard: maximum embedding error 0.00000022",
+      "lunchbox: maximum embedding error 0.00000058",
+      "alpacas: maximum embedding error 0.00000046"
+    ],
+    "limits": "Development only. Enlarged-model results describe its preserved initialization, not a completed larger-model training result. The fixed benchmark has not been rerun."
+  }
+}

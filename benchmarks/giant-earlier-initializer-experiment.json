@@ -1,0 +1,31 @@
+{
+  "experiment": "Giant encoder continued from the earlier intrinsic initializer",
+  "test_data_used": false,
+  "best_development": {
+    "epoch": 31,
+    "loss": 1.2666016372541586,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9275000095367432,
+        "top5": 0.9941666722297668
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8199999928474426,
+        "top5": 0.940416693687439
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.6339285969734192,
+        "top5": 0.818928599357605
+      }
+    },
+    "best_score": 0.6339285969734192,
+    "seconds": 105.35811762500089,
+    "improved": true
+  },
+  "checkpoint_sha256": "39c573c70289083801db3f3d0a39c6d65834889fab03c0ace08dabdcb164653d",
+  "disposition": "Replace this run with an expansion of the completed 71% word encoder. Keep its checkpoint and history; this is not a claim that further training could not improve it.",
+  "limits": "Development results only; benchmark and confirmation remain unopened."
+}

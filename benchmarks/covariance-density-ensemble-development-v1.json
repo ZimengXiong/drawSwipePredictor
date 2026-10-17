@@ -1,0 +1,70 @@
+{
+  "encoder_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "bank_manifest_sha256": "99242d416e9a74532a5dde529b539bb8884871afa3ac70bdb9cec639a89efdca",
+  "retrieval_sha256": "b86c9d1cab7d56cd50b23bc8cf38f6a47824427ab36c4a145a049b1951064156",
+  "retrieval_auxiliary_sha256": "89a68311ded7735485a232d212691ea5e941c7fdee11318ff6f0358fcb741727",
+  "retrieval_auxiliary_weight": 0.25,
+  "retrieval_selection_sha256": "71d81b6242793e3b9c4d38d020e0aadea5cb92ba78c7d54d3c2618dbe8373db8",
+  "test_data_used": false,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "full_vocabulary": 60000,
+  "selected": {
+    "regularizer": 4.0,
+    "covariance_fraction": 0.03,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9641666412353516,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8683333396911621,
+        "top5": 0.9599999785423279
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7260714173316956,
+        "top5": 0.8903571367263794
+      }
+    }
+  },
+  "paired_memory": {
+    "gained": 14,
+    "lost": 6,
+    "net": 8
+  },
+  "rules": "All development rows; natural top128 from full vocabulary; exact full words. Fitted covariance uses independent references only. No target insertion.",
+  "retrieval_only_control": {
+    "regularizer": 0.25,
+    "covariance_fraction": 0.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9641666412353516,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8683333396911621,
+        "top5": 0.9599999785423279
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7251190543174744,
+        "top5": 0.8896428346633911
+      }
+    }
+  },
+  "raw_report_sha256": "9de4217f9e8a829b6ff4908a81d0a34a221a86a4caebede25b05f12ae383c0fb",
+  "native_verified": false,
+  "promoted_to_app": false,
+  "disposition": "Small full-development gain; below the selected spelling ensemble. Retain as an experiment; no larger reference-bank build or native promotion."
+}

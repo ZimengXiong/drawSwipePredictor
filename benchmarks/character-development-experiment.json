@@ -1,0 +1,32 @@
+{
+  "experiment": "Frozen-backbone character decoder",
+  "test_data_used": false,
+  "best_development": {
+    "epoch": 49,
+    "loss": 1.7045296438535054,
+    "proxy_weight": 1.0,
+    "validation": {
+      "clean": {
+        "samples": 327,
+        "top1": 0.9051987528800964,
+        "top5": 0.9785932898521423
+      },
+      "loose": {
+        "samples": 591,
+        "top1": 0.7986463904380798,
+        "top5": 0.9204737544059753
+      },
+      "memory": {
+        "samples": 2082,
+        "top1": 0.6373679041862488,
+        "top5": 0.819884717464447
+      }
+    },
+    "best_score": 0.6373679041862488,
+    "improved": true,
+    "seconds": 23.49170062498888
+  },
+  "checkpoint_sha256": "e27b0da516302857dbf275319dd9a6a52dbc9ffa55ee5d22646370ccc5c64e65",
+  "disposition": "Stop the frozen-backbone run after 61 epochs and transfer its best decoder to joint training with a newer backbone. Keep the checkpoint and full development history.",
+  "limits": "Uses a 3000-query development subset; not directly comparable to the full 8400-query hard development cohort or to the benchmark."
+}

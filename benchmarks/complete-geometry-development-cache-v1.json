@@ -1,0 +1,75 @@
+{
+  "test_data_used": false,
+  "split": "development",
+  "samples": 12000,
+  "full_vocabulary": 60000,
+  "feature_schema": "complete_geometry_v1",
+  "feature_names": [
+    "retrieval_cost",
+    "complete_cost",
+    "reserved_zero",
+    "complete_margin",
+    "elastic_cost",
+    "point_cost",
+    "start_error",
+    "end_error",
+    "rotation",
+    "smoothing",
+    "length_error",
+    "displacement_error",
+    "tangent_error",
+    "unrotated_elastic",
+    "sharp_elastic",
+    "rounded_elastic",
+    "minimum_point_cost",
+    "minimum_endpoint_error",
+    "sqrt_retrieval_cost",
+    "sqrt_elastic_cost"
+  ],
+  "feature_file_sha256": "1841fca97b480e925241fdf93e6948bcb21f8d9860d21b524c3a14ebef3003d5",
+  "base_manifest_sha256": "e77149fdda0c22ca19c2fd26e6cd2be7b7deef53e595908a11570a18ec8e0157",
+  "executable_snapshots_sha256": {
+    "prediction": "34ce4574f3432e679e229536d069d8271d718041827795bf2a941876925dd697",
+    "raw_replay": "d2ff5becfcd5a7c54c422646cf70681e8b5ea35b1ccef001f80fee46d577ac64"
+  },
+  "source_sha256": {
+    "prepare_complete_geometry.py": "003b119589c48dd8b23490e83a998b911aa261daee65c4e892652037385ed224",
+    "retrieval_model.py": "6be42de79e9777a97ef5cebcba60ce8b96fc840cdbf43aee532501e25cd87d4d",
+    "train_proxy.py": "f75f43da53eaa3e6f69316d60dc7c6d9b60a93283598122249b153564a70867a"
+  },
+  "git_commit": "c3144c25fb717386c9f1c9a9b115c7de4d383eca",
+  "corpora": [
+    {
+      "samples": 12000,
+      "vocabulary": 60000,
+      "seed": 700003,
+      "writer_start": 700005100009,
+      "writer_end": 700005112009,
+      "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+    }
+  ],
+  "baseline": {
+    "clean": {
+      "samples": 1200,
+      "correct_top1": 1150,
+      "correct_top5": 1200,
+      "correct_top128": 1200
+    },
+    "loose": {
+      "samples": 2400,
+      "correct_top1": 2084,
+      "correct_top5": 2305,
+      "correct_top128": 2400
+    },
+    "memory": {
+      "samples": 8400,
+      "correct_top1": 6131,
+      "correct_top5": 7524,
+      "correct_top128": 8364
+    }
+  },
+  "reference_development_sha256": "d04a682c2627923b7d1aa18ea510a589237bfd44193a4bab4fade76fd04994e9",
+  "rules": "Natural complete top128; no target insertion, popularity, or vocabulary-rank features. Raw replay reproduces every cached curve. Labels and difficulty are loss/reporting arrays only.",
+  "seconds": 1299.6282073330076,
+  "limits": "Full-development feature-cache fidelity only. No trained geometry correction or new accuracy gain. The benchmark and blind confirmation remain unopened."
+}

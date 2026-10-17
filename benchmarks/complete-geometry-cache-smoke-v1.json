@@ -1,0 +1,66 @@
+{
+  "test_data_used": false,
+  "split": "train",
+  "samples": 16,
+  "full_vocabulary": 60000,
+  "feature_schema": "complete_geometry_v1",
+  "feature_names": [
+    "retrieval_cost",
+    "complete_cost",
+    "reserved_zero",
+    "complete_margin",
+    "elastic_cost",
+    "point_cost",
+    "start_error",
+    "end_error",
+    "rotation",
+    "smoothing",
+    "length_error",
+    "displacement_error",
+    "tangent_error",
+    "unrotated_elastic",
+    "sharp_elastic",
+    "rounded_elastic",
+    "minimum_point_cost",
+    "minimum_endpoint_error",
+    "sqrt_retrieval_cost",
+    "sqrt_elastic_cost"
+  ],
+  "feature_file_sha256": "f505e8f05e911faeae32e7b32ad3b5f4dd6b29bcb65e84d15e1257fb1514f057",
+  "base_manifest_sha256": "e77149fdda0c22ca19c2fd26e6cd2be7b7deef53e595908a11570a18ec8e0157",
+  "executable_snapshots_sha256": {
+    "prediction": "34ce4574f3432e679e229536d069d8271d718041827795bf2a941876925dd697",
+    "raw_replay": "d2ff5becfcd5a7c54c422646cf70681e8b5ea35b1ccef001f80fee46d577ac64"
+  },
+  "corpora": [
+    {
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700001,
+      "writer_start": 700003100003,
+      "writer_end": 700004100003,
+      "sha256": "557eb33b55d76c7c0b27b792f26b17b163006ca1ba13435a9a4e62436d6ce235"
+    }
+  ],
+  "baseline": {
+    "clean": {
+      "samples": 1,
+      "correct_top1": 1,
+      "correct_top5": 1,
+      "correct_top128": 1
+    },
+    "loose": {
+      "samples": 6,
+      "correct_top1": 6,
+      "correct_top5": 6,
+      "correct_top128": 6
+    },
+    "memory": {
+      "samples": 9,
+      "correct_top1": 7,
+      "correct_top5": 8,
+      "correct_top128": 9
+    }
+  },
+  "limits": "Sixteen training writers only: raw replay, schema, candidate ordering, and cache serialization smoke check. Not development accuracy or a trained correction gain. Production training and full-development mining run separately."
+}

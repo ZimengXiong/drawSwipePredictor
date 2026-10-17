@@ -1,0 +1,30 @@
+{
+  "experiment": "proxy-modes4-v1",
+  "status": "Stopped to prioritize the stronger residual and character models",
+  "best": {
+    "epoch": 12,
+    "loss": 1.376824413537979,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9358333349227905,
+        "top5": 0.9925000071525574
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.7833333611488342,
+        "top5": 0.9116666913032532
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.564047634601593,
+        "top5": 0.7526190280914307
+      }
+    },
+    "best_score": 0.564047634601593,
+    "seconds": 68.250867499999,
+    "improved": true
+  },
+  "test_data_used": false,
+  "reason": "Four centers substantially increased computation but did not outperform the smaller single-center development baseline at this stage."
+}

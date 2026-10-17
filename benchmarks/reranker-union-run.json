@@ -1,0 +1,52 @@
+{
+  "seed": 20261016,
+  "epochs": 100,
+  "test_data_used": false,
+  "selection": "mean top1 across four validation sources; shortlist fixed by native feature preparation",
+  "source_sha256": {
+    "train": "812ee11bf13d60e58f942521c54694d8dd730a3b2c5767e410b645129ce80b39",
+    "validation": "209e3e9871ee8e5f46e781af49ea2b27b3d9ff98d79a231cc7b3d7c2a1a4f6f5"
+  },
+  "native_sources": {
+    "train": {
+      "split": "train",
+      "seed": 424242,
+      "source_sha256": {
+        "real": "5d833110127d554d43e9a83843305e90b51f2022bddd880c7e1586c0761693da",
+        "synthetic": "1a62a17180f0af39f043a8caab1ae77b9fd27473cb72863bda0a68896b2c8550"
+      },
+      "encoder_sha256": "9573edad3f1319a491a2e6f3b474c64ef2753d7ab81132284488dfe8b7816ccd",
+      "bank_sha256": "ccbf1e7e5788c5c22eb41d6f3b12592aa28d428a5c728aa5c047919467d446d2",
+      "test_data_used": false,
+      "candidates": 64,
+      "candidate_policy": "half neural retrieval, half independent geometry retrieval",
+      "samples": 96000,
+      "candidate_recall": {
+        "distorted_real": 0.9854166666666667,
+        "online": 0.9550416666666667,
+        "real": 0.994625,
+        "synthetic": 0.907875
+      }
+    },
+    "validation": {
+      "split": "validation",
+      "seed": 424243,
+      "source_sha256": {
+        "real": "50f20dcbc612f955937da815ae2ea6df4b484cb6e783b610e942d5c2b76f6521",
+        "synthetic": "c7bf08aecfb4e55f7481f1804c0d844efbcf4dd1bd3e096499727c9582db9741"
+      },
+      "encoder_sha256": "9573edad3f1319a491a2e6f3b474c64ef2753d7ab81132284488dfe8b7816ccd",
+      "bank_sha256": "ccbf1e7e5788c5c22eb41d6f3b12592aa28d428a5c728aa5c047919467d446d2",
+      "test_data_used": false,
+      "candidates": 64,
+      "candidate_policy": "half neural retrieval, half independent geometry retrieval",
+      "samples": 8000,
+      "candidate_recall": {
+        "distorted_real": 0.9795,
+        "online": 0.9535,
+        "real": 0.988,
+        "synthetic": 0.8955
+      }
+    }
+  }
+}

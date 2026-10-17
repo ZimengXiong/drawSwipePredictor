@@ -1,0 +1,64 @@
+{
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "development_samples": 12000,
+  "training_queries": 50000,
+  "eligible_training_queries": 49865,
+  "epoch": 65,
+  "blend": 1.0,
+  "correction_sha256": "8546c4e4f7ae0ae98e87c3fd9eeb5a5126cecd56077c723e4ad54d31b0e5e5f8",
+  "base_manifest_sha256": "e77149fdda0c22ca19c2fd26e6cd2be7b7deef53e595908a11570a18ec8e0157",
+  "development_feature_sha256": "1841fca97b480e925241fdf93e6948bcb21f8d9860d21b524c3a14ebef3003d5",
+  "training_run_sha256": "e1275ad4469cad4cdbfc6195585f8998e2b11bef32153e13d927b1adf6065445",
+  "training_history_sha256": "0c3967a156fde93e46e5cf4ec1360977dee232fd9c1faeca020de5e389a09ab1",
+  "selected_training_validation": {
+    "clean": {
+      "samples": 1200,
+      "correct_top1": 1149,
+      "correct_top5": 1200,
+      "top1": 0.9575,
+      "top5": 1.0
+    },
+    "loose": {
+      "samples": 2400,
+      "correct_top1": 2094,
+      "correct_top5": 2306,
+      "top1": 0.8725,
+      "top5": 0.9608333333333333
+    },
+    "memory": {
+      "samples": 8400,
+      "correct_top1": 6142,
+      "correct_top5": 7532,
+      "top1": 0.7311904761904762,
+      "top5": 0.8966666666666666
+    }
+  },
+  "native_cost_formula_validation": {
+    "clean": {
+      "samples": 1200,
+      "correct_top1": 1149,
+      "correct_top5": 1200,
+      "top1": 0.9575,
+      "top5": 1.0
+    },
+    "loose": {
+      "samples": 2400,
+      "correct_top1": 2094,
+      "correct_top5": 2306,
+      "top1": 0.8725,
+      "top5": 0.9608333333333333
+    },
+    "memory": {
+      "samples": 8400,
+      "correct_top1": 6142,
+      "correct_top5": 7532,
+      "top1": 0.7311904761904762,
+      "top5": 0.8966666666666666
+    }
+  },
+  "same_aggregate_counts": true,
+  "native_verified": false,
+  "promoted_to_app": false,
+  "limits": "Full development on fixed native features, using the deployed cost formula. Native correction loading and point-only end-to-end parity remain to be implemented. No benchmark or confirmation evaluation."
+}

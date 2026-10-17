@@ -1,0 +1,78 @@
+{
+  "encoder_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "decoder_sha256": "d06540bd32a3575abf092d131623e4d0826729852886761ba1f08721a4fe4fa9",
+  "retrieval_sha256": null,
+  "word_retrieval": [
+    {
+      "sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+      "weight": 0.25
+    },
+    {
+      "sha256": "9035e7f8637fce217ea1b240e35e4c3dd0db05979292e494d18e43e193231950",
+      "weight": 0.75
+    }
+  ],
+  "retrieval_auxiliary_sha256": null,
+  "retrieval_auxiliary_weight": 0.0,
+  "retrieval_selection_sha256": "065a430db91da6b32243325ec398912a9025a15cc04cd80b9c473113d3067848",
+  "joint_context": false,
+  "context_state_source_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "decoder_epoch": 30,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "samples": 12000,
+  "selected": {
+    "length_power": 0.0,
+    "proxy_weight": 8.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9616666436195374,
+        "top5": 0.9983333349227905
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8712499737739563,
+        "top5": 0.9608333110809326
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.729285717010498,
+        "top5": 0.8952381014823914
+      }
+    }
+  },
+  "shortlist_recall": {
+    "clean": 1.0,
+    "loose": 1.0,
+    "memory": 0.9954761862754822
+  },
+  "rules": "All development rows; natural top128; exact full words; no target insertion or alias credit",
+  "raw_report_sha256": "bf725a7eaebaf3cdae9be60cef63dc033af3716043df199aeca22b7a6712323c",
+  "native_verified": false,
+  "promoted_to_app": false,
+  "limits": "Full development only. No benchmark or blind-confirmation evaluation. The previous 6131/8400 hard spelling candidate remains selected.",
+  "hard_correct_top1": 6126,
+  "aggregate_count_change_vs_previous": {
+    "clean": {
+      "top1": 4,
+      "top5": -2
+    },
+    "loose": {
+      "top1": 7,
+      "top5": 1
+    },
+    "memory": {
+      "top1": -5,
+      "top5": -4
+    }
+  }
+}

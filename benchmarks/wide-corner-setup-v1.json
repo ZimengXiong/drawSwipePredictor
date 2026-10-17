@@ -1,0 +1,135 @@
+{
+  "test_data_used": false,
+  "run": {
+    "test_data_used": false,
+    "encoder_sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+    "data": {
+      "test_data_used": false,
+      "split": "train",
+      "samples": 300000,
+      "internal_holdout": 10000,
+      "checkpoint_sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+      "validation_corpus": {
+        "samples": 12000,
+        "vocabulary": 60000,
+        "seed": 700003,
+        "writer_start": 700005100009,
+        "writer_end": 700005112009,
+        "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+      },
+      "corpora": [
+        {
+          "samples": 300000,
+          "vocabulary": 60000,
+          "seed": 720051,
+          "writer_start": 720053160153,
+          "writer_end": 720053460153,
+          "sha256": "e53d6fd5b56ebe4b4e49697de154f85899f6249a72dee46eb966b33f13ad294d"
+        }
+      ],
+      "target_schema": "waypoints_arc_v2",
+      "reference_data_sha256": "6d45f4362dab82b7b3d1a1a8e7734d4231491676915a21d9843699bcd293841e",
+      "base_arrays_identical_to_reference": true,
+      "seed": 900919,
+      "random_route_samples": 59890,
+      "data_sha256": "e53d6fd5b56ebe4b4e49697de154f85899f6249a72dee46eb966b33f13ad294d",
+      "cli_sha256": "1db126a55d8047d4d9f4548e6c9c18e30221681bac9603bae95db37c16dc9e67",
+      "source_sha256": "b44ee200d4ed9a9587bc1e5387920a6b51ebf7881b61e91f06caa9896c1488c6",
+      "generator_sha256": "760b43e423eb8fe9bd81273551a0df7749c93f2e722c2f86afd33f8f4e2bf1c0",
+      "count_histogram": [
+        0,
+        0,
+        6345,
+        23444,
+        34401,
+        33826,
+        37246,
+        35048,
+        29927,
+        23339,
+        16080,
+        10601,
+        6670,
+        4544,
+        3181,
+        2509,
+        2230,
+        2017,
+        1940,
+        1986,
+        2042,
+        1918,
+        1926,
+        1941,
+        1912,
+        1897,
+        1915,
+        1924,
+        1937,
+        1972,
+        1917,
+        1942,
+        1423
+      ],
+      "query_inputs": "Observed normalized points only. Counts and unrounded coordinates are supervised targets; word identities, writer IDs, and difficulty are absent from model inputs.",
+      "limits": "Training supervision only. Interior drift uses the fixed corner-midpoint convention; targets are latent controls, not observed pen samples. No recognition or benchmark accuracy claimed."
+    },
+    "parameters": 14665764,
+    "model_type": "aligned_waypoints_v2",
+    "initialization_sha256": "74f7f9310581304f29c9401cb27f7af173157a4e1e5a76edc22364d580f9d3d0",
+    "selection": "Internal mean-query location MSE plus ten times arc MSE",
+    "query_inputs": "Normalized stroke points; inference enumerates every count from2to32. True counts and corner locations supervise training only.",
+    "source_sha256": {
+      "train_waypoints.py": "dc08b4bdf1d28155063391b8d15ac511e4d550389cdc739e811f1019866f505e",
+      "waypoint_model.py": "5395dc483ca3d5d45decef8e04009c171ea561e6123b08b4a1232f24b90fab65",
+      "aligned_waypoint_model.py": "7014f31cc8b14d031085ef87fb8f19cd26e55a884d47a15c8eede9f4fb9db408",
+      "retrieval_model.py": "6be42de79e9777a97ef5cebcba60ce8b96fc840cdbf43aee532501e25cd87d4d",
+      "large_encoder.py": "41767ccc94c0d872490cb8a76866fb5f564d6c3179218bd0e2b0ed51c284a7e4"
+    },
+    "arguments": {
+      "checkpoint": "checkpoints/exact-low-probe-v1.pt",
+      "data": "data/waypoint-aligned-v2/train.npz",
+      "output": "checkpoints/waypoint-wide-v1",
+      "epochs": 100,
+      "steps": 200,
+      "batch": 256,
+      "width": 384,
+      "layers": 6,
+      "seed": 900941,
+      "with_progress": true,
+      "init_model": "checkpoints/waypoint-wide-init-v1.pt"
+    },
+    "git_commit": "b4ba4315076e0617a077cb7e1b88c584e03a8a1b"
+  },
+  "initial_internal_validation": {
+    "epoch": 0,
+    "training_loss": 0.0,
+    "internal_holdout": {
+      "conditional_loss": -1.6467169324874877,
+      "count_accuracy": 0.739,
+      "conditional_waypoint_mse": 0.23267981004198957,
+      "samples": 10000,
+      "mean_query_waypoint_mse": 0.10007935740947724,
+      "arc_position_mse": 0.0005750166997313499,
+      "recognition_accuracy_measured": false
+    },
+    "seconds": 20.232794125011424
+  },
+  "expansion": {
+    "source_sha256": "2c5b793c7a834a1838f55d24e04a704c419bd722df6dcf0e8e37f06c9ed70b65",
+    "source_epoch": 17,
+    "source_code_sha256": "29a901619b8f39cd7d02ffdaed8a162a098f13dd1d34fe352e791da405c5e7d4",
+    "maximum_absolute_errors": {
+      "means": 2.592802047729492e-06,
+      "log_scales": 6.9141387939453125e-06,
+      "count_log_probabilities": 3.814697265625e-05
+    },
+    "reference_queries": 4,
+    "count_hypotheses_per_query": 31,
+    "symmetry_noise": 0.01,
+    "limits": "Synthetic tensor initialization parity only; no trained gain or word-recognition result."
+  },
+  "training_session": 46174,
+  "training_pid": 24500,
+  "limits": "Function-preserving initialization and conditional training-writer diagnostics only. No wider-model word-recognition gain or native support claimed. Source frozen round17 has a separate full-development result6193/8400; it is not a result for this new model."
+}

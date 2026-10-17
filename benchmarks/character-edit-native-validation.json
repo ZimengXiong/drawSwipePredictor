@@ -1,0 +1,19 @@
+{
+  "purpose": "Native latent-deletion parity only; no benchmark data",
+  "test_data_used": false,
+  "checks": [
+    "hello: maximum character log-probability error 0.00011277; exact top-five ranking matches",
+    "world: maximum character log-probability error 0.00005484; exact top-five ranking matches",
+    "keyboard: maximum character log-probability error 0.00009251; exact top-five ranking matches",
+    "lunchbox: maximum character log-probability error 0.00007677; exact top-five ranking matches",
+    "alpacas: maximum character log-probability error 0.00010014; exact top-five ranking matches"
+  ],
+  "character": {
+    "sha256": "4187b6f3410bb4e75e4ff7e14b72fe252342f5f2b72c3f070516eac556e6692e",
+    "checkpoint_sha256": "dd2ff1bb6f2f3c861f768a779212425a77bf4eabab5e5ff33de27f9a80cf7741",
+    "proxy_weight": 1.0,
+    "deletion_probability": 0.45,
+    "length_power": 0.3,
+    "selection": "Development only; exact-word scoring and naturally retrieved top128 candidates"
+  }
+}

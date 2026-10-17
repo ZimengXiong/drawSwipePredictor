@@ -1,0 +1,51 @@
+{
+  "test_data_used": false,
+  "native_manifest_sha256": "1b1dbcd554547009692c9ac15da66a6b7c56b46c6f8dddd9dd7d1ef4b8403929",
+  "native_cli_sha256": "67812bed14e67992ec488a4d5c4fb60f916e7e150e4252f437ff9d0d1c53ef0f",
+  "artifacts": {
+    "encoder.bin": "909155b3b401dcc75d46759f8f751749974028e89a4fd2f13ca6c6cb70925372",
+    "words.bin": "bdbc9c7a02da7fdc96102d175d937f348864678771498682f4bdee51b57bfbf1",
+    "spelling.bin": "1f3545194d45596b7b21ecbac88d76a5e21877ee46c61d10dc58c0606eb00c4e",
+    "spelling/encoder.bin": "1eddedc4a75670b45609154ff934621df29c60182326fddf5675d68b91a5a822",
+    "spelling-verification.json": "d832f07289c1af6e60db5b7dc0ee5306ba9e376de8253f4bc602797d610f2c13",
+    "auxiliary/encoder.bin": "4b5f81e92f873cdf1c2794d898a1c3a66d6f958a8f71a30786ec373ae9038961",
+    "auxiliary/words.bin": "952efb2686de85bfd9fd34f21eca75c529268592e16ef4bbf74310ccee72204c"
+  },
+  "cases": 5,
+  "verification_stdout": "hello: maximum spelling cost error 0.00001907; exact top-five ranking matches\nworld: maximum spelling cost error 0.00001240; exact top-five ranking matches\nkeyboard: maximum spelling cost error 0.00001526; exact top-five ranking matches\nlunchbox: maximum spelling cost error 0.00002289; exact top-five ranking matches\nalpacas: maximum spelling cost error 0.00001907; exact top-five ranking matches\n",
+  "binding_rejections": {
+    "missing_decoder": {
+      "exit_code": 1,
+      "reason": "Error: \"No such file or directory (os error 2)\""
+    },
+    "changed_decoder": {
+      "exit_code": 1,
+      "reason": "Error: \"spelling weights differ from the exported manifest\""
+    },
+    "changed_context": {
+      "exit_code": 1,
+      "reason": "Error: \"spelling decoder belongs to a different retrieval context\""
+    },
+    "changed_mixture": {
+      "exit_code": 1,
+      "reason": "Error: \"spelling decoder belongs to a different retrieval context\""
+    }
+  },
+  "normal_inference_milliseconds": [
+    74.813,
+    82.77195800000001,
+    80.564,
+    78.19195900000001,
+    78.473
+  ],
+  "limits": "CLI-only package and canonical parity checks. All native inference assets match the separately verified full-development model. The app window was not opened; original app and crate-bundled assets remain unchanged. This is not a new accuracy evaluation or a benchmark result.",
+  "model_directory": "build/Draw from Memory Preview.app/Contents/Resources/model",
+  "package_receipt_sha256": "dafbabf6a031caf301fa342371efcf7baf82ecc82859ac5b7e694b84662ff126",
+  "package_executable_sha256": "973ac66c6ea1487c2da96c11f63a34e5aa63d18c91314ec93ffcdd584b31cd40",
+  "package_info_plist_sha256": "c49bb89dd6a7240b06bec9bab11308b035b5d8bde16c8d3240f28958ad3da659",
+  "packager_source_sha256": "c30fcc70f4492ff73809ba161079baa1a1215e60b414539e256791b5647ff5a7",
+  "backend_source_sha256": "73d19208e669d8415ad1f1078a66aa15519b225522ea4882ed22c5420b5d7d53",
+  "app_window_opened": false,
+  "benchmark_evaluated": false,
+  "full_native_development_report": "benchmarks/spelling-ensemble-native-full-development-v1.json"
+}

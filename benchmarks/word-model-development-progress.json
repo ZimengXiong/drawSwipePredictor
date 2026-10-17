@@ -1,0 +1,33 @@
+{
+  "kind": "Word encoder before the balanced-data continuation",
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "checkpoint_sha256": "71ddd1ed8147be03225cd3afc17c84e62a5b8e9c0043bf68f386276a5047d203",
+  "checkpoint_epoch": 153,
+  "validation": {
+    "clean": {
+      "samples": 1200,
+      "top1": 0.9608333110809326,
+      "top5": 0.996666669845581
+    },
+    "loose": {
+      "samples": 2400,
+      "top1": 0.85916668176651,
+      "top5": 0.9566666483879089
+    },
+    "memory": {
+      "samples": 8400,
+      "top1": 0.7067857384681702,
+      "top5": 0.8728571534156799
+    }
+  },
+  "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "native_parity": [
+    "hello: maximum embedding error 0.00000033",
+    "world: maximum embedding error 0.00000085",
+    "keyboard: maximum embedding error 0.00000020",
+    "lunchbox: maximum embedding error 0.00000044",
+    "alpacas: maximum embedding error 0.00000038"
+  ],
+  "limits": "Development only. The balanced continuation is running; no claim that it improves this initializer. The fixed benchmark remains unopened during these experiments."
+}

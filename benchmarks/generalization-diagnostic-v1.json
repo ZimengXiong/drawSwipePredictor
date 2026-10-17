@@ -1,0 +1,91 @@
+{
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "training_pools": {
+    "training_pool_0": {
+      "path": "data/memory-proxy/train.bin",
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700001,
+      "writer_start": 700003100003,
+      "writer_end": 700004100003,
+      "sha256": "557eb33b55d76c7c0b27b792f26b17b163006ca1ba13435a9a4e62436d6ce235",
+      "evaluated_hard_rows": 4096
+    },
+    "training_pool_1": {
+      "path": "data/memory-proxy/train-700020.bin",
+      "samples": 1000000,
+      "vocabulary": 60000,
+      "seed": 700020,
+      "writer_start": 700022100060,
+      "writer_end": 700023100060,
+      "sha256": "137f01942c269ee7d029e74ad50ce9ad613e39589d46ffeab58a27efd9c88fe6",
+      "evaluated_hard_rows": 4096
+    }
+  },
+  "seed": 900491,
+  "checkpoints": [
+    {
+      "checkpoint": "checkpoints/proxy-giant-strong-init.pt",
+      "sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+      "epoch": 167,
+      "declared_training_pools": {
+        "training_pool_0": true,
+        "training_pool_1": false
+      },
+      "metrics": {
+        "training_pool_0": {
+          "samples": 4096,
+          "top1": 0.790283203125,
+          "top5": 0.92333984375
+        },
+        "training_pool_1": {
+          "samples": 4096,
+          "top1": 0.698974609375,
+          "top5": 0.877197265625
+        },
+        "development_memory": {
+          "samples": 8400,
+          "top1": 0.7101190686225891,
+          "top5": 0.8745238184928894
+        }
+      }
+    },
+    {
+      "checkpoint": "checkpoints/balanced-averaging-source-v1.pt",
+      "sha256": "b86c9d1cab7d56cd50b23bc8cf38f6a47824427ab36c4a145a049b1951064156",
+      "epoch": 112,
+      "declared_training_pools": {
+        "training_pool_0": true,
+        "training_pool_1": true
+      },
+      "metrics": {
+        "training_pool_0": {
+          "samples": 4096,
+          "top1": 0.765625,
+          "top5": 0.912353515625
+        },
+        "training_pool_1": {
+          "samples": 4096,
+          "top1": 0.712646484375,
+          "top5": 0.893798828125
+        },
+        "development_memory": {
+          "samples": 8400,
+          "top1": 0.7232142686843872,
+          "top5": 0.8885714411735535
+        }
+      }
+    }
+  ],
+  "rules": "Models remain in evaluation mode; no weights or normalization updates; all word scores eligible; labels and writer IDs excluded from encoder inputs",
+  "limits": "Training-pool samples may have been seen during fitting. Only declared development accuracy supports model selection. No benchmark or blind-confirmation evaluation."
+}

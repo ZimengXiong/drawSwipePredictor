@@ -1,0 +1,139 @@
+{
+  "vocabulary": 60000,
+  "test_manifest": {
+    "seed": 8675309,
+    "fresh_donors": 191,
+    "real_samples": 1000,
+    "exclusion": "All donor sessions in the previously collected 150k train, 10k validation and 5k test files",
+    "selection": "Up to 10 random records per fresh donor, shuffled and capped at 1000; no model scores used",
+    "sha256": "4a89b90f62151a3124ebcc268f4cb7a96b2711248736e61e7eb97e50c2b7393b",
+    "source_sha256": {
+      "real_test": "196e924d466a1384d6373fbe9005dedfb0cccd7ee8275b96b914cec5dcdab47b",
+      "synthetic_test": "0093efeba85c44cfcf9db28bb7c94211e0bff9e6b42b3f03238d969c437bc114"
+    },
+    "limitations": "Recorded swipes use visible keyboards. Distorted and synthetic gestures do not establish human freehand-memory accuracy."
+  },
+  "groups": {
+    "distorted_real": {
+      "samples": 1000,
+      "clusters": 191,
+      "baseline": {
+        "top1": 0.701,
+        "top5": 0.875,
+        "median_ms": 3.4256245,
+        "p95_ms": 3.6782538499999995
+      },
+      "challenger": {
+        "top1": 0.701,
+        "top5": 0.878,
+        "median_ms": 6.8017915,
+        "p95_ms": 7.292573249999999
+      },
+      "top1_gain": 0.0,
+      "cluster_bootstrap_95pct": [
+        -0.016898678352420687,
+        0.017119838872104734
+      ]
+    },
+    "real": {
+      "samples": 1000,
+      "clusters": 191,
+      "baseline": {
+        "top1": 0.778,
+        "top5": 0.921,
+        "median_ms": 3.428,
+        "p95_ms": 3.6815628
+      },
+      "challenger": {
+        "top1": 0.791,
+        "top5": 0.926,
+        "median_ms": 6.815666500000001,
+        "p95_ms": 7.38912915
+      },
+      "top1_gain": 0.013,
+      "cluster_bootstrap_95pct": [
+        0.0,
+        0.02659587569437166
+      ]
+    },
+    "synthetic_clean": {
+      "samples": 2000,
+      "clusters": 2000,
+      "baseline": {
+        "top1": 0.964,
+        "top5": 0.9995,
+        "median_ms": 3.4189375,
+        "p95_ms": 3.6825732
+      },
+      "challenger": {
+        "top1": 0.9265,
+        "top5": 0.9945,
+        "median_ms": 6.921688,
+        "p95_ms": 7.89226455
+      },
+      "top1_gain": -0.0375,
+      "cluster_bootstrap_95pct": [
+        -0.0455,
+        -0.029
+      ]
+    },
+    "synthetic_loose": {
+      "samples": 2000,
+      "clusters": 2000,
+      "baseline": {
+        "top1": 0.6765,
+        "top5": 0.8245,
+        "median_ms": 3.443562,
+        "p95_ms": 3.71866605
+      },
+      "challenger": {
+        "top1": 0.712,
+        "top5": 0.8435,
+        "median_ms": 6.867583,
+        "p95_ms": 8.04873155
+      },
+      "top1_gain": 0.0355,
+      "cluster_bootstrap_95pct": [
+        0.0255,
+        0.0455
+      ]
+    },
+    "synthetic_memory": {
+      "samples": 2000,
+      "clusters": 2000,
+      "baseline": {
+        "top1": 0.3345,
+        "top5": 0.535,
+        "median_ms": 3.4461665,
+        "p95_ms": 3.7242982000000002
+      },
+      "challenger": {
+        "top1": 0.435,
+        "top5": 0.627,
+        "median_ms": 6.983375,
+        "p95_ms": 7.48725625
+      },
+      "top1_gain": 0.1005,
+      "cluster_bootstrap_95pct": [
+        0.0865,
+        0.1155
+      ]
+    }
+  },
+  "models": {
+    "baseline": {
+      "encoder.bin": "9573edad3f1319a491a2e6f3b474c64ef2753d7ab81132284488dfe8b7816ccd",
+      "manifest.json": "77b9c97a5d450d13334667ba682a62b0e3a980eec5fff71c55ef7565b767bfde",
+      "verification.json": "321eafcf69331702a3b766cab4c07aa8167439142c14d4619a4496675e649a4e",
+      "words.bin": "ccbf1e7e5788c5c22eb41d6f3b12592aa28d428a5c728aa5c047919467d446d2"
+    },
+    "challenger": {
+      "encoder.bin": "9573edad3f1319a491a2e6f3b474c64ef2753d7ab81132284488dfe8b7816ccd",
+      "manifest.json": "77b9c97a5d450d13334667ba682a62b0e3a980eec5fff71c55ef7565b767bfde",
+      "reranker-verification.json": "657e2929171d5bed5dbc8855a941962479eb7668821f083e575e68ccce0f2d37",
+      "verification.json": "321eafcf69331702a3b766cab4c07aa8167439142c14d4619a4496675e649a4e",
+      "words.bin": "ccbf1e7e5788c5c22eb41d6f3b12592aa28d428a5c728aa5c047919467d446d2",
+      "reranker.json": "fa28069c6c65f3d401f536d1dc73569e346acff9baf1403a6980009069b98a63"
+    }
+  }
+}

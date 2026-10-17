@@ -1,0 +1,21 @@
+{
+  "seed": 8675309,
+  "fresh_donors": 107,
+  "real_samples": 879,
+  "exclusion": "All donor sessions in every split of the excluded datasets",
+  "excluded_source_sha256": {
+    "futo-large/train.jsonl": "5d833110127d554d43e9a83843305e90b51f2022bddd880c7e1586c0761693da",
+    "futo-large/validation.jsonl": "50f20dcbc612f955937da815ae2ea6df4b484cb6e783b610e942d5c2b76f6521",
+    "futo-large/test.jsonl": "ac2b2f3687c80e19ce78be828cb755c0ab5991d019726bfaf0796e8703e5f810",
+    "futo-fresh/train.jsonl": "cd7e53cb97e2d1a29fa116796ff8426bac97d8f9d1806dc9eb9bc701e0df0602",
+    "futo-fresh/validation.jsonl": "dc52e65f42356896474b6538b5d377af1c29194cc4cf200437ea3d3cd8959bde",
+    "futo-fresh/test.jsonl": "196e924d466a1384d6373fbe9005dedfb0cccd7ee8275b96b914cec5dcdab47b"
+  },
+  "selection": "Up to 10 random records per fresh donor, shuffled and capped at 1000; no model scores used",
+  "sha256": "0dd181dfd6ee8be0c706bfe269504ddd6dbb1e0dc90ed587ebf3ba019ce1a63f",
+  "source_sha256": {
+    "real_test": "f280b23720a1e588a0e1934c1435514d936cb0ce9aee6d6f9940d87c3b178014",
+    "synthetic_test": "b534c26e0be4dde0de78406f0267fe608edfec95f4bf6a7064ebcb7f58ce20ff"
+  },
+  "limitations": "Recorded swipes use visible keyboards. Distorted and synthetic gestures do not establish human freehand-memory accuracy."
+}
