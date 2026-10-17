@@ -96,6 +96,7 @@ def main():
     parser.add_argument("--extra-train", type=Path, action="append", default=[])
     parser.add_argument("--stream-corpus", action="store_true")
     parser.add_argument("--balance-real", action="store_true")
+    parser.add_argument("--freeze-proxies", action="store_true")
     parser.add_argument("--validation", type=Path, default=ROOT / "training/data/memory-proxy/validation.bin")
     parser.add_argument("--init-model", type=Path, default=ROOT / "training/checkpoints/retrieval-v3/best.pt")
     parser.add_argument("--output", type=Path, required=True)
@@ -193,7 +194,7 @@ def main():
     expected = (len(words), 128) if args.centers == 1 else (len(words), args.centers, 128)
     if tuple(initial_vectors.shape) != expected:
         raise ValueError("proxy center dimensions differ from the requested model")
-    proxies = nn.Parameter(F.normalize(initial_vectors, dim=-1))
+    proxies = nn.Parameter(F.normalize(initial_vectors, dim=-1), requires_grad=not args.freeze_proxies)
     del initial, initial_vectors
     optimizer = torch.optim.AdamW([{"params": model.parameters(), "lr": args.learning_rate},
                                   {"params": [proxies], "lr": args.learning_rate * 4}], weight_decay=0.0001)
