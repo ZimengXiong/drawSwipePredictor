@@ -1,5 +1,4 @@
-//! Small native inference runtime for the exported convolutional route encoder.
-//! The fixed architecture keeps deployment independent of Python and ONNX.
+//! Native convolutional inference for compact and residual route encoders.
 use crate::memory_geometry::resample;
 
 const POINTS: usize = 64;
@@ -10,20 +9,32 @@ struct Layer {
     bias: Vec<f32>,
     inputs: usize,
     outputs: usize,
+    kernel: usize,
+    stride: usize,
+    dilation: usize,
 }
 
 pub(crate) struct Encoder {
     convolutions: Vec<Layer>,
+    residual: Vec<[Layer; 2]>,
+    downsample: Option<Layer>,
     dense: Vec<Layer>,
 }
 
 impl Encoder {
     pub(crate) fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
-        if bytes.get(..8) != Some(b"SWPRT001") {
-            return Err("unsupported route encoder format".into());
-        }
+        let large = match bytes.get(..8) {
+            Some(b"SWPRT001") => false,
+            Some(b"SWPRT002") => true,
+            _ => return Err("unsupported route encoder format".into()),
+        };
         let mut position = 8;
-        let mut layer = |inputs: usize, outputs: usize, kernel: usize| -> Result<Layer, String> {
+        let mut layer = |inputs: usize,
+                         outputs: usize,
+                         kernel: usize,
+                         stride: usize,
+                         dilation: usize|
+         -> Result<Layer, String> {
             let count = inputs * outputs * kernel + outputs;
             let end = position + count * 4;
             let data = bytes.get(position..end).ok_or("truncated route encoder")?;
@@ -43,21 +54,55 @@ impl Encoder {
                 bias: values[split..].to_vec(),
                 inputs,
                 outputs,
+                kernel,
+                stride,
+                dilation,
             })
         };
-        let convolutions = [(8, 48), (48, 64), (64, 96), (96, 128)]
+        let specification = if large {
+            vec![(8, 48, 5, 1), (48, 64, 5, 2), (64, 128, 3, 1)]
+        } else {
+            vec![
+                (8, 48, 5, 1),
+                (48, 64, 5, 2),
+                (64, 96, 5, 2),
+                (96, 128, 5, 2),
+            ]
+        };
+        let convolutions = specification
             .into_iter()
-            .map(|(i, o)| layer(i, o, 5))
+            .map(|(i, o, k, s)| layer(i, o, k, s, 1))
             .collect::<Result<_, _>>()?;
-        let dense = [(1024, 256), (256, DIM)]
+        let mut residual = Vec::new();
+        if large {
+            for dilation in [1, 2, 4, 8, 1, 2] {
+                residual.push([
+                    layer(128, 192, 5, 1, dilation)?,
+                    layer(192, 128, 3, 1, dilation)?,
+                ]);
+            }
+        }
+        let downsample = if large {
+            Some(layer(128, 192, 3, 2, 1)?)
+        } else {
+            None
+        };
+        let dimensions = if large {
+            [(3072, 768), (768, DIM)]
+        } else {
+            [(1024, 256), (256, DIM)]
+        };
+        let dense = dimensions
             .into_iter()
-            .map(|(i, o)| layer(i, o, 1))
+            .map(|(i, o)| layer(i, o, 1, 1, 1))
             .collect::<Result<_, _>>()?;
         if position != bytes.len() {
             return Err("route encoder has trailing data".into());
         }
         Ok(Self {
             convolutions,
+            residual,
+            downsample,
             dense,
         })
     }
@@ -65,34 +110,20 @@ impl Encoder {
     pub(crate) fn embed(&self, raw: &[(f64, f64)]) -> Option<[f32; DIM]> {
         let mut values = prepare_features(raw)?;
         let mut length = POINTS;
-        for (stage, layer) in self.convolutions.iter().enumerate() {
-            let stride = if stage == 0 { 1 } else { 2 };
-            let next_length = (length + 4 - 5) / stride + 1;
-            let mut output = vec![0.0; layer.outputs * next_length];
-            let width = layer.inputs * 5;
-            let mut patch = vec![0.0; width];
-            for t in 0..next_length {
-                for input in 0..layer.inputs {
-                    for k in 0..5 {
-                        let position = (t * stride + k) as isize - 2;
-                        patch[input * 5 + k] = if position >= 0 && (position as usize) < length {
-                            values[input * length + position as usize]
-                        } else {
-                            0.0
-                        };
-                    }
-                }
-                for channel in 0..layer.outputs {
-                    let sum = layer.bias[channel]
-                        + dot(
-                            &patch,
-                            &layer.weights[channel * width..(channel + 1) * width],
-                        );
-                    output[channel * next_length + t] = sum.max(0.0);
-                }
+        for layer in &self.convolutions {
+            let next = convolve(&values, length, layer, true);
+            values = next.0;
+            length = next.1;
+        }
+        for [first, second] in &self.residual {
+            let hidden = convolve(&values, length, first, true).0;
+            let update = convolve(&hidden, length, second, false).0;
+            for (value, delta) in values.iter_mut().zip(update) {
+                *value = (*value + delta).max(0.0);
             }
-            values = output;
-            length = next_length;
+        }
+        if let Some(layer) = &self.downsample {
+            values = convolve(&values, length, layer, true).0;
         }
         for (stage, layer) in self.dense.iter().enumerate() {
             let mut output = layer.bias.clone();
@@ -114,6 +145,35 @@ impl Encoder {
         }
         vector.try_into().ok()
     }
+}
+
+fn convolve(values: &[f32], length: usize, layer: &Layer, relu: bool) -> (Vec<f32>, usize) {
+    let next_length = (length - 1) / layer.stride + 1;
+    let mut output = vec![0.0; layer.outputs * next_length];
+    let width = layer.inputs * layer.kernel;
+    let mut patch = vec![0.0; width];
+    for t in 0..next_length {
+        for input in 0..layer.inputs {
+            for k in 0..layer.kernel {
+                let position = (t * layer.stride + k * layer.dilation) as isize
+                    - (layer.kernel / 2 * layer.dilation) as isize;
+                patch[input * layer.kernel + k] = if position >= 0 && (position as usize) < length {
+                    values[input * length + position as usize]
+                } else {
+                    0.0
+                };
+            }
+        }
+        for channel in 0..layer.outputs {
+            let sum = layer.bias[channel]
+                + dot(
+                    &patch,
+                    &layer.weights[channel * width..(channel + 1) * width],
+                );
+            output[channel * next_length + t] = if relu { sum.max(0.0) } else { sum };
+        }
+    }
+    (output, next_length)
 }
 
 /// Independent accumulators allow vectorization without architecture-specific code.
