@@ -317,3 +317,17 @@ The adaptive gate stopped after 25 rounds without improvement, and the nine-laye
 `WaypointDecoder` predicts unrounded locations and uncertainty. Its inference method enumerates every possible count from two to 32 and receives no true count, target word, writer identity, or difficulty. Training conditions its supervised location loss on the known training count and separately predicts that count from the stroke. These internal diagnostics are not complete-word accuracy.
 
 The first five rounds improve internal count accuracy to 66.18%, while conditional location MSE stays near 0.567. Lower conditional loss therefore does not yet establish better corner reconstruction. This motivates checking alignment supervision and loss balance before using the model as word evidence. The experiment remains in training and has no word-recognition or native result yet.
+
+## Isolate count evidence
+
+`evaluate_count_evidence.py` tests the learned count head against the existing full spelling score cache. It computes all 31 count classes from points, removes the count prior estimated from training rows only, and integrates each public candidate's possible interior omission. Neither true query counts nor difficulty enter prediction. The full development comparison keeps zero count weight: 6,171/8,400 hard first choices. Nonzero count evidence is excluded from the selected recognizer.
+
+A reporting-only check of the fixed model across development vocabulary ranges also gives no evidence that the current model meets 80% in the documented benchmark target range. It changes no model, selection, or candidate set and reads no benchmark rows. Rank metadata remains excluded from prediction.
+
+## Separate widened-channel gradients
+
+`--widen-symmetry-noise 0.01` adds paired, canceling projection-column perturbations after expansion. Replicated input activations cancel these perturbations at initialization. Their gradients differ, allowing the replicas to learn different features. A local random generator preserves the training random stream. Tests check unchanged predictions, unchanged global CPU random state, and distinct replicated-channel gradients with dropout disabled.
+
+Five full-size GPU references differ by at most 0.000020 after this change. A matched 28.6-million-parameter run keeps the original context, decoder initialization, retrieval source, 31 training shards, rates, seed, and schedule. The output directory and symmetry setting are its only argument differences. It remains an experiment; initialization parity is not trained accuracy.
+
+The first corner-recovery stage stopped after 21 rounds. Count learning improved, but location MSE stayed near its starting value. Best and latest saved checkpoints are preserved before adding stronger ordered-alignment supervision.

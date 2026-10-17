@@ -1,0 +1,37 @@
+{
+  "test_data_used": false,
+  "stage": "waypoint-inverse-v1",
+  "pid": 6432,
+  "last_completed_history_epoch": 21,
+  "initial": {
+    "epoch": 0,
+    "training_loss": 0.0,
+    "internal_holdout": {
+      "conditional_loss": 2.96013191947937,
+      "count_accuracy": 0.0113,
+      "conditional_waypoint_mse": 0.5672504303077197,
+      "samples": 10000,
+      "recognition_accuracy_measured": false
+    },
+    "seconds": 9.94108645801316
+  },
+  "last": {
+    "epoch": 21,
+    "training_loss": -1.0619255316257477,
+    "internal_holdout": {
+      "conditional_loss": -1.1128883865356445,
+      "count_accuracy": 0.7194,
+      "conditional_waypoint_mse": 0.5669057579838086,
+      "samples": 10000,
+      "recognition_accuracy_measured": false
+    },
+    "seconds": 1733.6438469999994
+  },
+  "history_sha256": "65cfbdfba004296dccad7e45d15fa56bc4b939c0233fcf66e7c1caf1f4f2c14b",
+  "preserved_checkpoints_sha256": {
+    "latest.pt": "756fbf22aae0f24c3b6d97e99b40c842430165830430d7dcb52ac4dd45df3e59",
+    "best.pt": "13bb9f1606695237f7485cf80e2743df12ba2dbb48cfaf2aa994b3c5b308e8a8"
+  },
+  "reason": "Count prediction and conditional loss improve, but corner-location MSE stays near its starting value after at least20rounds. Preserve saved weights before adding ordered alignment supervision. Count-only word evidence also failed its full-development control.",
+  "limits": "Internal training-writer diagnostics only. No word-recognition gain or benchmark result claimed."
+}

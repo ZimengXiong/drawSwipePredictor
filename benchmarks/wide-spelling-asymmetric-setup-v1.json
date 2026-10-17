@@ -1,0 +1,19 @@
+{
+  "test_data_used": false,
+  "control_run_sha256": "21a553bc3a515e8d4459d208f304ee2603d003cc27a84b6a9a4bc0f98289653f",
+  "variant_run_sha256": "a035c671893e09dd4409a1f5f45a06cf3209c732127e8d57b606582dfd7a10e5",
+  "different_arguments": {
+    "widen_symmetry_noise": [
+      0.0,
+      0.01
+    ],
+    "output": [
+      "checkpoints/autoregressive-wide-twelve-v2",
+      "checkpoints/autoregressive-wide-asymmetric-v1"
+    ]
+  },
+  "all_other_arguments_and_sources_match": true,
+  "decoder_parameters": 28560797,
+  "initialization_parity_report": "wide-spelling-asymmetric-initialization-parity-v1.json",
+  "limits": "Matched intended training configuration and canonical initialization parity only. No trained accuracy gain or bit-identical GPU execution claimed."
+}
