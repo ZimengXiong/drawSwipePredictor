@@ -56,6 +56,9 @@ def main():
         for name, value in [("primary_sha256", primary_hash), ("auxiliary_sha256", auxiliary_hash), ("fit_retriever_sha256", old_hash)]:
             if fixed[name] != value:
                 raise ValueError("fixed combination source checkpoints differ")
+        for key, path in [("complete_selection_sha256", args.complete_selection), ("motor_calibration_sha256", args.motor_calibration)]:
+            if fixed[key] != hashlib.sha256(path.read_bytes()).hexdigest():
+                raise ValueError("fixed combination calibration sources differ")
         earlier = fixed["writer_selection"]
         if not (offset >= earlier["offset"] + earlier["samples"] or offset + count <= earlier["offset"]):
             raise ValueError("fixed-combination development slices overlap")
@@ -72,6 +75,8 @@ def main():
     targets, lengths, _ = character_targets(words)
     paths = torch.tensor(np.array(rows["points"][selected]), device="mps")
     motor = (fits["errors"] + calibration["selected"]["regularization"] * fits["penalties"]).min(2).values
+    if not torch.isfinite(motor).all():
+        raise ValueError("nonfinite motor fits; do not omit development rows")
     middle = motor.median(1).values
     evidence = (motor - middle[:, None]) / (middle - motor.min(1).values).clamp_min(1e-6)[:, None]
     candidates_all, valid_all, costs_all, motor_all = [], [], [], []
@@ -106,12 +111,14 @@ def main():
             else:
                 likelihood = -candidate_ctc_cost(probabilities, gpu_pool, targets, lengths)
             scores = likelihood / sizes.float().pow(0.3) + settings["proxy_weight"] * 32 * prior.gather(1, gpu_pool)
+            if not torch.isfinite(scores.cpu()[valid]).all():
+                raise ValueError("nonfinite complete-system evidence")
             candidates_all.append(pool); valid_all.append(valid)
             costs_all.append(scores.cpu().masked_fill(~valid, -torch.inf)); motor_all.append(motor_evidence)
     candidates, valid, scores, evidence = [torch.cat(parts) for parts in [candidates_all, valid_all, costs_all, motor_all]]
     before = candidates[:, :128].gather(1, scores[:, :128].argmax(1)[:, None])[:, 0] == labels
     trials = []
-    for weight in ([fixed["selected"]["motor_weight"]] if fixed else [0.0, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0]):
+    for weight in ([fixed["selected"]["motor_weight"]] if fixed else [0.0, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0]):
         ranking = (scores - weight * evidence).argsort(dim=1, descending=True, stable=True)[:, :5]
         hits = candidates.gather(1, ranking) == labels[:, None]
         trials.append({"motor_weight": weight, "top1": float(hits[:, 0].float().mean()), "top5": float(hits.any(1).float().mean()),
@@ -124,6 +131,8 @@ def main():
         "complete_selection_sha256": hashlib.sha256(args.complete_selection.read_bytes()).hexdigest(),
         "motor_calibration_sha256": hashlib.sha256(args.motor_calibration.read_bytes()).hexdigest(),
         "rules": "Union of naturally retrieved lists; absent motor evidence is neutral; no target insertion or alias credit"}
+    torch.save({"candidates": candidates, "valid": valid, "scores": scores, "motor_evidence": evidence,
+        "labels": labels, "metadata": report}, args.output.with_suffix(".pt"))
     args.output.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2), flush=True)
 
