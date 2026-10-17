@@ -1,0 +1,53 @@
+{
+  "test_data_used": false,
+  "control_first_epoch": {
+    "epoch": 1,
+    "loss": 0.9090429332852363,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9624999761581421,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8708333373069763,
+        "top5": 0.9604166746139526
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7196428775787354,
+        "top5": 0.8883333206176758
+      }
+    },
+    "best_score": 0.7232142686843872,
+    "seconds": 537.5792754169961,
+    "improved": false
+  },
+  "gate_first_epoch": {
+    "epoch": 1,
+    "loss": 0.9141438446938992,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9649999737739563,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8666666746139526,
+        "top5": 0.9599999785423279
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7202380895614624,
+        "top5": 0.8864285945892334
+      }
+    },
+    "best_score": 0.7232142686843872,
+    "seconds": 526.2426631660201,
+    "improved": false
+  },
+  "initial_hard_top1": 0.7232142686843872,
+  "limits": "First epoch only; both updates trail the preserved initializer. Activation diagnostics compare gate epoch1 with control epoch10, not equal training budgets. No claimed accuracy gain."
+}
