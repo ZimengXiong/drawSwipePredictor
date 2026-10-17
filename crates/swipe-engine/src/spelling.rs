@@ -322,3 +322,75 @@ fn add(target: &mut [f32], update: &[f32]) {
         *value += delta;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn identity(outputs: usize) -> Linear {
+        let mut weights = vec![0.0; outputs * WIDTH];
+        for row in 0..outputs {
+            weights[row * WIDTH + row % WIDTH] = 1.0;
+        }
+        Linear {
+            inputs: WIDTH,
+            outputs,
+            weights,
+            bias: vec![0.0; outputs],
+        }
+    }
+
+    #[test]
+    fn causal_attention_excludes_future_letters() {
+        let model = Attention {
+            projection: identity(3 * WIDTH),
+            output: identity(WIDTH),
+        };
+        let first = vec![1.0; 2 * WIDTH];
+        let mut changed = first.clone();
+        changed[WIDTH..].fill(2.0);
+        let original = model.forward(&first, &model.keys(&first), true);
+        let causal = model.forward(&changed, &model.keys(&changed), true);
+        let unmasked = model.forward(&changed, &model.keys(&changed), false);
+        assert_eq!(original[..WIDTH], causal[..WIDTH]);
+        assert!(unmasked[0] > causal[0] + 0.5);
+        assert!(causal[WIDTH] > original[WIDTH]);
+    }
+
+    #[test]
+    fn normalization_handles_constant_and_shifted_features() {
+        let norm = Norm {
+            weight: vec![1.0; WIDTH],
+            bias: vec![0.0; WIDTH],
+        };
+        assert!(norm.forward(&vec![7.0; WIDTH]).iter().all(|&v| v == 0.0));
+        let input: Vec<_> = (0..WIDTH).map(|i| i as f32 / 10.0).collect();
+        let shifted: Vec<_> = input.iter().map(|v| v + 3.0).collect();
+        assert!(norm
+            .forward(&input)
+            .iter()
+            .zip(norm.forward(&shifted))
+            .all(|(a, b)| (a - b).abs() < 1e-6));
+    }
+
+    #[test]
+    fn reader_rejects_invalid_configuration_and_nonfinite_weights() {
+        assert!(SpellingModel::from_bytes(b"SWPSP001").is_err());
+        let mut bytes = vec![0; 44];
+        bytes[..8].copy_from_slice(b"SWPSP001");
+        assert!(SpellingModel::from_bytes(&bytes)
+            .err()
+            .unwrap()
+            .contains("configuration"));
+        bytes[32..36].copy_from_slice(&8_u32.to_le_bytes());
+        assert!(SpellingModel::from_bytes(&bytes)
+            .err()
+            .unwrap()
+            .contains("truncated"));
+        let mut reader = Reader {
+            bytes: &f32::NAN.to_le_bytes(),
+            position: 0,
+        };
+        assert!(reader.values(1).unwrap_err().contains("nonfinite"));
+    }
+}

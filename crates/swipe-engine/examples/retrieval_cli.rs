@@ -24,6 +24,15 @@ struct ExpectedPrediction {
     rating: f64,
 }
 
+#[derive(Deserialize)]
+struct SpellingVerification {
+    word: String,
+    points: Vec<(f64, f64)>,
+    words: Vec<String>,
+    costs: Vec<f32>,
+    predictions: Vec<ExpectedPrediction>,
+}
+
 fn option<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
     args.iter()
         .position(|a| a == name)
@@ -37,6 +46,45 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut engine = RetrievalEngine::from_files(directory)?;
     if let Some(count) = option(&args, "--vocab") {
         engine.truncate_vocabulary(count.parse()?);
+    }
+    if let Some(path) = option(&args, "--verify-spelling") {
+        let cases: Vec<SpellingVerification> =
+            serde_json::from_str(&std::fs::read_to_string(path)?)?;
+        for case in cases {
+            let costs = engine
+                .spelling_costs(&case.points, &case.words)
+                .ok_or("invalid spelling input")?;
+            if costs.len() != case.costs.len() {
+                return Err("spelling verification dimensions differ".into());
+            }
+            let error = costs
+                .iter()
+                .zip(&case.costs)
+                .map(|(a, b)| (a - b).abs())
+                .fold(0.0_f32, f32::max);
+            if error > 0.0002 {
+                return Err(format!("spelling costs differ by {error}").into());
+            }
+            let predictions = engine.predict_from_path(&case.points, case.predictions.len());
+            if predictions.len() != case.predictions.len() {
+                return Err("missing spelling predictions".into());
+            }
+            for (actual, expected) in predictions.iter().zip(&case.predictions) {
+                if actual.word != expected.word || (actual.rating - expected.rating).abs() > 0.0002
+                {
+                    return Err(format!(
+                        "spelling ranking differs for {}: {} versus {}",
+                        case.word, actual.word, expected.word
+                    )
+                    .into());
+                }
+            }
+            println!(
+                "{}: maximum spelling cost error {error:.8}; exact top-five ranking matches",
+                case.word
+            );
+        }
+        return Ok(());
     }
     if let Some(path) = option(&args, "--verify-character") {
         let cases: Vec<CharacterVerification> =
