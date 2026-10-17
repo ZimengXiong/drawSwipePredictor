@@ -31,7 +31,7 @@ class MotorSampler:
         return self.eligible[torch.randint(len(self.eligible), (count,), device=self.device)]
 
     @torch.no_grad()
-    def sample(self, labels, strength=None):
+    def sample(self, labels, strength=None, return_metadata=False):
         batch, device = len(labels), self.device
         def signed(*shape):
             return torch.rand(*shape, device=device) * 2 - 1
@@ -112,4 +112,9 @@ class MotorSampler:
         b = path.gather(1, hi[:, :, None].expand(-1, -1, 2))
         path = a + weight * (b - a)
         path -= path.mean(1, keepdim=True)
-        return path / path.square().sum(2).mean(1, keepdim=True).sqrt().clamp_min(1e-8)[:, :, None]
+        normalized = path / path.square().sum(2).mean(1, keepdim=True).sqrt().clamp_min(1e-8)[:, :, None]
+        if return_metadata:
+            retained = ids.gather(1, compressed) + 1
+            retained = retained.masked_fill(indices >= lengths[:, None], 0)
+            return normalized, {"keys": retained, "lengths": lengths, "dropped": drop}
+        return normalized
