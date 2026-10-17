@@ -1,0 +1,428 @@
+{
+  "test_data_used": false,
+  "run": {
+    "test_data_used": false,
+    "encoder_sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+    "data": {
+      "test_data_used": false,
+      "split": "train",
+      "samples": 300000,
+      "internal_holdout": 10000,
+      "checkpoint_sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+      "validation_corpus": {
+        "samples": 12000,
+        "vocabulary": 60000,
+        "seed": 700003,
+        "writer_start": 700005100009,
+        "writer_end": 700005112009,
+        "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+      },
+      "corpora": [
+        {
+          "samples": 300000,
+          "vocabulary": 60000,
+          "seed": 720051,
+          "writer_start": 720053160153,
+          "writer_end": 720053460153,
+          "sha256": "e53d6fd5b56ebe4b4e49697de154f85899f6249a72dee46eb966b33f13ad294d"
+        }
+      ],
+      "target_schema": "waypoints_arc_v2",
+      "reference_data_sha256": "6d45f4362dab82b7b3d1a1a8e7734d4231491676915a21d9843699bcd293841e",
+      "base_arrays_identical_to_reference": true,
+      "seed": 900919,
+      "random_route_samples": 59890,
+      "data_sha256": "e53d6fd5b56ebe4b4e49697de154f85899f6249a72dee46eb966b33f13ad294d",
+      "cli_sha256": "1db126a55d8047d4d9f4548e6c9c18e30221681bac9603bae95db37c16dc9e67",
+      "source_sha256": "b44ee200d4ed9a9587bc1e5387920a6b51ebf7881b61e91f06caa9896c1488c6",
+      "generator_sha256": "760b43e423eb8fe9bd81273551a0df7749c93f2e722c2f86afd33f8f4e2bf1c0",
+      "count_histogram": [
+        0,
+        0,
+        6345,
+        23444,
+        34401,
+        33826,
+        37246,
+        35048,
+        29927,
+        23339,
+        16080,
+        10601,
+        6670,
+        4544,
+        3181,
+        2509,
+        2230,
+        2017,
+        1940,
+        1986,
+        2042,
+        1918,
+        1926,
+        1941,
+        1912,
+        1897,
+        1915,
+        1924,
+        1937,
+        1972,
+        1917,
+        1942,
+        1423
+      ],
+      "query_inputs": "Observed normalized points only. Counts and unrounded coordinates are supervised targets; word identities, writer IDs, and difficulty are absent from model inputs.",
+      "limits": "Training supervision only. Interior drift uses the fixed corner-midpoint convention; targets are latent controls, not observed pen samples. No recognition or benchmark accuracy claimed."
+    },
+    "parameters": 1939812,
+    "model_type": "aligned_waypoints_v2",
+    "initialization_sha256": "13bb9f1606695237f7485cf80e2743df12ba2dbb48cfaf2aa994b3c5b308e8a8",
+    "selection": "Internal mean-query location MSE plus ten times arc MSE",
+    "query_inputs": "Normalized stroke points; inference enumerates every count from2to32. True counts and corner locations supervise training only.",
+    "source_sha256": {
+      "train_waypoints.py": "dc08b4bdf1d28155063391b8d15ac511e4d550389cdc739e811f1019866f505e",
+      "waypoint_model.py": "5395dc483ca3d5d45decef8e04009c171ea561e6123b08b4a1232f24b90fab65",
+      "aligned_waypoint_model.py": "7014f31cc8b14d031085ef87fb8f19cd26e55a884d47a15c8eede9f4fb9db408",
+      "retrieval_model.py": "6be42de79e9777a97ef5cebcba60ce8b96fc840cdbf43aee532501e25cd87d4d",
+      "large_encoder.py": "41767ccc94c0d872490cb8a76866fb5f564d6c3179218bd0e2b0ed51c284a7e4"
+    },
+    "arguments": {
+      "checkpoint": "checkpoints/exact-low-probe-v1.pt",
+      "data": "data/waypoint-aligned-v2/train.npz",
+      "output": "checkpoints/waypoint-aligned-v2",
+      "epochs": 100,
+      "steps": 200,
+      "batch": 256,
+      "width": 192,
+      "layers": 3,
+      "seed": 900941,
+      "with_progress": true,
+      "init_model": "checkpoints/waypoint-unaligned-init-v1.pt"
+    },
+    "git_commit": "d26bd151d3ee2fb8a981e5cb476f6ae2b25032d6"
+  },
+  "initial": {
+    "epoch": 0,
+    "training_loss": 0.0,
+    "internal_holdout": {
+      "conditional_loss": 0.20576193375587462,
+      "count_accuracy": 0.7194,
+      "conditional_waypoint_mse": 0.5669057670682236,
+      "samples": 10000,
+      "mean_query_waypoint_mse": 0.44062618885040283,
+      "arc_position_mse": 0.006434440393745899,
+      "recognition_accuracy_measured": false
+    },
+    "seconds": 11.394688667001901
+  },
+  "latest_completed": {
+    "epoch": 3,
+    "training_loss": -1.0235214811563491,
+    "internal_holdout": {
+      "conditional_loss": -1.1520206115722655,
+      "count_accuracy": 0.7243,
+      "conditional_waypoint_mse": 0.2878453893158182,
+      "samples": 10000,
+      "mean_query_waypoint_mse": 0.13668401165008545,
+      "arc_position_mse": 0.0009307367612607778,
+      "recognition_accuracy_measured": false
+    },
+    "seconds": 296.6648661670042
+  },
+  "data_verified_sha256": "e53d6fd5b56ebe4b4e49697de154f85899f6249a72dee46eb966b33f13ad294d",
+  "frozen_probe_sha256": "542ee1304297e76f09856d3669c924deb138f1312c3b7021eaf98866bab71ec2",
+  "subset_diagnostic": {
+    "test_data_used": false,
+    "development": {
+      "samples": 12000,
+      "vocabulary": 60000,
+      "seed": 700003,
+      "writer_start": 700005100009,
+      "writer_end": 700005112009,
+      "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+    },
+    "samples": 512,
+    "full_development": false,
+    "full_vocabulary": 60000,
+    "encoder_sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+    "corner_sha256": "542ee1304297e76f09856d3669c924deb138f1312c3b7021eaf98866bab71ec2",
+    "corner_epoch": 2,
+    "source_sha256": {
+      "evaluate_waypoint_evidence.py": "f5655ff434852582a217166c52698f6c9cb56bc95a78bda7457f840aca375d5c",
+      "waypoint_evidence.py": "2f43f1aa3369a12920120c97575e3339b91fb88cf802d2a36aad49d04d037886",
+      "waypoint_model.py": "5395dc483ca3d5d45decef8e04009c171ea561e6123b08b4a1232f24b90fab65",
+      "aligned_waypoint_model.py": "7014f31cc8b14d031085ef87fb8f19cd26e55a884d47a15c8eede9f4fb9db408",
+      "retrieval_model.py": "6be42de79e9777a97ef5cebcba60ce8b96fc840cdbf43aee532501e25cd87d4d",
+      "large_encoder.py": "41767ccc94c0d872490cb8a76866fb5f564d6c3179218bd0e2b0ed51c284a7e4",
+      "visited_route_model.py": "a82b1601bffec3448c0632cc9945c0d91cf7a1671c2f19ea474d99e36d39de7e"
+    },
+    "inputs_sha256": {
+      "checkpoints/exact-low-probe-v1.pt": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+      "checkpoints/waypoint-aligned-probe-v1.pt": "542ee1304297e76f09856d3669c924deb138f1312c3b7021eaf98866bab71ec2",
+      "data/waypoint-aligned-v2/train.npz": "e53d6fd5b56ebe4b4e49697de154f85899f6249a72dee46eb966b33f13ad294d",
+      "checkpoints/route-spelling-full-v1.json": "7b2d5f60f53d6536f161d3e0242ce892535fa3e569a6643f97b8dab1d8cbba20",
+      "checkpoints/visited-routes-full-development-v1.json": "d9fc3207332fd6a7c5b03f2c9ebf8b8ac2d80db0111b46ef59238333a8065d2e",
+      "checkpoints/route-spelling-full-v1.scores.npz": "5939d4d876aa40d8874329237217cdff6f016a2ce3cb92634939f8020e3f7397",
+      "checkpoints/visited-routes-full-development-v1.scores.npz": "c087ef87ebc223d7b09ff955489a0533eb1da7772bceeb9a965092ffcf006977"
+    },
+    "score_cache_sha256": "5459c50c42c9956071ec2b01232926964d6e81632364ca47b2e819fb66411d37",
+    "baseline_full_counts_verified": true,
+    "inputs_unchanged_through_scoring": true,
+    "training_count_prior": [
+      0.021224141120910645,
+      0.07797931134700775,
+      0.11466207355260849,
+      0.11275171488523483,
+      0.12408275902271271,
+      0.11672759801149368,
+      0.09973793476819992,
+      0.07793448865413666,
+      0.053644828498363495,
+      0.03538276255130768,
+      0.02222413942217827,
+      0.015141380950808525,
+      0.010596553795039654,
+      0.008334481157362461,
+      0.007406898308545351,
+      0.0067310333251953125,
+      0.0065206908620893955,
+      0.006634481251239777,
+      0.006837931461632252,
+      0.006372413598001003,
+      0.006455173250287771,
+      0.006472415290772915,
+      0.006362068932503462,
+      0.0063689653761684895,
+      0.00642413878813386,
+      0.0064034489914774895,
+      0.006444827187806368,
+      0.0065517243929207325,
+      0.006396551616489887,
+      0.0064310347661376,
+      0.00476206885650754
+    ],
+    "omission_prior": 0.2835,
+    "fixed_spelling_settings": {
+      "length_power": 0.3,
+      "proxy_weight": 4.0
+    },
+    "selected": {
+      "corner_weight": 0.1,
+      "validation": {
+        "clean": {
+          "samples": 53,
+          "correct_top1": 51,
+          "correct_top5": 53,
+          "top1": 0.9622641509433962,
+          "top5": 1.0
+        },
+        "loose": {
+          "samples": 109,
+          "correct_top1": 100,
+          "correct_top5": 105,
+          "top1": 0.9174311926605505,
+          "top5": 0.963302752293578
+        },
+        "memory": {
+          "samples": 350,
+          "correct_top1": 253,
+          "correct_top5": 314,
+          "top1": 0.7228571428571429,
+          "top5": 0.8971428571428571
+        }
+      }
+    },
+    "trials": [
+      {
+        "corner_weight": 0.0,
+        "validation": {
+          "clean": {
+            "samples": 53,
+            "correct_top1": 51,
+            "correct_top5": 53,
+            "top1": 0.9622641509433962,
+            "top5": 1.0
+          },
+          "loose": {
+            "samples": 109,
+            "correct_top1": 100,
+            "correct_top5": 105,
+            "top1": 0.9174311926605505,
+            "top5": 0.963302752293578
+          },
+          "memory": {
+            "samples": 350,
+            "correct_top1": 252,
+            "correct_top5": 313,
+            "top1": 0.72,
+            "top5": 0.8942857142857142
+          }
+        }
+      },
+      {
+        "corner_weight": 0.1,
+        "validation": {
+          "clean": {
+            "samples": 53,
+            "correct_top1": 51,
+            "correct_top5": 53,
+            "top1": 0.9622641509433962,
+            "top5": 1.0
+          },
+          "loose": {
+            "samples": 109,
+            "correct_top1": 100,
+            "correct_top5": 105,
+            "top1": 0.9174311926605505,
+            "top5": 0.963302752293578
+          },
+          "memory": {
+            "samples": 350,
+            "correct_top1": 253,
+            "correct_top5": 314,
+            "top1": 0.7228571428571429,
+            "top5": 0.8971428571428571
+          }
+        }
+      },
+      {
+        "corner_weight": 0.25,
+        "validation": {
+          "clean": {
+            "samples": 53,
+            "correct_top1": 51,
+            "correct_top5": 53,
+            "top1": 0.9622641509433962,
+            "top5": 1.0
+          },
+          "loose": {
+            "samples": 109,
+            "correct_top1": 100,
+            "correct_top5": 105,
+            "top1": 0.9174311926605505,
+            "top5": 0.963302752293578
+          },
+          "memory": {
+            "samples": 350,
+            "correct_top1": 253,
+            "correct_top5": 315,
+            "top1": 0.7228571428571429,
+            "top5": 0.9
+          }
+        }
+      },
+      {
+        "corner_weight": 0.5,
+        "validation": {
+          "clean": {
+            "samples": 53,
+            "correct_top1": 51,
+            "correct_top5": 53,
+            "top1": 0.9622641509433962,
+            "top5": 1.0
+          },
+          "loose": {
+            "samples": 109,
+            "correct_top1": 100,
+            "correct_top5": 105,
+            "top1": 0.9174311926605505,
+            "top5": 0.963302752293578
+          },
+          "memory": {
+            "samples": 350,
+            "correct_top1": 251,
+            "correct_top5": 314,
+            "top1": 0.7171428571428572,
+            "top5": 0.8971428571428571
+          }
+        }
+      },
+      {
+        "corner_weight": 1.0,
+        "validation": {
+          "clean": {
+            "samples": 53,
+            "correct_top1": 51,
+            "correct_top5": 53,
+            "top1": 0.9622641509433962,
+            "top5": 1.0
+          },
+          "loose": {
+            "samples": 109,
+            "correct_top1": 99,
+            "correct_top5": 105,
+            "top1": 0.908256880733945,
+            "top5": 0.963302752293578
+          },
+          "memory": {
+            "samples": 350,
+            "correct_top1": 249,
+            "correct_top5": 316,
+            "top1": 0.7114285714285714,
+            "top5": 0.9028571428571428
+          }
+        }
+      },
+      {
+        "corner_weight": 2.0,
+        "validation": {
+          "clean": {
+            "samples": 53,
+            "correct_top1": 51,
+            "correct_top5": 53,
+            "top1": 0.9622641509433962,
+            "top5": 1.0
+          },
+          "loose": {
+            "samples": 109,
+            "correct_top1": 99,
+            "correct_top5": 105,
+            "top1": 0.908256880733945,
+            "top5": 0.963302752293578
+          },
+          "memory": {
+            "samples": 350,
+            "correct_top1": 249,
+            "correct_top5": 318,
+            "top1": 0.7114285714285714,
+            "top5": 0.9085714285714286
+          }
+        }
+      },
+      {
+        "corner_weight": 4.0,
+        "validation": {
+          "clean": {
+            "samples": 53,
+            "correct_top1": 51,
+            "correct_top5": 53,
+            "top1": 0.9622641509433962,
+            "top5": 1.0
+          },
+          "loose": {
+            "samples": 109,
+            "correct_top1": 99,
+            "correct_top5": 105,
+            "top1": 0.908256880733945,
+            "top5": 0.963302752293578
+          },
+          "memory": {
+            "samples": 350,
+            "correct_top1": 247,
+            "correct_top5": 315,
+            "top1": 0.7057142857142857,
+            "top5": 0.9
+          }
+        }
+      }
+    ],
+    "native_supported": false,
+    "limits": "Every selected row; same natural128 candidates retrieved from all60000 words. Missing targets remain misses. All31 counts inferred from points; no true query count, corner label, target, writer, or difficulty enters prediction. Count prior uses training rows only. No benchmark or confirmation evaluation. Subset diagnostics are not full-development accuracy."
+  },
+  "validation": {
+    "python_tests_passed": 67,
+    "waypoint_exporter_tests_passed": 3,
+    "engine_clippy_warnings_rejected": true
+  },
+  "limits": "Same 300000 writers as first corner dataset; only ordered alignment labels added. Internal conditional geometry metrics and a512-row diagnostic do not establish full-development recognition. No benchmark or confirmation data used. Stage remains in training."
+}

@@ -1,0 +1,230 @@
+{
+  "test_data_used": false,
+  "stages": [
+    {
+      "stage": "proxy-massive-exact-v1",
+      "pid": 34937,
+      "last": {
+        "epoch": 46,
+        "loss": 0.8561733916401864,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9574999809265137,
+            "top5": 0.9975000023841858
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8645833134651184,
+            "top5": 0.9604166746139526
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7176190614700317,
+            "top5": 0.8876190185546875
+          }
+        },
+        "best_score": 0.7232142686843872,
+        "seconds": 462.9066745839955,
+        "improved": false
+      },
+      "best": {
+        "epoch": 0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9641666412353516,
+            "top5": 0.9991666674613953
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8695833086967468,
+            "top5": 0.9595833420753479
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7232142686843872,
+            "top5": 0.8885714411735535
+          }
+        },
+        "best_score": 0.7232142686843872
+      },
+      "reason": "At least thirty full validation rounds without improving the preserved initializer; free unified memory for active decoder and aligned-corner work.",
+      "preserved_checkpoints_sha256": {
+        "best.pt": "e502d8e87e1b92ba699a7e01c00feab37ab9f026130b159787c837f178426007",
+        "latest.pt": "1d8ccf4c74c324962a8f9a0f19c5aec552922571a5607b52f3f29049fa56c01d"
+      },
+      "history_sha256": "96792883c45e007aadaf70680951cb40c0738a8274641bc1bed34392a9d5ac7b",
+      "process_exited": true
+    },
+    {
+      "stage": "proxy-massive-gates-v1",
+      "pid": 57023,
+      "last": {
+        "epoch": 33,
+        "loss": 0.8638513351976872,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9633333086967468,
+            "top5": 0.9991666674613953
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8662499785423279,
+            "top5": 0.9574999809265137
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7196428775787354,
+            "top5": 0.8879761695861816
+          }
+        },
+        "best_score": 0.7232142686843872,
+        "seconds": 501.81560825000633,
+        "improved": false
+      },
+      "best": {
+        "epoch": 0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9641666412353516,
+            "top5": 0.9991666674613953
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8695833086967468,
+            "top5": 0.9595833420753479
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7232142686843872,
+            "top5": 0.8885714411735535
+          }
+        },
+        "best_score": 0.7232142686843872
+      },
+      "reason": "At least thirty full validation rounds without improving the preserved initializer; free unified memory for active decoder and aligned-corner work.",
+      "preserved_checkpoints_sha256": {
+        "best.pt": "56092044696fb297be13eb19018f9c9293c71b2ceedb0e5928ed54d31d80be5b",
+        "latest.pt": "a1ad86b1d806c8930385541ec342fa8356121299daa887ccf245dbc9f0ff03bf"
+      },
+      "history_sha256": "f004926aac12e968eea37e9b8ec189cc68cbc47e769b2c56516035363395a132",
+      "process_exited": true
+    },
+    {
+      "stage": "proxy-wide512-exact-v1",
+      "pid": 98045,
+      "last": {
+        "epoch": 41,
+        "loss": 0.8142101436853408,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9649999737739563,
+            "top5": 0.9991666674613953
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.871666669845581,
+            "top5": 0.9620833396911621
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7279762029647827,
+            "top5": 0.897261917591095
+          }
+        },
+        "best_score": 0.7303571701049805,
+        "seconds": 135.31820845798939,
+        "improved": false
+      },
+      "best": {
+        "epoch": 0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9583333134651184,
+            "top5": 0.9983333349227905
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8762500286102295,
+            "top5": 0.9637500047683716
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7303571701049805,
+            "top5": 0.8959524035453796
+          }
+        },
+        "best_score": 0.7303571701049805
+      },
+      "reason": "At least thirty full validation rounds without improving the preserved initializer; free unified memory for active decoder and aligned-corner work.",
+      "preserved_checkpoints_sha256": {
+        "best.pt": "d55bc81719b07e0cfbd317bd329fb6639b206cf93a95d21c5a920075544d2434",
+        "latest.pt": "7c825397eb07b7e19b079067b2816bfe03fe8d5d481b8f9f5cc4cc175603f8ed"
+      },
+      "history_sha256": "3ad6f102a4d43c2df7fa361178b315614f01099550175fc51a0bd6f08cb3284c",
+      "process_exited": true
+    },
+    {
+      "stage": "proxy-wide512-fixed-norm-v1",
+      "pid": 99734,
+      "last": {
+        "epoch": 41,
+        "loss": 0.8116066983342171,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9641666412353516,
+            "top5": 0.9991666674613953
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8700000047683716,
+            "top5": 0.9629166722297668
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7260714173316956,
+            "top5": 0.8976190686225891
+          }
+        },
+        "best_score": 0.7303571701049805,
+        "seconds": 140.8277114579978,
+        "improved": false
+      },
+      "best": {
+        "epoch": 0,
+        "validation": {
+          "clean": {
+            "samples": 1200,
+            "top1": 0.9583333134651184,
+            "top5": 0.9983333349227905
+          },
+          "loose": {
+            "samples": 2400,
+            "top1": 0.8762500286102295,
+            "top5": 0.9637500047683716
+          },
+          "memory": {
+            "samples": 8400,
+            "top1": 0.7303571701049805,
+            "top5": 0.8959524035453796
+          }
+        },
+        "best_score": 0.7303571701049805
+      },
+      "reason": "At least thirty full validation rounds without improving the preserved initializer; free unified memory for active decoder and aligned-corner work.",
+      "preserved_checkpoints_sha256": {
+        "best.pt": "6beecdcaf99e490643db33f1227d4efa8eed52df0e784ed48159a05531f93cf9",
+        "latest.pt": "aa206b9ec5cfac6fcc6918a469c1f434dd6188ae11d545383b1316748fec778e"
+      },
+      "history_sha256": "ebefdf21bdc7529add3fb4e2d69598a37d38e68f4821fb574c024bc837c39fe0",
+      "process_exited": true
+    }
+  ],
+  "limits": "Training controls only. No benchmark rerun or selected-model replacement. Best and latest checkpoint files remain preserved."
+}
