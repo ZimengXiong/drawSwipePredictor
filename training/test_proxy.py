@@ -50,6 +50,8 @@ class ProxyTests(unittest.TestCase):
         wrong["metadata"]["test_data_used"] = True
         with self.assertRaisesRegex(ValueError, "provenance"):
             validate_retrieval_source(wrong, source)
+        with self.assertRaisesRegex(ValueError, "provenance"):
+            validate_retrieval_source(source, wrong)
         wrong = {**source, "words": list(reversed(source["words"]))}
         with self.assertRaisesRegex(ValueError, "vocabulary"):
             validate_retrieval_source(wrong, source)

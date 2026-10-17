@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def validate_retrieval_source(retrieved, context):
     """Keep hard-negative mining inside the declared vocabulary and writer splits."""
-    if retrieved["words"] != context["words"] or retrieved["metadata"]["test_data_used"]:
+    if retrieved["words"] != context["words"] or retrieved["metadata"]["test_data_used"] or context["metadata"]["test_data_used"]:
         raise ValueError("independent retriever vocabulary or data provenance differs")
     for key in ["train_corpus", "validation_corpus"]:
         if retrieved["metadata"][key]["sha256"] != context["metadata"][key]["sha256"]:
@@ -112,6 +112,8 @@ def main():
     rng = np.random.default_rng(args.seed)
     device = "mps"
     saved, encoder_hash = load_checkpoint(args.checkpoint)
+    if saved["metadata"]["test_data_used"]:
+        raise ValueError("spelling context initialization must not use test data")
     architecture = saved["metadata"]["arguments"].get("architecture", "small")
     if architecture not in ["large", "intrinsic", "giant"]:
         raise ValueError("spelling decoder requires a residual encoder")

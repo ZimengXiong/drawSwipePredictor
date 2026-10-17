@@ -1,0 +1,71 @@
+{
+  "test_data_used": false,
+  "run": "autoregressive-joint-v1",
+  "reason": "No improvement over its preserved initializer across completed subset development evaluations. Release resources for the larger decoder with stronger frozen negative mining.",
+  "last_completed": {
+    "epoch": 33,
+    "loss": 1.0150860358774663,
+    "seconds": 143.02409995900234
+  },
+  "last_evaluated": {
+    "epoch": 30,
+    "loss": 0.9837575155496597,
+    "seconds": 144.75057908400777,
+    "selected": {
+      "length_power": 0.0,
+      "proxy_weight": 8.0,
+      "validation": {
+        "clean": {
+          "samples": 323,
+          "top1": 0.9752321839332581,
+          "top5": 1.0
+        },
+        "loose": {
+          "samples": 626,
+          "top1": 0.8690096139907837,
+          "top5": 0.9600638747215271
+        },
+        "memory": {
+          "samples": 2051,
+          "top1": 0.7191613912582397,
+          "top5": 0.8873720169067383
+        }
+      }
+    },
+    "best_score": 0.7201365232467651,
+    "improved": false
+  },
+  "best": {
+    "epoch": 0,
+    "selected": {
+      "length_power": 0.0,
+      "proxy_weight": 4.0,
+      "validation": {
+        "clean": {
+          "samples": 323,
+          "top1": 0.9659442901611328,
+          "top5": 1.0
+        },
+        "loose": {
+          "samples": 626,
+          "top1": 0.8514376878738403,
+          "top5": 0.9568690061569214
+        },
+        "memory": {
+          "samples": 2051,
+          "top1": 0.7201365232467651,
+          "top5": 0.8849341869354248
+        }
+      }
+    },
+    "best_score": 0.7201365232467651
+  },
+  "artifacts_sha256": {
+    "best.pt": "4d46bc2f50f32c1af8669a74e78744a3f6566aebff8429be6588dd64b0e7d8a5",
+    "latest.pt": "3f71306b3e1cd1825cd8dfb56c940b82215c664b1afe74aa95bb290c1bd29618",
+    "run.json": "00226a953402ca79c9122062b0ab8ce378bb885ce7a3473554676f8773ed2bf9",
+    "history.jsonl": "23af63538231f1dfb779d0c8a5512353e25506cea466f4d310cc04adec2f9b22"
+  },
+  "action": "SIGINT after verifying live identity; checkpoints and learned context retained.",
+  "limits": "Fixed 3000-row subset, including2051 hard drawings; not full-development or benchmark accuracy."
+}
