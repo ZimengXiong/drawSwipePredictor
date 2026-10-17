@@ -1,0 +1,271 @@
+{
+  "test_data_used": false,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "samples": 12000,
+  "full_vocabulary": 60000,
+  "encoder_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "decoder_sha256": "746041b260aa3b036d5b8e16ead92e1d89b6400a6d361f44bfeb5502128ca391",
+  "word_components": [
+    {
+      "sha256": "5d223181ccae3aeb34cabff4dc05e8e12c84fdce10a8da822ab3c440f4cc12f6",
+      "weight": 0.5
+    },
+    {
+      "sha256": "0368c06c3f1b2838d4c8215ac90ad2823bfb797ac789c369b488adebfb4bc837",
+      "weight": 0.5
+    }
+  ],
+  "word_selection_sha256": "cb3b40b3166ef67a4bf4764f662884c61c465336eab5e710ce86bfca018f0244",
+  "selected_rows_sha256": "828bc9469ffcf3bd4cc6dd8c1fe586e4d1dc74859e04d85e3fbe04bd9cb7647f",
+  "score_cache_sha256": "c087ef87ebc223d7b09ff955489a0533eb1da7772bceeb9a965092ffcf006977",
+  "omission_prior": 0.2835,
+  "selected": {
+    "proxy_weight": 8.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "correct_top1": 1154,
+        "correct_top5": 1200,
+        "top1": 0.9616666666666667,
+        "top5": 1.0
+      },
+      "loose": {
+        "samples": 2400,
+        "correct_top1": 2098,
+        "correct_top5": 2305,
+        "top1": 0.8741666666666666,
+        "top5": 0.9604166666666667
+      },
+      "memory": {
+        "samples": 8400,
+        "correct_top1": 6152,
+        "correct_top5": 7557,
+        "top1": 0.7323809523809524,
+        "top5": 0.8996428571428572
+      }
+    }
+  },
+  "trials": [
+    {
+      "proxy_weight": null,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1154,
+          "correct_top5": 1198,
+          "top1": 0.9616666666666667,
+          "top5": 0.9983333333333333
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2098,
+          "correct_top5": 2309,
+          "top1": 0.8741666666666666,
+          "top5": 0.9620833333333333
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6141,
+          "correct_top5": 7528,
+          "top1": 0.7310714285714286,
+          "top5": 0.8961904761904762
+        }
+      }
+    },
+    {
+      "proxy_weight": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1055,
+          "correct_top5": 1161,
+          "top1": 0.8791666666666667,
+          "top5": 0.9675
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 1899,
+          "correct_top5": 2207,
+          "top1": 0.79125,
+          "top5": 0.9195833333333333
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 5370,
+          "correct_top5": 6995,
+          "top1": 0.6392857142857142,
+          "top5": 0.8327380952380953
+        }
+      }
+    },
+    {
+      "proxy_weight": 0.25,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1098,
+          "correct_top5": 1184,
+          "top1": 0.915,
+          "top5": 0.9866666666666667
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 1967,
+          "correct_top5": 2250,
+          "top1": 0.8195833333333333,
+          "top5": 0.9375
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 5670,
+          "correct_top5": 7188,
+          "top1": 0.675,
+          "top5": 0.8557142857142858
+        }
+      }
+    },
+    {
+      "proxy_weight": 0.5,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1121,
+          "correct_top5": 1191,
+          "top1": 0.9341666666666667,
+          "top5": 0.9925
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2008,
+          "correct_top5": 2264,
+          "top1": 0.8366666666666667,
+          "top5": 0.9433333333333334
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 5809,
+          "correct_top5": 7327,
+          "top1": 0.6915476190476191,
+          "top5": 0.8722619047619048
+        }
+      }
+    },
+    {
+      "proxy_weight": 1.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1144,
+          "correct_top5": 1196,
+          "top1": 0.9533333333333334,
+          "top5": 0.9966666666666667
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2056,
+          "correct_top5": 2282,
+          "top1": 0.8566666666666667,
+          "top5": 0.9508333333333333
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 5985,
+          "correct_top5": 7454,
+          "top1": 0.7125,
+          "top5": 0.8873809523809524
+        }
+      }
+    },
+    {
+      "proxy_weight": 2.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1149,
+          "correct_top5": 1198,
+          "top1": 0.9575,
+          "top5": 0.9983333333333333
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2075,
+          "correct_top5": 2298,
+          "top1": 0.8645833333333334,
+          "top5": 0.9575
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6099,
+          "correct_top5": 7514,
+          "top1": 0.7260714285714286,
+          "top5": 0.8945238095238095
+        }
+      }
+    },
+    {
+      "proxy_weight": 4.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1152,
+          "correct_top5": 1200,
+          "top1": 0.96,
+          "top5": 1.0
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2095,
+          "correct_top5": 2302,
+          "top1": 0.8729166666666667,
+          "top5": 0.9591666666666666
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6139,
+          "correct_top5": 7555,
+          "top1": 0.7308333333333333,
+          "top5": 0.8994047619047619
+        }
+      }
+    },
+    {
+      "proxy_weight": 8.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1154,
+          "correct_top5": 1200,
+          "top1": 0.9616666666666667,
+          "top5": 1.0
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2098,
+          "correct_top5": 2305,
+          "top1": 0.8741666666666666,
+          "top5": 0.9604166666666667
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6152,
+          "correct_top5": 7557,
+          "top1": 0.7323809523809524,
+          "top5": 0.8996428571428572
+        }
+      }
+    }
+  ],
+  "rules": "Every selected row; full 60000-word retrieval; natural top128; exact complete word; no target insertion, route-count oracle, or visited-key labels at inference",
+  "source_sha256": {
+    "evaluate_visited_routes.py": "82cd8a5d4c69fa785378219c3b44aa15e3dac766fa6ccaa36fb89a6a7d98b246",
+    "visited_route_model.py": "a82b1601bffec3448c0632cc9945c0d91cf7a1671c2f19ea474d99e36d39de7e"
+  },
+  "raw_report_sha256": "d9fc3207332fd6a7c5b03f2c9ebf8b8ac2d80db0111b46ef59238333a8065d2e"
+}
