@@ -35,14 +35,23 @@ def corpus(path):
                   "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
 
 
+def proxy_scores(query, proxies):
+    """Score one or several equally weighted route centers per word."""
+    normalized = F.normalize(proxies, dim=-1)
+    if normalized.ndim == 2:
+        return query @ normalized.T
+    similarities = (query @ normalized.reshape(-1, normalized.shape[-1]).T).reshape(len(query), len(proxies), proxies.shape[1])
+    weights = F.softmax(similarities / 0.1, dim=2)
+    return (weights * similarities).sum(2)
+
+
 @torch.no_grad()
 def evaluate(model, proxies, datasets):
-    bank = F.normalize(proxies, dim=1)
     result = {}
     for name, (paths, labels) in datasets.items():
         hits = []
         for start in range(0, len(paths), 256):
-            ranked = (model(encoder_features(model, paths[start:start + 256])) @ bank.T).topk(5, dim=1).indices
+            ranked = proxy_scores(model(encoder_features(model, paths[start:start + 256])), proxies).topk(5, dim=1).indices
             truth = labels[start:start + 256, None]
             hits.append(torch.stack([(ranked[:, :1] == truth).any(1), (ranked == truth).any(1)], 1))
         top1, top5 = torch.cat(hits).float().mean(0).tolist()
@@ -62,12 +71,16 @@ def main():
     parser.add_argument("--learning-rate", type=float, default=0.00015)
     parser.add_argument("--seed", type=int, default=812831)
     parser.add_argument("--architecture", choices=["small", "large", "intrinsic"], default="small")
+    parser.add_argument("--centers", type=int, default=1)
+    parser.add_argument("--proxy-init", type=Path)
     parser.add_argument("--fresh-fraction", type=float, default=0.0)
     parser.add_argument("--resume", type=Path)
     parser.add_argument("--device", default="mps")
     args = parser.parse_args()
     if min(args.epochs, args.steps, args.batch) < 1:
         parser.error("counts must be positive")
+    if not 1 <= args.centers <= 8:
+        parser.error("use 1 to 8 route centers per word")
     if not 0 <= args.fresh_fraction <= 0.7:
         parser.error("fresh fraction must be between 0 and 0.7")
     torch.set_num_threads(8)
@@ -117,7 +130,18 @@ def main():
     sampler = MotorSampler(words, device) if args.fresh_fraction else None
     with torch.no_grad():
         initial_vectors = initial["proxies"].to(device) if "proxies" in initial else torch.cat([model(encoder_features(model, part)) for part in canonical.split(512)])
-    proxies = nn.Parameter(initial_vectors)
+    if args.proxy_init:
+        loaded = np.load(args.proxy_init, allow_pickle=False)
+        if loaded["words"].tolist() != words:
+            raise ValueError("proxy initialization vocabulary differs")
+        initial_vectors = torch.tensor(loaded["vectors"], device=device)
+    elif args.centers > 1 and initial_vectors.ndim == 2:
+        initial_vectors = initial_vectors[:, None].repeat(1, args.centers, 1)
+        initial_vectors = initial_vectors + torch.randn_like(initial_vectors) * 0.01
+    expected = (len(words), 128) if args.centers == 1 else (len(words), args.centers, 128)
+    if tuple(initial_vectors.shape) != expected:
+        raise ValueError("proxy center dimensions differ from the requested model")
+    proxies = nn.Parameter(F.normalize(initial_vectors, dim=-1))
     optimizer = torch.optim.AdamW([{"params": model.parameters(), "lr": args.learning_rate},
                                   {"params": [proxies], "lr": args.learning_rate * 4}], weight_decay=0.0001)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=0.00001)
@@ -158,7 +182,7 @@ def main():
                 paths = torch.cat([paths, sampler.sample(fresh_labels)])
                 labels = torch.cat([labels, fresh_labels])
             query = model(encoder_features(model, paths))
-            logits = 32.0 * query @ F.normalize(proxies, dim=1).T
+            logits = 32.0 * proxy_scores(query, proxies)
             loss = F.cross_entropy(logits, labels)
             if teacher is not None:
                 with torch.no_grad():
@@ -185,7 +209,7 @@ def main():
         print(json.dumps(result), flush=True)
         with (args.output / "history.jsonl").open("a") as output:
             output.write(json.dumps(result) + "\n")
-        saved = {"model": model.state_dict(), "proxies": F.normalize(proxies.detach(), dim=1),
+        saved = {"model": model.state_dict(), "proxies": F.normalize(proxies.detach(), dim=-1),
                  "optimizer": optimizer.state_dict(), "scheduler": scheduler.state_dict(),
                  "epoch": epoch, "best_score": best, "words": words, "counts": counts, "metadata": metadata}
         temporary = args.output / "latest.pt.tmp"
