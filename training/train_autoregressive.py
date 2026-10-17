@@ -15,6 +15,7 @@ from torch.nn import functional as F
 
 from autoregressive_model import SpellingDecoder, word_tokens, decoder_dimensions, expand_decoder
 from motor_sampler import MotorSampler
+from widen_spelling import widen_decoder
 from retrieval_model import build_encoder, encoder_features, load_recordings
 from train_character import encode
 from train_joint import load_checkpoint
@@ -90,6 +91,8 @@ def main():
                         help="Independent frozen word model for mining negatives and development candidates")
     parser.add_argument("--decoder-layers", type=int, choices=[3, 6, 9, 12],
                         help="Decoder depth; defaults to the source depth or three blocks")
+    parser.add_argument("--decoder-width", type=int, choices=[192, 384],
+                        help="Expand channels while preserving the initialized inference function")
     parser.add_argument("--ranking-candidates", type=int, default=0)
     parser.add_argument("--learning-rate", type=float, default=0.0004)
     parser.add_argument("--fine-tune-encoder", action="store_true")
@@ -173,11 +176,15 @@ def main():
     real, real_labels = torch.tensor(real, device=device), torch.tensor(real_labels, device=device)
     initial, decoder_hash = load_checkpoint(args.init_decoder) if args.init_decoder else (None, None)
     args.decoder_layers = args.decoder_layers or (decoder_dimensions(initial["model"])[1] if initial else 3)
-    model = SpellingDecoder(getattr(encoder, "input_channels", 8), layers=args.decoder_layers).to(device)
+    args.decoder_width = args.decoder_width or (decoder_dimensions(initial["model"])[0] if initial else 192)
+    model = SpellingDecoder(getattr(encoder, "input_channels", 8), width=args.decoder_width, layers=args.decoder_layers).to(device)
     if args.init_decoder:
         if initial["metadata"]["encoder_sha256"] != encoder_hash or initial["words"] != words:
             raise ValueError("decoder initialization belongs to a different encoder or dictionary")
-        expand_decoder(model, initial["model"])
+        if args.decoder_width == decoder_dimensions(initial["model"])[0]:
+            expand_decoder(model, initial["model"])
+        else:
+            widen_decoder(model, initial["model"])
         if "context_model" in initial:
             if not args.fine_tune_encoder:
                 raise ValueError("a jointly trained decoder requires its learned context")
@@ -202,7 +209,7 @@ def main():
         "real_training_sha256": real_hash,
         "real_sampling": "uniform observed training word types; all recordings retained",
         "source_sha256": {name: hashlib.sha256((ROOT / "training" / name).read_bytes()).hexdigest()
-                          for name in ["autoregressive_model.py", "train_autoregressive.py", "motor_sampler.py"]},
+                          for name in ["autoregressive_model.py", "train_autoregressive.py", "motor_sampler.py", "widen_spelling.py"]},
         "test_data_used": False, "selection": "Exact-word development top1; natural top128 from full vocabulary; no target injection",
         "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()}
     args.output.mkdir(parents=True, exist_ok=True)
