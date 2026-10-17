@@ -87,7 +87,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     file.write_all(&seed.to_le_bytes())?;
     let mut chooser = Random::new(seed);
     for i in 0..samples {
-        let &(id, word) = eligible[chooser.index(eligible.len())];
+        let (id, word) = eligible[chooser.index(eligible.len())];
         let difficulty_id = if i % 10 == 0 {
             0_u32
         } else if i % 10 < 3 {
