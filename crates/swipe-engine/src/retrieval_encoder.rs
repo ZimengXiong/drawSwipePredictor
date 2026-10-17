@@ -1,6 +1,4 @@
 //! Native convolutional inference for compact and residual route encoders.
-use crate::memory_geometry::resample;
-
 const POINTS: usize = 64;
 pub(crate) const DIM: usize = 128;
 
@@ -312,11 +310,60 @@ fn prepare_features(raw: &[(f64, f64)]) -> Option<Vec<f32>> {
     if scale == 0.0 || !scale.is_finite() {
         return None;
     }
-    let points: Vec<_> = centered
+    // Match training's f64 arc-length resampling before converting to f32.
+    // Early rounding can amplify through the character decoder's residual layers.
+    let scaled: Vec<_> = centered
         .iter()
-        .map(|p| [(p[0] / scale) as f32, (p[1] / scale) as f32])
+        .map(|p| [p[0] / scale, p[1] / scale])
         .collect();
-    let mut sampled = resample(&points, POINTS);
+    let points: Vec<_> = scaled
+        .iter()
+        .enumerate()
+        .filter(|(i, p)| {
+            *i == 0 || (p[0] - scaled[i - 1][0]).hypot(p[1] - scaled[i - 1][1]) * scale > 1e-10
+        })
+        .map(|(_, p)| *p)
+        .collect();
+    if points.len() < 2 {
+        return None;
+    }
+    let mut lengths = vec![0.0_f64];
+    for pair in points.windows(2) {
+        let distance = (pair[1][0] - pair[0][0]).hypot(pair[1][1] - pair[0][1]);
+        lengths.push(lengths.last()? + distance);
+    }
+    let total = *lengths.last()?;
+    let mut segment = 1;
+    let mut precise: Vec<[f64; 2]> = (0..POINTS)
+        .map(|i| {
+            let target = total * i as f64 / (POINTS - 1) as f64;
+            while segment < points.len() - 1 && lengths[segment] < target {
+                segment += 1;
+            }
+            let amount =
+                (target - lengths[segment - 1]) / (lengths[segment] - lengths[segment - 1]);
+            std::array::from_fn(|a| {
+                points[segment - 1][a] + amount * (points[segment][a] - points[segment - 1][a])
+            })
+        })
+        .collect();
+    let center: [f64; 2] =
+        std::array::from_fn(|a| precise.iter().map(|p| p[a]).sum::<f64>() / POINTS as f64);
+    for point in &mut precise {
+        for a in 0..2 {
+            point[a] -= center[a];
+        }
+    }
+    let radius = (precise
+        .iter()
+        .map(|p| p[0] * p[0] + p[1] * p[1])
+        .sum::<f64>()
+        / POINTS as f64)
+        .sqrt();
+    let mut sampled: Vec<[f32; 2]> = precise
+        .iter()
+        .map(|p| [(p[0] / radius) as f32, (p[1] / radius) as f32])
+        .collect();
     let mean = [
         sampled.iter().map(|p| p[0]).sum::<f32>() / POINTS as f32,
         sampled.iter().map(|p| p[1]).sum::<f32>() / POINTS as f32,
@@ -347,6 +394,46 @@ fn prepare_features(raw: &[(f64, f64)]) -> Option<Vec<f32>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn features_match_training_resampling_precision() {
+        let path = [
+            (0.0, 0.0),
+            (0.7, 2.1),
+            (3.2, -0.4),
+            (3.2, -0.4),
+            (-1.6, 1.3),
+            (4.9, 0.8),
+        ];
+        // Reference values from retrieval_model.features(curve(path)).
+        let reference = [
+            (0, -0.80029976_f32),
+            (9, -0.25944304),
+            (21, 1.1261655),
+            (39, -1.7202265),
+            (63, 2.1827266),
+            (76, 0.30472907),
+            (127, -0.016108382),
+            (135, -0.45507714),
+            (191, 2.3156624),
+            (255, -0.04602395),
+            (319, 0.17745042),
+            (383, -0.036761202),
+            (447, 0.16726351),
+            (511, -0.012866421),
+        ];
+        for offset in [0.0, 1_000_000.0] {
+            let shifted: Vec<_> = path.iter().map(|p| (p.0 + offset, p.1 - offset)).collect();
+            let actual = prepare_features(&shifted).unwrap();
+            for (i, expected) in reference {
+                assert!(
+                    (actual[i] - expected).abs() < 3e-7,
+                    "feature {i}: {} vs {expected}",
+                    actual[i]
+                );
+            }
+        }
+    }
 
     #[test]
     fn rejects_invalid_model_and_input() {
