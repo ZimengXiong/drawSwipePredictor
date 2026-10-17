@@ -1,0 +1,80 @@
+{
+  "encoder_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "decoder_sha256": "680431d83a7a758ce77ffc14dbda066510abf6bdf649dd6b1e67dd28163c3760",
+  "retrieval_sha256": null,
+  "word_retrieval": [
+    {
+      "sha256": "89a68311ded7735485a232d212691ea5e941c7fdee11318ff6f0358fcb741727",
+      "weight": 0.16666666666666666
+    },
+    {
+      "sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+      "weight": 0.16666666666666666
+    },
+    {
+      "sha256": "be02eac8fa11d5dc1bd29613fcba7de1456ce1dbfd698fb9f11f3e1426f13dee",
+      "weight": 0.16666666666666666
+    },
+    {
+      "sha256": "9035e7f8637fce217ea1b240e35e4c3dd0db05979292e494d18e43e193231950",
+      "weight": 0.16666666666666666
+    },
+    {
+      "sha256": "5f0a9b1a6b42d1f82d8d7648486271d1e200850342686171c66a51288b1699a6",
+      "weight": 0.16666666666666666
+    },
+    {
+      "sha256": "f055a302b235b9cb4f74d61c0781267371cb5ea0dccad48fb314a2a96be054d6",
+      "weight": 0.16666666666666666
+    }
+  ],
+  "retrieval_auxiliary_sha256": null,
+  "retrieval_auxiliary_weight": 0.0,
+  "retrieval_selection_sha256": "e963f5fa209d6a5921294ae2197c51c8a659913a4cf2f3c18701668fa3013367",
+  "joint_context": false,
+  "context_state_source_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "decoder_epoch": 1,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "samples": 12000,
+  "selected": {
+    "length_power": 1.0,
+    "proxy_weight": 1.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9633333086967468,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8712499737739563,
+        "top5": 0.9616666436195374
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7304762005805969,
+        "top5": 0.8955952525138855
+      }
+    }
+  },
+  "shortlist_recall": {
+    "clean": 1.0,
+    "loose": 1.0,
+    "memory": 0.9955952167510986
+  },
+  "rules": "All development rows; natural top128; exact full words; no target insertion or alias credit",
+  "raw_report_sha256": "265cb5c326ee2f4ef0f67c20d285b63e17dc6b2026a1298ecc7851804678ef30",
+  "hard_correct_top1": 6136,
+  "native_verified": false,
+  "promoted_to_app": false,
+  "limits": "All 12,000 development rows, natural top 128 from all 60,000 words, and the same frozen trained nine-layer decoder. No target insertion or alias credit. Below the geometry-corrected candidate at 6,142/8,400; no benchmark or confirmation evaluation."
+}
