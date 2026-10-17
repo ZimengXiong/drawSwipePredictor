@@ -1,0 +1,17 @@
+{
+  "test_data_used": false,
+  "raw_report_sha256": "29b7842e0b205046d1e7c0f51303b8d96529fffc8864c97593dbd9ba437ca6bb",
+  "frozen_decoder_sha256_verified": true,
+  "hard_correct_top1": 6171,
+  "comparison": "Ties selected nine-layer complete model at6171/8400 hard first choices. Lower hard top5 and higher initialized native latency; no preview promotion. Subset improvement did not establish a full-development gain.",
+  "native_verified_for_this_trained_snapshot": false,
+  "benchmark_evaluated": false,
+  "confirmation_opened": false,
+  "validation": {
+    "python_tests": 67,
+    "waypoint_exporter_tests": 3,
+    "engine_clippy_passed": true,
+    "geometry_metal_cpu_max_absolute_error": 2.384185791015625e-07
+  },
+  "limits": "Full separate development only. The28.6M training stage continues; no benchmark or80% claim."
+}
