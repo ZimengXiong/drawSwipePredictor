@@ -23,7 +23,7 @@ from character_model import character_targets, candidate_ctc_cost
 from motor_sampler import MotorSampler
 from retrieval_model import curve, build_encoder, encoder_features
 from train_pair import evaluate
-from train_proxy import RECORD, corpus, proxy_scores, real_word_groups, balanced_real_indices, proxy_checkpoint_state, training_proxy_vectors, optimizer_groups, mix_training_paths
+from train_proxy import RECORD, corpus, proxy_scores, real_word_groups, balanced_real_indices, proxy_checkpoint_state, training_proxy_vectors, optimizer_groups, mix_training_paths, training_mode
 from reference_density import mixture_similarity
 from evaluate_training_exposure import exposure_bias
 from average_word_models import average_state
@@ -38,6 +38,25 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_fixed_normalization_preserves_statistics_and_affine_learning(self):
+        torch.manual_seed(104)
+        model = nn.Sequential(nn.Conv1d(2, 8, 3, padding=1), nn.BatchNorm1d(8),
+                              nn.ReLU(), nn.Dropout(0.1))
+        norm = model[1]
+        mean, variance, weight = norm.running_mean.clone(), norm.running_var.clone(), norm.weight.detach().clone()
+        training_mode(model, True)
+        self.assertTrue(model[0].training and model[-1].training)
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+        model(torch.randn(4, 2, 16) + 3).square().mean().backward()
+        self.assertGreater(float(norm.weight.grad.norm()), 0)
+        optimizer.step()
+        torch.testing.assert_close(norm.running_mean, mean, atol=0, rtol=0)
+        torch.testing.assert_close(norm.running_var, variance, atol=0, rtol=0)
+        self.assertFalse(torch.equal(norm.weight.detach(), weight))
+        training_mode(model, False)
+        model(torch.randn(4, 2, 16) + 3)
+        self.assertFalse(torch.equal(norm.running_mean, mean))
+
     def test_six_candidate_selection_never_exceeds_native_component_limit(self):
         trials = word_mixtures(6)
         self.assertEqual(len(trials), 126)

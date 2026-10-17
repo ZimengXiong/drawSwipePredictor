@@ -22,6 +22,15 @@ ROOT = Path(__file__).resolve().parents[1]
 RECORD = np.dtype([("label", "<u4"), ("difficulty", "<u4"), ("writer", "<u8"), ("points", "<f4", (64, 2))])
 
 
+def training_mode(model, freeze_normalization=False):
+    """Keep affine normalization parameters trainable while optionally fixing statistics."""
+    model.train()
+    if freeze_normalization:
+        for layer in model.modules():
+            if isinstance(layer, nn.BatchNorm1d):
+                layer.eval()
+
+
 def optimizer_groups(model, proxies, encoder_rate, proxy_rate, gate_rate=None):
     """Let added residual blocks open their output gates independently."""
     gates = []
@@ -148,6 +157,8 @@ def main():
     parser.add_argument("--synthetic-only", action="store_true",
                         help="Train on synthetic writers without real-recording or canonical-route mixing")
     parser.add_argument("--freeze-proxies", action="store_true")
+    parser.add_argument("--freeze-normalization", action="store_true",
+                        help="Preserve encoder running statistics during fine-tuning; affine parameters still learn")
     parser.add_argument("--validation", type=Path, default=ROOT / "training/data/memory-proxy/validation.bin")
     parser.add_argument("--init-model", type=Path, default=ROOT / "training/checkpoints/retrieval-v3/best.pt")
     parser.add_argument("--output", type=Path, required=True)
@@ -295,6 +306,8 @@ def main():
             raise ValueError("resume checkpoint gate learning rate differs; use --init-model for a new training stage")
         if saved["metadata"]["arguments"].get("synthetic_only", False) != args.synthetic_only:
             raise ValueError("resume checkpoint training mixture differs; use --init-model for a new training stage")
+        if saved["metadata"]["arguments"].get("freeze_normalization", False) != args.freeze_normalization:
+            raise ValueError("resume normalization mode differs; use --init-model for a new stage")
         model.load_state_dict(saved["model"])
         proxies.data.copy_(training_proxy_vectors(saved))
         legacy_resume = "raw_proxies" not in saved
@@ -310,6 +323,8 @@ def main():
         "proxy_state_schema": 2, "initialization_preserves_raw_vectors": preserve_raw,
         "legacy_normalized_resume": legacy_resume,
         "optimizer_learning_rates_at_start": [group["lr"] for group in optimizer.param_groups],
+        "normalization": "fixed running statistics, trainable affine parameters" if args.freeze_normalization else "running statistics updated during training",
+        "trainer_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "encoder_parameters": sum(parameter.numel() for parameter in model.parameters()),
         "word_vector_parameters": proxies.numel(),
         "test_data_used": False, "selection": "uniform full-vocabulary memory validation top1",
@@ -331,7 +346,7 @@ def main():
         (args.output / "best-metrics.json").write_text(json.dumps({"epoch": 0, "validation": initial_metrics, "best_score": best}, indent=2) + "\n")
         del baseline
     for epoch in range(start, args.epochs):
-        model.train()
+        training_mode(model, args.freeze_normalization)
         began, loss_sum = time.monotonic(), 0.0
         for step in range(args.steps):
             nr, nc = (0, 0) if args.synthetic_only else (args.batch * 15 // 100, args.batch // 10)
