@@ -1,6 +1,7 @@
 mod character;
 pub mod retrieval;
 mod spelling;
+mod transformer;
 pub use retrieval::RetrievalEngine;
 
 mod rerank;
