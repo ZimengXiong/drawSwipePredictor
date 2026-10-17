@@ -1,0 +1,35 @@
+{
+  "kind": "Balanced-real continuation snapshot; full development and native embedding checks",
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "checkpoint_sha256": "669b86c72578aeb18c4a98f2ba3960531d6124890fa8ecd5798a6176b83406c6",
+  "checkpoint_epoch": 105,
+  "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "validation": {
+    "clean": {
+      "samples": 1200,
+      "top1": 0.9591666460037231,
+      "top5": 0.9991666674613953
+    },
+    "loose": {
+      "samples": 2400,
+      "top1": 0.8675000071525574,
+      "top5": 0.9579166769981384
+    },
+    "memory": {
+      "samples": 8400,
+      "top1": 0.7215476036071777,
+      "top5": 0.8895238041877747
+    }
+  },
+  "native_encoder_sha256": "891e306b640ad8d8caf9b5085f77bba6e355432833a5c4ae536fafcaa9830014",
+  "native_words_sha256": "21f44d57038fe1e0e54e6f8f38a5b80385ffeaab3a33769d2458b7e2a9f365c9",
+  "native_embedding_reference_maximum_errors": {
+    "hello": 3.4e-07,
+    "world": 3.2e-07,
+    "keyboard": 1.1e-07,
+    "lunchbox": 1.7e-07,
+    "alpacas": 1.7e-07
+  },
+  "limits": "Training continuation remains live. Snapshot is a separate directory export, not the bundled app. Five reference routes verify implementation parity only. No benchmark or blind-confirmation evaluation."
+}

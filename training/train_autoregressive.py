@@ -147,8 +147,10 @@ def main():
         best = chosen["validation"]["memory"]["top1"]
         initial_report = {"epoch": 0, "selected": chosen, "trials": trials, "best_score": best}
         print(json.dumps({"initial_spelling_validation": chosen}), flush=True)
+        initial_path = args.output / "best.pt.tmp"
         torch.save({"model": model.state_dict(), "optimizer": optimizer.state_dict(), "scheduler": schedule.state_dict(),
-                    "epoch": -1, "best_score": best, "selected": chosen, "metadata": metadata, "words": words}, args.output / "best.pt")
+                    "epoch": -1, "best_score": best, "selected": chosen, "metadata": metadata, "words": words}, initial_path)
+        initial_path.replace(args.output / "best.pt")
         (args.output / "best-metrics.json").write_text(json.dumps(initial_report, indent=2) + "\n")
     for epoch in range(args.epochs):
         model.train()

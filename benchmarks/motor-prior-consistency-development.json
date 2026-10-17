@@ -1,0 +1,139 @@
+{
+  "kind": "Matched motor-prior development control with a stronger frozen word encoder",
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "checkpoint_sha256": "1970620aa0ac8e31da5c5668d0c57902587e83afa8bed0afdd1bda618d362237",
+  "renderer_sha256": "61323e3094c8a79842db1354c1deaccbbfb8b81cc5e4fedda27ae0a73f7904b7",
+  "samples": 128,
+  "natural_candidates": 64,
+  "steps": 200,
+  "baseline_top1": 0.609375,
+  "shortlist_recall": 0.9921875,
+  "comparisons": [
+    {
+      "optimization_regularization": 0.0002,
+      "score_regularization": 0.02,
+      "selected": {
+        "regularization": 0.02,
+        "proxy_weight": 0.005,
+        "top1": 0.6484375,
+        "top5": 0.828125
+      },
+      "trials": [
+        {
+          "regularization": 0.02,
+          "proxy_weight": 0.0,
+          "top1": 0.546875,
+          "top5": 0.7109375
+        },
+        {
+          "regularization": 0.02,
+          "proxy_weight": 0.001,
+          "top1": 0.5703125,
+          "top5": 0.7734375
+        },
+        {
+          "regularization": 0.02,
+          "proxy_weight": 0.005,
+          "top1": 0.6484375,
+          "top5": 0.828125
+        },
+        {
+          "regularization": 0.02,
+          "proxy_weight": 0.01,
+          "top1": 0.640625,
+          "top5": 0.8671875
+        },
+        {
+          "regularization": 0.02,
+          "proxy_weight": 0.05,
+          "top1": 0.625,
+          "top5": 0.890625
+        },
+        {
+          "regularization": 0.02,
+          "proxy_weight": 0.1,
+          "top1": 0.6171875,
+          "top5": 0.8828125
+        },
+        {
+          "regularization": 0.02,
+          "proxy_weight": 0.5,
+          "top1": 0.609375,
+          "top5": 0.8671875
+        },
+        {
+          "regularization": 0.02,
+          "proxy_weight": 1.0,
+          "top1": 0.609375,
+          "top5": 0.859375
+        }
+      ],
+      "raw_report_sha256": "9d617cb7715813d633486dce59f204ff6489fc5e3fd2ac3c2c4ed02090db4b52"
+    },
+    {
+      "optimization_regularization": 0.02,
+      "score_regularization": 0.02,
+      "selected": {
+        "regularization": 0.02,
+        "proxy_weight": 0.01,
+        "top1": 0.640625,
+        "top5": 0.8828125
+      },
+      "trials": [
+        {
+          "regularization": 0.02,
+          "proxy_weight": 0.0,
+          "top1": 0.546875,
+          "top5": 0.765625
+        },
+        {
+          "regularization": 0.02,
+          "proxy_weight": 0.001,
+          "top1": 0.6328125,
+          "top5": 0.828125
+        },
+        {
+          "regularization": 0.02,
+          "proxy_weight": 0.005,
+          "top1": 0.6328125,
+          "top5": 0.859375
+        },
+        {
+          "regularization": 0.02,
+          "proxy_weight": 0.01,
+          "top1": 0.640625,
+          "top5": 0.8828125
+        },
+        {
+          "regularization": 0.02,
+          "proxy_weight": 0.05,
+          "top1": 0.6171875,
+          "top5": 0.875
+        },
+        {
+          "regularization": 0.02,
+          "proxy_weight": 0.1,
+          "top1": 0.609375,
+          "top5": 0.8828125
+        },
+        {
+          "regularization": 0.02,
+          "proxy_weight": 0.5,
+          "top1": 0.609375,
+          "top5": 0.8671875
+        },
+        {
+          "regularization": 0.02,
+          "proxy_weight": 1.0,
+          "top1": 0.609375,
+          "top5": 0.859375
+        }
+      ],
+      "raw_report_sha256": "ee9bf354f781c3b3dfe5d5b2af9426c2492472ed9b15162a81b145fbad5b6c10"
+    }
+  ],
+  "decision": "No demonstrated gain from matching optimization and scoring penalties; retain original fitting default. Neither slow fitting method is in the app.",
+  "limits": "Same exploratory development slice and candidate lists; each method selects the proxy blend on these examples. These figures are not comparable to full-development scores or a blind benchmark."
+}
