@@ -1,0 +1,45 @@
+{
+  "test_data_used": false,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "full_vocabulary": 60000,
+  "selection_sha256": "71d81b6242793e3b9c4d38d020e0aadea5cb92ba78c7d54d3c2618dbe8373db8",
+  "native_manifest_sha256": "15a0e7d21df19e1146b7ce8284fe66043cd1e0e52f5599400d1d4afdfc062e26",
+  "regenerated_development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "validation": {
+    "clean": {
+      "samples": 1200,
+      "top1": 0.9641666666666666,
+      "top5": 0.9991666666666666,
+      "correct_top1": 1157,
+      "correct_top5": 1199
+    },
+    "loose": {
+      "samples": 2400,
+      "top1": 0.8683333333333333,
+      "top5": 0.96,
+      "correct_top1": 2084,
+      "correct_top5": 2304
+    },
+    "memory": {
+      "samples": 8400,
+      "top1": 0.7251190476190477,
+      "top5": 0.8896428571428572,
+      "correct_top1": 6091,
+      "correct_top5": 7473
+    }
+  },
+  "matches_python_hit_counts": true,
+  "evaluated_rows": 12000,
+  "median_milliseconds": 28.5452505,
+  "p95_milliseconds": 36.2784181,
+  "limits": "Development only; regenerated raw strokes reproduce the unchanged corpus hash. Concurrent training affects timing. No benchmark or blind-confirmation evaluation.",
+  "native_cli_sha256": "705d9cc29d8cf35340010f69de19bc645912a01345c06b0b18ce727ece75fab6",
+  "corpus_cli_sha256": "99842414a67fd9248d143ad13a042a0e0adcea1bae756450b279fad8fa0235c9"
+}
