@@ -104,11 +104,11 @@ class MotorFitter:
         keys, lengths = keys[keep], lengths[keep]
         repeated = query[:, None, None].expand(-1, candidates.shape[1], variants, -1, -1).reshape(-1, 64, 2)[keep]
         if initializer is None:
-            parameters = torch.zeros(len(keys), 70 + keys.shape[1] - 2, device=self.device, requires_grad=True)
+            parameters = torch.zeros(len(keys), 70 + keys.shape[1] - 2, device=self.device, requires_grad=steps > 0)
         else:
             with torch.no_grad():
                 suggested = initializer(repeated, keys, lengths, self)
-            parameters = suggested.detach().clone().requires_grad_(True)
+            parameters = suggested.detach().clone().requires_grad_(steps > 0)
         optimizer = torch.optim.Adam([parameters], lr=learning_rate)
         best = torch.full((len(keys),), torch.inf, device=self.device)
         best_error, best_penalty = best.clone(), best.clone()
