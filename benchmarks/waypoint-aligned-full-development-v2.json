@@ -1,0 +1,289 @@
+{
+  "test_data_used": false,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "samples": 12000,
+  "full_development": true,
+  "full_vocabulary": 60000,
+  "encoder_sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+  "corner_sha256": "2c5b793c7a834a1838f55d24e04a704c419bd722df6dcf0e8e37f06c9ed70b65",
+  "corner_epoch": 17,
+  "source_sha256": {
+    "evaluate_waypoint_evidence.py": "c6e1ae370e0b80996b17d27ff801261779438189208264ccc98990d953460eb6",
+    "waypoint_evidence.py": "2f43f1aa3369a12920120c97575e3339b91fb88cf802d2a36aad49d04d037886",
+    "waypoint_model.py": "5395dc483ca3d5d45decef8e04009c171ea561e6123b08b4a1232f24b90fab65",
+    "aligned_waypoint_model.py": "7014f31cc8b14d031085ef87fb8f19cd26e55a884d47a15c8eede9f4fb9db408",
+    "retrieval_model.py": "6be42de79e9777a97ef5cebcba60ce8b96fc840cdbf43aee532501e25cd87d4d",
+    "large_encoder.py": "41767ccc94c0d872490cb8a76866fb5f564d6c3179218bd0e2b0ed51c284a7e4",
+    "visited_route_model.py": "a82b1601bffec3448c0632cc9945c0d91cf7a1671c2f19ea474d99e36d39de7e"
+  },
+  "inputs_sha256": {
+    "checkpoints/exact-low-probe-v1.pt": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+    "checkpoints/waypoint-aligned-probe-v2.pt": "2c5b793c7a834a1838f55d24e04a704c419bd722df6dcf0e8e37f06c9ed70b65",
+    "data/waypoint-aligned-v2/train.npz": "e53d6fd5b56ebe4b4e49697de154f85899f6249a72dee46eb966b33f13ad294d",
+    "checkpoints/route-spelling-full-v1.json": "7b2d5f60f53d6536f161d3e0242ce892535fa3e569a6643f97b8dab1d8cbba20",
+    "checkpoints/visited-routes-full-development-v1.json": "d9fc3207332fd6a7c5b03f2c9ebf8b8ac2d80db0111b46ef59238333a8065d2e",
+    "data/memory-proxy/validation.bin": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+    "checkpoints/route-spelling-full-v1.scores.npz": "5939d4d876aa40d8874329237217cdff6f016a2ce3cb92634939f8020e3f7397",
+    "checkpoints/visited-routes-full-development-v1.scores.npz": "c087ef87ebc223d7b09ff955489a0533eb1da7772bceeb9a965092ffcf006977"
+  },
+  "score_cache_sha256": "b1e8d098b3d81c358468b40e9a6064be77dad97248e324c105d07abcf0dca62e",
+  "baseline_full_counts_verified": true,
+  "inputs_unchanged_through_scoring": true,
+  "training_count_prior": [
+    0.021224141120910645,
+    0.07797931134700775,
+    0.11466207355260849,
+    0.11275171488523483,
+    0.12408275902271271,
+    0.11672759801149368,
+    0.09973793476819992,
+    0.07793448865413666,
+    0.053644828498363495,
+    0.03538276255130768,
+    0.02222413942217827,
+    0.015141380950808525,
+    0.010596553795039654,
+    0.008334481157362461,
+    0.007406898308545351,
+    0.0067310333251953125,
+    0.0065206908620893955,
+    0.006634481251239777,
+    0.006837931461632252,
+    0.006372413598001003,
+    0.006455173250287771,
+    0.006472415290772915,
+    0.006362068932503462,
+    0.0063689653761684895,
+    0.00642413878813386,
+    0.0064034489914774895,
+    0.006444827187806368,
+    0.0065517243929207325,
+    0.006396551616489887,
+    0.0064310347661376,
+    0.00476206885650754
+  ],
+  "omission_prior": 0.2835,
+  "fixed_spelling_settings": {
+    "length_power": 0.3,
+    "proxy_weight": 4.0
+  },
+  "selected": {
+    "corner_weight": 1.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "correct_top1": 1154,
+        "correct_top5": 1198,
+        "top1": 0.9616666666666667,
+        "top5": 0.9983333333333333
+      },
+      "loose": {
+        "samples": 2400,
+        "correct_top1": 2102,
+        "correct_top5": 2319,
+        "top1": 0.8758333333333334,
+        "top5": 0.96625
+      },
+      "memory": {
+        "samples": 8400,
+        "correct_top1": 6193,
+        "correct_top5": 7546,
+        "top1": 0.7372619047619048,
+        "top5": 0.8983333333333333
+      }
+    }
+  },
+  "trials": [
+    {
+      "corner_weight": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1153,
+          "correct_top5": 1199,
+          "top1": 0.9608333333333333,
+          "top5": 0.9991666666666666
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2092,
+          "correct_top5": 2307,
+          "top1": 0.8716666666666667,
+          "top5": 0.96125
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6171,
+          "correct_top5": 7557,
+          "top1": 0.7346428571428572,
+          "top5": 0.8996428571428572
+        }
+      }
+    },
+    {
+      "corner_weight": 0.1,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1153,
+          "correct_top5": 1199,
+          "top1": 0.9608333333333333,
+          "top5": 0.9991666666666666
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2095,
+          "correct_top5": 2309,
+          "top1": 0.8729166666666667,
+          "top5": 0.9620833333333333
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6174,
+          "correct_top5": 7557,
+          "top1": 0.735,
+          "top5": 0.8996428571428572
+        }
+      }
+    },
+    {
+      "corner_weight": 0.25,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1153,
+          "correct_top5": 1199,
+          "top1": 0.9608333333333333,
+          "top5": 0.9991666666666666
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2096,
+          "correct_top5": 2313,
+          "top1": 0.8733333333333333,
+          "top5": 0.96375
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6183,
+          "correct_top5": 7560,
+          "top1": 0.7360714285714286,
+          "top5": 0.9
+        }
+      }
+    },
+    {
+      "corner_weight": 0.5,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1154,
+          "correct_top5": 1199,
+          "top1": 0.9616666666666667,
+          "top5": 0.9991666666666666
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2101,
+          "correct_top5": 2316,
+          "top1": 0.8754166666666666,
+          "top5": 0.965
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6182,
+          "correct_top5": 7557,
+          "top1": 0.7359523809523809,
+          "top5": 0.8996428571428572
+        }
+      }
+    },
+    {
+      "corner_weight": 1.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1154,
+          "correct_top5": 1198,
+          "top1": 0.9616666666666667,
+          "top5": 0.9983333333333333
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2102,
+          "correct_top5": 2319,
+          "top1": 0.8758333333333334,
+          "top5": 0.96625
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6193,
+          "correct_top5": 7546,
+          "top1": 0.7372619047619048,
+          "top5": 0.8983333333333333
+        }
+      }
+    },
+    {
+      "corner_weight": 2.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1149,
+          "correct_top5": 1199,
+          "top1": 0.9575,
+          "top5": 0.9991666666666666
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2106,
+          "correct_top5": 2329,
+          "top1": 0.8775,
+          "top5": 0.9704166666666667
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6165,
+          "correct_top5": 7513,
+          "top1": 0.7339285714285714,
+          "top5": 0.8944047619047619
+        }
+      }
+    },
+    {
+      "corner_weight": 4.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1144,
+          "correct_top5": 1199,
+          "top1": 0.9533333333333334,
+          "top5": 0.9991666666666666
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2099,
+          "correct_top5": 2332,
+          "top1": 0.8745833333333334,
+          "top5": 0.9716666666666667
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6082,
+          "correct_top5": 7423,
+          "top1": 0.724047619047619,
+          "top5": 0.8836904761904761
+        }
+      }
+    }
+  ],
+  "native_supported": false,
+  "limits": "Every selected row; same natural128 candidates retrieved from all60000 words. Missing targets remain misses. All31 counts inferred from points; no true query count, corner label, target, writer, or difficulty enters prediction. Count prior uses training rows only. No benchmark or confirmation evaluation. Subset diagnostics are not full-development accuracy."
+}
