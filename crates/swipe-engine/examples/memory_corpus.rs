@@ -85,6 +85,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     file.write_all(&samples.to_le_bytes())?;
     file.write_all(&(vocab as u32).to_le_bytes())?;
     file.write_all(&seed.to_le_bytes())?;
+    let mut verification = Vec::new();
     let mut chooser = Random::new(seed);
     for i in 0..samples {
         let (id, word) = eligible[chooser.index(eligible.len())];
@@ -102,13 +103,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         file.write_all(&(id as u32).to_le_bytes())?;
         file.write_all(&difficulty_id.to_le_bytes())?;
         file.write_all(&writer.to_le_bytes())?;
-        for point in resample(&points) {
+        let normalized = resample(&points);
+        if option(&args, "--verification").is_some() && i < 8 {
+            verification.push(serde_json::json!({"word": word, "points": points, "normalized": normalized.to_vec()}));
+        }
+        for point in normalized {
             for value in point {
                 file.write_all(&value.to_le_bytes())?;
             }
         }
     }
     file.flush()?;
+    if let Some(path) = option(&args, "--verification") {
+        std::fs::write(path, serde_json::to_vec(&verification)?)?;
+    }
     let report = serde_json::json!({"samples": samples, "vocabulary": vocab, "seed": seed,
         "writer_start": seed * 1_000_003, "writer_end_exclusive": seed * 1_000_003 + samples,
         "target_policy": "uniform over all 4–12 letter words in the full deployment vocabulary",

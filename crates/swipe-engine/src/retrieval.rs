@@ -100,6 +100,9 @@ impl RetrievalEngine {
             return Err("invalid number of word-route centers".into());
         }
         let mut position = if multiple { 28 } else { 24 };
+        if count > (bank.len() - position) / (2 + 1 + 4 + DIM * centers * 4) {
+            return Err("word-bank count exceeds its payload".into());
+        }
         let mut words = Vec::with_capacity(count);
         let mut vectors = Vec::with_capacity(count * centers);
         let mut seen = HashSet::new();
@@ -134,8 +137,8 @@ impl RetrievalEngine {
             if values.iter().any(|v| !v.is_finite()) || !(0.0..=1.0).contains(&values[0]) {
                 return Err("invalid word-bank values".into());
             }
-            for center in values[1..].chunks_exact(DIM) {
-                let vector: [f32; DIM] = center.try_into().unwrap();
+            for center in values[1..].as_chunks::<DIM>().0 {
+                let vector = *center;
                 let norm = vector.iter().map(|v| v * v).sum::<f32>();
                 if !(0.99..=1.01).contains(&norm) {
                     return Err("word-bank vector is not normalized".into());
