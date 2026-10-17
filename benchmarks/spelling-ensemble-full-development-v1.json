@@ -1,0 +1,75 @@
+{
+  "encoder_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "decoder_sha256": "d06540bd32a3575abf092d131623e4d0826729852886761ba1f08721a4fe4fa9",
+  "retrieval_sha256": "b86c9d1cab7d56cd50b23bc8cf38f6a47824427ab36c4a145a049b1951064156",
+  "retrieval_auxiliary_sha256": "89a68311ded7735485a232d212691ea5e941c7fdee11318ff6f0358fcb741727",
+  "retrieval_auxiliary_weight": 0.25,
+  "retrieval_selection_sha256": "71d81b6242793e3b9c4d38d020e0aadea5cb92ba78c7d54d3c2618dbe8373db8",
+  "decoder_epoch": 30,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "samples": 12000,
+  "selected": {
+    "length_power": 1.0,
+    "proxy_weight": 2.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9633333086967468,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8712499737739563,
+        "top5": 0.9608333110809326
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7272619009017944,
+        "top5": 0.8920238018035889
+      }
+    }
+  },
+  "shortlist_recall": {
+    "clean": 1.0,
+    "loose": 0.9991666674613953,
+    "memory": 0.9948809742927551
+  },
+  "rules": "All development rows; natural top128; exact full words; no target insertion or alias credit",
+  "retrieval_only_control": {
+    "length_power": 0.0,
+    "proxy_weight": null,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9641666412353516,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8683333396911621,
+        "top5": 0.9599999785423279
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7251190543174744,
+        "top5": 0.8896428346633911
+      }
+    }
+  },
+  "full_trial_report_sha256": "aff0c4a77d99d1416c21aa416140ad85080c4bb1fe9f77432b36c8203f2d81a1",
+  "full_trial_report_path": "training/checkpoints/autoregressive-ranking-ensemble-full-v1.json",
+  "hard_top1_hits": 6109,
+  "baseline_hard_top1_hits": 6091,
+  "native_verified": false,
+  "promoted_to_app": false,
+  "status": "Development-only epoch30 decoder probe. All three word encoders and the spelling decoder must be represented in native inference before promotion. Training continues; target unmet."
+}
