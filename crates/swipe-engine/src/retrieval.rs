@@ -13,6 +13,12 @@ struct Word {
     geometry: Geometry,
 }
 
+struct Auxiliary {
+    encoder: Encoder,
+    vectors: Vec<[f32; DIM]>,
+    centers: usize,
+}
+
 /// Native neural recognizer. Load matching exported encoder and word-bank files.
 ///
 /// The encoder maps a gesture to a unit vector. Word vectors are cached at
@@ -29,6 +35,9 @@ pub struct RetrievalEngine {
     adaptive_prior: bool,
     ranker: Option<Ranker>,
     character: Option<CharacterModel>,
+    auxiliary: Option<Auxiliary>,
+    auxiliary_weight: f32,
+    auxiliary_tags: [u64; 2],
 }
 
 impl RetrievalEngine {
@@ -58,6 +67,33 @@ impl RetrievalEngine {
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
             Err(error) => return Err(error.to_string()),
         }
+        if engine.auxiliary_weight > 0.0 {
+            if engine.prior_weight != 0.0 || engine.tta_degrees != 0.0 || engine.adaptive_prior {
+                return Err("word ensembles require their exported base retrieval settings".into());
+            }
+            let folder = directory.as_ref().join("auxiliary");
+            let other_encoder =
+                std::fs::read(folder.join("encoder.bin")).map_err(|e| e.to_string())?;
+            let other_bank = std::fs::read(folder.join("words.bin")).map_err(|e| e.to_string())?;
+            if engine.auxiliary_tags != [fingerprint(&other_encoder), fingerprint(&other_bank)] {
+                return Err("auxiliary model does not match the exported ensemble".into());
+            }
+            let other = Self::from_bytes(&other_encoder, &other_bank)?;
+            if other.words.len() != engine.words.len()
+                || other
+                    .words
+                    .iter()
+                    .zip(&engine.words)
+                    .any(|(a, b)| a.text != b.text)
+            {
+                return Err("ensemble word banks differ".into());
+            }
+            engine.auxiliary = Some(Auxiliary {
+                encoder: other.encoder,
+                vectors: other.vectors,
+                centers: other.centers,
+            });
+        }
         let ranker = directory.as_ref().join("reranker.json");
         match std::fs::read_to_string(ranker) {
             Ok(json) => engine.load_ranker(&json, &encoder, &bank)?,
@@ -68,7 +104,7 @@ impl RetrievalEngine {
             Ok(bytes) => {
                 let model = CharacterModel::from_bytes(&bytes)?;
                 if model.encoder_tag != fingerprint(&encoder)
-                    || model.bank_tag != fingerprint(&bank)
+                    || model.bank_tag != engine.character_binding(&bank)
                 {
                     return Err(
                         "character decoder belongs to a different encoder or word bank".into(),
@@ -88,6 +124,18 @@ impl RetrievalEngine {
             Err(error) => return Err(error.to_string()),
         }
         Ok(engine)
+    }
+
+    fn character_binding(&self, bank: &[u8]) -> u64 {
+        if self.auxiliary.is_none() {
+            return fingerprint(bank);
+        }
+        let mut binding = bank.to_vec();
+        for tag in self.auxiliary_tags {
+            binding.extend_from_slice(&tag.to_le_bytes());
+        }
+        binding.extend_from_slice(&self.auxiliary_weight.to_le_bytes());
+        fingerprint(&binding)
     }
 
     fn load_ranker(&mut self, json: &str, encoder: &[u8], bank: &[u8]) -> Result<(), String> {
@@ -198,6 +246,9 @@ impl RetrievalEngine {
             adaptive_prior: false,
             ranker: None,
             character: None,
+            auxiliary: None,
+            auxiliary_weight: 0.0,
+            auxiliary_tags: [0, 0],
         })
     }
 
@@ -210,16 +261,25 @@ impl RetrievalEngine {
             tta_degrees: f32,
             #[serde(default)]
             adaptive_prior: bool,
+            #[serde(default)]
+            auxiliary_weight: f32,
+            #[serde(default)]
+            auxiliary_encoder_tag: u64,
+            #[serde(default)]
+            auxiliary_bank_tag: u64,
         }
         let settings: Settings = serde_json::from_str(json).map_err(|e| e.to_string())?;
         if !(0.0..=2.0).contains(&settings.prior_weight)
             || !(0.0..=24.0).contains(&settings.tta_degrees)
+            || !(0.0..=1.0).contains(&settings.auxiliary_weight)
         {
             return Err("invalid route ranking settings".into());
         }
         self.prior_weight = settings.prior_weight;
         self.tta_degrees = settings.tta_degrees;
         self.adaptive_prior = settings.adaptive_prior;
+        self.auxiliary_weight = settings.auxiliary_weight;
+        self.auxiliary_tags = [settings.auxiliary_encoder_tag, settings.auxiliary_bank_tag];
         Ok(())
     }
 
@@ -231,6 +291,9 @@ impl RetrievalEngine {
     pub fn truncate_vocabulary(&mut self, count: usize) {
         self.words.truncate(count);
         self.vectors.truncate(count * self.centers);
+        if let Some(auxiliary) = &mut self.auxiliary {
+            auxiliary.vectors.truncate(count * auxiliary.centers);
+        }
     }
 
     pub fn set_prior_weight(&mut self, weight: f32) {
@@ -385,12 +448,27 @@ impl RetrievalEngine {
         limit: usize,
         geometry_union: bool,
     ) -> Vec<Prediction> {
+        let auxiliary_query = if let Some(model) = &self.auxiliary {
+            let Some(embedding) = model.encoder.embed(path) else {
+                return Vec::new();
+            };
+            Some(embedding)
+        } else {
+            None
+        };
         let mut ranked: Vec<_> = self
             .vectors
             .chunks_exact(self.centers)
             .enumerate()
             .map(|(index, centers)| {
-                let similarity = center_similarity(query, centers);
+                let mut similarity = center_similarity(query, centers);
+                if let (Some(model), Some(embedding)) = (&self.auxiliary, &auxiliary_query) {
+                    let start = index * model.centers;
+                    let other =
+                        center_similarity(embedding, &model.vectors[start..start + model.centers]);
+                    similarity =
+                        (1.0 - self.auxiliary_weight) * similarity + self.auxiliary_weight * other;
+                }
                 let distance = (1.0 - similarity).max(0.0);
                 let popularity = self.words[index].popularity;
                 let rating = if self.adaptive_prior {

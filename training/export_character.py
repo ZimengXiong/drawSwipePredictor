@@ -12,7 +12,7 @@ import torch
 from character_edit import ctc_edit_components, edit_log_likelihood
 from character_model import CharacterDecoder, character_targets, candidate_ctc_cost
 from export_retrieval import fingerprint, floats
-from retrieval_model import build_encoder, curve
+from retrieval_model import build_encoder, curve, encoder_features
 from train_character import encode
 from train_proxy import proxy_scores
 
@@ -26,6 +26,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--retrieval-checkpoint", type=Path, required=True)
     parser.add_argument("--decoder-checkpoint", type=Path)
+    parser.add_argument("--auxiliary-checkpoint", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     torch.set_num_threads(4)
@@ -38,7 +39,7 @@ def main():
         raise ValueError("character decoder belongs to a different frozen encoder")
     if "character_model" in decoder and decoder_hash != retriever_hash:
         raise ValueError("joint decoder and encoder must come from the same checkpoint")
-    selected = decoder["selected"]
+    selected = manifest.get("complete_selection", decoder["selected"])
     weight = selected["proxy_weight"]
     if weight is None:
         raise ValueError("development selected retrieval alone; use its base export")
@@ -53,7 +54,20 @@ def main():
     for key, content in [("encoder", encoder_bytes), ("words", bank_bytes)]:
         if manifest[key + "_sha256"] != hashlib.sha256(content).hexdigest():
             raise ValueError("native base artifact hash mismatch")
-    binary = bytearray(b"SWPCH001" + struct.pack("<QQIfff", fingerprint(encoder_bytes), fingerprint(bank_bytes), channels, weight, probability, 0.3))
+    binding = bytearray(bank_bytes)
+    auxiliary_model = None
+    auxiliary_weight = manifest.get("auxiliary_weight", 0.0)
+    if auxiliary_weight:
+        if not args.auxiliary_checkpoint or "complete_selection" not in manifest:
+            raise ValueError("ensemble character decoding requires its auxiliary checkpoint and development selection")
+        auxiliary, auxiliary_hash = read_checkpoint(args.auxiliary_checkpoint)
+        if auxiliary_hash != manifest["auxiliary_checkpoint_sha256"] or auxiliary["words"] != retriever["words"]:
+            raise ValueError("auxiliary character evidence source differs")
+        auxiliary_model = build_encoder(auxiliary["metadata"]["arguments"].get("architecture", "small")).to("mps").eval()
+        auxiliary_model.load_state_dict(auxiliary["model"])
+        auxiliary_proxies = auxiliary["proxies"].to("mps")
+        binding.extend(struct.pack("<QQf", manifest["auxiliary_encoder_tag"], manifest["auxiliary_bank_tag"], auxiliary_weight))
+    binary = bytearray(b"SWPCH001" + struct.pack("<QQIfff", fingerprint(encoder_bytes), fingerprint(binding), channels, weight, probability, 0.3))
     def convolution(conv, norm=None):
         if norm is None:
             binary.extend(floats(conv.weight)); binary.extend(floats(conv.bias))
@@ -74,7 +88,11 @@ def main():
             paths = torch.tensor(curve(case["points"])[None], device="mps")
             sequence, raw, embedding = encode(encoder, paths)
             log_probs = model(sequence, raw, embedding).log_softmax(2)
-            similarity, candidates = proxy_scores(embedding, proxies).topk(128, dim=1)
+            scores = proxy_scores(embedding, proxies)
+            if auxiliary_model is not None:
+                other = proxy_scores(auxiliary_model(encoder_features(auxiliary_model, paths)), auxiliary_proxies)
+                scores = (1 - auxiliary_weight) * scores + auxiliary_weight * other
+            similarity, candidates = scores.topk(128, dim=1)
             sizes = lengths[candidates.cpu()].to("mps")
             if probability:
                 ordinary, deleted = ctc_edit_components(log_probs, candidates, targets, lengths)
