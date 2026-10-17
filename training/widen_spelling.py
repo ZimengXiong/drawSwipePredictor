@@ -52,3 +52,37 @@ def widen_decoder(model, original):
         for output in [block.self_attn.out_proj, block.multihead_attn.out_proj, block.linear2]:
             output.weight.zero_()
             output.bias.zero_()
+
+
+@torch.no_grad()
+def break_widened_symmetry(model, original, scale=0.01, seed=900971):
+    """Change replicated-channel gradients while canceling their initial outputs."""
+    old_width, old_layers, _ = decoder_dimensions(original)
+    new_width = model.symbols.embedding_dim
+    if new_width <= old_width or new_width % old_width or not 0 < scale <= 0.05:
+        raise ValueError('symmetry breaking requires an expanded width and a small positive scale')
+    ratio = new_width//old_width
+    channels = torch.arange(old_width).reshape(6,-1).repeat(1,ratio).flatten()
+    hidden = torch.arange(old_width*4).repeat(ratio)
+    generator = torch.Generator(device='cpu').manual_seed(seed)
+
+    def perturb(layer, mapping):
+        groups = torch.stack([(mapping==index).nonzero().flatten() for index in range(int(mapping.max())+1)])
+        if groups.numel()!=layer.weight.shape[1] or groups.shape[1]!=ratio:
+            raise ValueError('projection does not have the expected replicated inputs')
+        noise = torch.randn(layer.weight.shape[0],len(groups),ratio-1,generator=generator)*scale
+        noise = torch.cat([noise,-noise.sum(2,keepdim=True)],dim=2)
+        columns = groups.flatten().to(layer.weight.device)
+        layer.weight[:,columns] += noise.reshape(layer.weight.shape[0],-1).to(layer.weight.device)
+
+    for block in model.decoder.layers[:old_layers]:
+        for attention in [block.self_attn,block.multihead_attn]:
+            # MultiheadAttention stores its combined Q/K/V matrix directly.
+            class Projection:
+                pass
+            projection=Projection();projection.weight=attention.in_proj_weight
+            perturb(projection,channels)
+            perturb(attention.out_proj,channels)
+        perturb(block.linear1,channels)
+        perturb(block.linear2,hidden)
+    perturb(model.output,channels)

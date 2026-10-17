@@ -6,11 +6,31 @@ import torch
 from torch.nn import functional as F
 
 from autoregressive_model import SpellingDecoder, load_decoder, word_tokens
-from widen_spelling import widen_decoder
+from widen_spelling import widen_decoder, break_widened_symmetry
 from export_spelling import spelling_binary
 
 
 class SpellingWidthTests(unittest.TestCase):
+    def test_canceling_noise_preserves_predictions_and_separates_gradients(self):
+        torch.manual_seed(105)
+        source=SpellingDecoder(width=48,layers=1).eval()
+        wide=SpellingDecoder(width=96,layers=2).eval()
+        widen_decoder(wide,source.state_dict())
+        sequence,raw,embedding=torch.randn(2,128,32),torch.randn(2,8,64),torch.randn(2,128)
+        inputs=torch.tensor([[27,3,1,20],[27,4,15,7]])
+        with torch.no_grad():before=wide(wide.encode_memory(sequence,raw,embedding),inputs)
+        state=torch.get_rng_state().clone()
+        break_widened_symmetry(wide,source.state_dict(),scale=0.01,seed=22)
+        self.assertTrue(torch.equal(state,torch.get_rng_state()))
+        after=wide(wide.encode_memory(sequence,raw,embedding),inputs)
+        torch.testing.assert_close(after,before,atol=2e-6,rtol=2e-5)
+        after.square().mean().backward()
+        mapping=torch.arange(48).reshape(6,-1).repeat(1,2).flatten()
+        first=torch.tensor([(mapping==i).nonzero()[0,0] for i in range(48)])
+        second=torch.tensor([(mapping==i).nonzero()[1,0] for i in range(48)])
+        gradient=wide.symbols.weight.grad
+        self.assertGreater(float((gradient[:,first]-gradient[:,second]).norm()),1e-5)
+
     def test_trailing_padding_can_be_removed_without_dropping_candidates(self):
         torch.manual_seed(38)
         model = SpellingDecoder(width=48, layers=1).eval()

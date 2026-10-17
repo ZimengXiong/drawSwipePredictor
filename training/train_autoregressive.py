@@ -15,7 +15,7 @@ from torch.nn import functional as F
 
 from autoregressive_model import SpellingDecoder, word_tokens, decoder_dimensions, expand_decoder
 from motor_sampler import MotorSampler
-from widen_spelling import widen_decoder
+from widen_spelling import widen_decoder, break_widened_symmetry
 from retrieval_model import build_encoder, encoder_features, load_recordings
 from train_character import encode
 from train_joint import load_checkpoint
@@ -93,6 +93,8 @@ def main():
                         help="Decoder depth; defaults to the source depth or three blocks")
     parser.add_argument("--decoder-width", type=int, choices=[192, 384],
                         help="Expand channels while preserving the initialized inference function")
+    parser.add_argument("--widen-symmetry-noise", type=float, default=0.0,
+                        help="Canceling projection noise that separates widened-channel gradients")
     parser.add_argument("--ranking-candidates", type=int, default=0)
     parser.add_argument("--learning-rate", type=float, default=0.0004)
     parser.add_argument("--fine-tune-encoder", action="store_true")
@@ -110,6 +112,8 @@ def main():
         parser.error("independent retrieval requires initialized candidate ranking")
     if args.fresh_fraction is not None and not 0 <= args.fresh_fraction <= 0.7:
         parser.error("fresh fraction must be between zero and 0.7")
+    if not np.isfinite(args.widen_symmetry_noise) or not 0 <= args.widen_symmetry_noise <= 0.05:
+        parser.error("widening noise must be between zero and 0.05")
     torch.set_num_threads(4)
     torch.manual_seed(args.seed)
     rng = np.random.default_rng(args.seed)
@@ -185,6 +189,8 @@ def main():
             expand_decoder(model, initial["model"])
         else:
             widen_decoder(model, initial["model"])
+        if args.widen_symmetry_noise:
+            break_widened_symmetry(model, initial["model"], args.widen_symmetry_noise, args.seed+118)
         if "context_model" in initial:
             if not args.fine_tune_encoder:
                 raise ValueError("a jointly trained decoder requires its learned context")
