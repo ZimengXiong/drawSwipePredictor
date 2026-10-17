@@ -1,3 +1,4 @@
+mod character;
 pub mod retrieval;
 pub use retrieval::RetrievalEngine;
 

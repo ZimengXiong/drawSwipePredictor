@@ -4,14 +4,20 @@ use crate::memory_geometry::resample;
 const POINTS: usize = 64;
 pub(crate) const DIM: usize = 128;
 
-struct Layer {
-    weights: Vec<f32>,
-    bias: Vec<f32>,
-    inputs: usize,
-    outputs: usize,
-    kernel: usize,
-    stride: usize,
-    dilation: usize,
+pub(crate) struct Layer {
+    pub(crate) weights: Vec<f32>,
+    pub(crate) bias: Vec<f32>,
+    pub(crate) inputs: usize,
+    pub(crate) outputs: usize,
+    pub(crate) kernel: usize,
+    pub(crate) stride: usize,
+    pub(crate) dilation: usize,
+}
+
+pub(crate) struct EncoderContext {
+    pub(crate) features: Vec<f32>,
+    pub(crate) sequence: Vec<f32>,
+    pub(crate) embedding: [f32; DIM],
 }
 
 pub(crate) struct Encoder {
@@ -120,10 +126,15 @@ impl Encoder {
     }
 
     pub(crate) fn embed(&self, raw: &[(f64, f64)]) -> Option<[f32; DIM]> {
+        self.context(raw).map(|context| context.embedding)
+    }
+
+    pub(crate) fn context(&self, raw: &[(f64, f64)]) -> Option<EncoderContext> {
         let mut values = prepare_features(raw)?;
         if self.convolutions[0].inputs == 16 {
             append_intrinsic(&mut values);
         }
+        let features = values.clone();
         let mut length = POINTS;
         for layer in &self.convolutions {
             let next = convolve(&values, length, layer, true);
@@ -137,6 +148,7 @@ impl Encoder {
                 *value = (*value + delta).max(0.0);
             }
         }
+        let sequence = values.clone();
         if let Some(layer) = &self.downsample {
             values = convolve(&values, length, layer, true).0;
         }
@@ -158,11 +170,20 @@ impl Encoder {
         if vector.iter().any(|v| !v.is_finite()) {
             return None;
         }
-        vector.try_into().ok()
+        Some(EncoderContext {
+            features,
+            sequence,
+            embedding: vector.try_into().ok()?,
+        })
     }
 }
 
-fn convolve(values: &[f32], length: usize, layer: &Layer, relu: bool) -> (Vec<f32>, usize) {
+pub(crate) fn convolve(
+    values: &[f32],
+    length: usize,
+    layer: &Layer,
+    relu: bool,
+) -> (Vec<f32>, usize) {
     let next_length = (length - 1) / layer.stride + 1;
     let mut output = vec![0.0; layer.outputs * next_length];
     let width = layer.inputs * layer.kernel;

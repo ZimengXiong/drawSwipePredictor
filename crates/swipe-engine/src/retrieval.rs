@@ -1,4 +1,5 @@
 //! Word retrieval using a neural embedding learned from real and synthetic swipes.
+use crate::character::CharacterModel;
 use crate::retrieval_encoder::{dot, Encoder, DIM};
 use crate::{Prediction, ScoreBreakdown};
 use std::collections::{HashMap, HashSet};
@@ -27,6 +28,7 @@ pub struct RetrievalEngine {
     tta_degrees: f32,
     adaptive_prior: bool,
     ranker: Option<Ranker>,
+    character: Option<CharacterModel>,
 }
 
 impl RetrievalEngine {
@@ -59,6 +61,29 @@ impl RetrievalEngine {
         let ranker = directory.as_ref().join("reranker.json");
         match std::fs::read_to_string(ranker) {
             Ok(json) => engine.load_ranker(&json, &encoder, &bank)?,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error.to_string()),
+        }
+        match std::fs::read(directory.as_ref().join("character.bin")) {
+            Ok(bytes) => {
+                let model = CharacterModel::from_bytes(&bytes)?;
+                if model.encoder_tag != fingerprint(&encoder)
+                    || model.bank_tag != fingerprint(&bank)
+                {
+                    return Err(
+                        "character decoder belongs to a different encoder or word bank".into(),
+                    );
+                }
+                if engine.ranker.is_some()
+                    || engine.prior_weight != 0.0
+                    || engine.tta_degrees != 0.0
+                {
+                    return Err(
+                        "character decoding requires its exported base retrieval settings".into(),
+                    );
+                }
+                engine.character = Some(model);
+            }
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
             Err(error) => return Err(error.to_string()),
         }
@@ -172,6 +197,7 @@ impl RetrievalEngine {
             tta_degrees: 0.0,
             adaptive_prior: false,
             ranker: None,
+            character: None,
         })
     }
 
@@ -218,6 +244,13 @@ impl RetrievalEngine {
         self.encoder.embed(path)
     }
 
+    /// Expose character log probabilities for cross-runtime verification.
+    pub fn character_probabilities(&self, path: &[(f64, f64)]) -> Option<Vec<[f32; 27]>> {
+        self.character
+            .as_ref()?
+            .log_probabilities(&self.encoder.context(path)?)
+    }
+
     /// Extract the same candidate features used during deployed reranking.
     pub fn ranking_features(&self, path: &[(f64, f64)], limit: usize) -> Vec<Candidate> {
         let predictions = self.retrieve(path, limit, true);
@@ -246,6 +279,26 @@ impl RetrievalEngine {
     }
 
     pub fn predict_from_path(&self, path: &[(f64, f64)], limit: usize) -> Vec<Prediction> {
+        if let Some(model) = &self.character {
+            if limit == 0 {
+                return Vec::new();
+            }
+            let Some(context) = self.encoder.context(path) else {
+                return Vec::new();
+            };
+            let Some(probabilities) = model.log_probabilities(&context) else {
+                return Vec::new();
+            };
+            let mut candidates = self.rank_query(&context.embedding, path, limit.max(128), false);
+            for candidate in &mut candidates {
+                candidate.rating = (model.cost(&probabilities, &candidate.word)
+                    - model.proxy_weight * 32.0 * (1.0 - candidate.raw_score as f32))
+                    as f64;
+            }
+            candidates.sort_by(|a, b| a.rating.total_cmp(&b.rating));
+            candidates.truncate(limit);
+            return candidates;
+        }
         let Some(ranker) = &self.ranker else {
             return self.retrieve(path, limit, false);
         };
@@ -322,12 +375,22 @@ impl RetrievalEngine {
                 *value /= norm;
             }
         }
+        self.rank_query(&query, path, limit, geometry_union)
+    }
+
+    fn rank_query(
+        &self,
+        query: &[f32; DIM],
+        path: &[(f64, f64)],
+        limit: usize,
+        geometry_union: bool,
+    ) -> Vec<Prediction> {
         let mut ranked: Vec<_> = self
             .vectors
             .chunks_exact(self.centers)
             .enumerate()
             .map(|(index, centers)| {
-                let similarity = center_similarity(&query, centers);
+                let similarity = center_similarity(query, centers);
                 let distance = (1.0 - similarity).max(0.0);
                 let popularity = self.words[index].popularity;
                 let rating = if self.adaptive_prior {
