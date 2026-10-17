@@ -27,6 +27,19 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_motor_sampler_covers_short_and_long_dictionary_routes(self):
+        words = ["at", "hello", "electroencephalographic"]
+        sampler = MotorSampler(words, "cpu", max_keys=None)
+        labels = torch.arange(3).repeat(4)
+        for strength in [0.0, 0.55, 1.0]:
+            paths, metadata = sampler.sample(labels, strength=strength, return_metadata=True)
+            self.assertEqual(tuple(paths.shape), (12, 64, 2))
+            self.assertTrue(torch.isfinite(paths).all())
+            expected = sampler.lengths[labels] - metadata["dropped"].long()
+            self.assertTrue((metadata["lengths"] == expected).all())
+            self.assertGreater(int(sampler.lengths[2]), 12)
+            torch.testing.assert_close(paths.square().sum(2).mean(1), torch.ones(12), atol=1e-5, rtol=1e-5)
+
     def test_spelling_likelihood_is_causal_and_candidate_order_independent(self):
         torch.manual_seed(900419)
         model = SpellingDecoder(width=48, layers=1).eval()

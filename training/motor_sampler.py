@@ -11,8 +11,11 @@ from retrieval_model import LAYOUT
 
 
 class MotorSampler:
-    def __init__(self, words, device):
+    def __init__(self, words, device, max_keys=12):
         self.device = device
+        self.width = max_keys if max_keys is not None else max(3, max(len(word) for word in words))
+        if self.width < 3:
+            raise ValueError("motor route width must be at least three")
         coordinates = [LAYOUT[chr(i + 97)] for i in range(26)]
         self.layout = torch.tensor(coordinates, device=device)
         sequences, lengths, eligible = [], [], []
@@ -20,9 +23,9 @@ class MotorSampler:
             sequence = [ord(c) - 97 for j, c in enumerate(word) if j == 0 or c != word[j - 1]]
             if 4 <= len(word) <= 12 and len(sequence) >= 2:
                 eligible.append(i)
-            sequence = sequence[:12]
+            sequence = sequence[:self.width]
             lengths.append(len(sequence))
-            sequences.append(sequence + [sequence[-1]] * (12 - len(sequence)))
+            sequences.append(sequence + [sequence[-1]] * (self.width - len(sequence)))
         self.keys = torch.tensor(sequences, device=device)
         self.lengths = torch.tensor(lengths, device=device)
         self.eligible = torch.tensor(eligible, device=device)
@@ -32,7 +35,7 @@ class MotorSampler:
 
     @torch.no_grad()
     def sample(self, labels, strength=None, return_metadata=False):
-        batch, device = len(labels), self.device
+        batch, device, width = len(labels), self.device, self.width
         def signed(*shape):
             return torch.rand(*shape, device=device) * 2 - 1
         if strength is None:
@@ -51,8 +54,8 @@ class MotorSampler:
         keys = self.layout[ids] + offsets * magnitude
         drop = (torch.rand(batch, device=device) < strength * 0.35) & (lengths > 4)
         skipped = 1 + (torch.rand(batch, device=device) * (lengths - 2)).long()
-        indices = torch.arange(12, device=device)[None].expand(batch, -1)
-        compressed = (indices + ((indices >= skipped[:, None]) & drop[:, None])).clamp_max(11)
+        indices = torch.arange(width, device=device)[None].expand(batch, -1)
+        compressed = (indices + ((indices >= skipped[:, None]) & drop[:, None])).clamp_max(width - 1)
         keys = keys.gather(1, compressed[:, :, None].expand(-1, -1, 2))
         lengths = lengths - drop.long()
         batch_ids = torch.arange(batch, device=device)
@@ -65,13 +68,13 @@ class MotorSampler:
         amount = (0.1 + torch.rand(batch, 1, 1, device=device) * 0.35) * magnitude
         current = keys[:, 1:-1]
         entry = current + amount * (keys[:, :-2] - current)
-        exit = current + amount * (0.65 + 0.7 * torch.rand(batch, 10, 1, device=device)) * (keys[:, 2:] - current)
+        exit = current + amount * (0.65 + 0.7 * torch.rand(batch, width - 2, 1, device=device)) * (keys[:, 2:] - current)
         start = torch.cat([keys[:, :1], exit[:, :-1]], dim=1)
         t_line = torch.arange(1, 9, device=device)[None, None, :, None] / 8
         line = start[:, :, None] + t_line * (entry - start)[:, :, None]
         t_curve = torch.arange(1, 11, device=device)[None, None, :, None] / 10
         bezier = (1 - t_curve).square() * entry[:, :, None] + 2 * (1 - t_curve) * t_curve * current[:, :, None] + t_curve.square() * exit[:, :, None]
-        corners = torch.cat([line, bezier], dim=2).reshape(batch, 180, 2)
+        corners = torch.cat([line, bezier], dim=2).reshape(batch, (width - 2) * 18, 2)
         dense = torch.cat([keys[:, :1], corners, last[:, None].expand(-1, 12, -1)], dim=1)
         last_exit = exit[batch_ids, (lengths - 3).clamp_min(0)]
         last_exit = torch.where((lengths > 2)[:, None], last_exit, keys[:, 0])
@@ -80,13 +83,13 @@ class MotorSampler:
         final_indices = 1 + (lengths - 2)[:, None] * 18 + torch.arange(12, device=device)[None]
         dense.scatter_(1, final_indices[:, :, None].expand(-1, -1, 2), final_line)
         dense_lengths = 1 + (lengths - 2) * 18 + 12
-        dense = torch.where((torch.arange(193, device=device)[None] < dense_lengths[:, None])[:, :, None], dense, last[:, None])
+        dense = torch.where((torch.arange(dense.shape[1], device=device)[None] < dense_lengths[:, None])[:, :, None], dense, last[:, None])
         # Simulate sparse, uneven acquisition before arc-length resampling.
         counts = torch.randint(45, 185, (batch,), device=device)
         t = (torch.arange(184, device=device)[None] / (counts - 1)[:, None]).clamp_max(1)
         t = t.pow((signed(batch, 1) * 0.6).exp())
         position = t * (dense_lengths - 1)[:, None]
-        lo = position.long().clamp_max(191)
+        lo = position.long().clamp_max(dense.shape[1] - 2)
         weight = (position - lo).unsqueeze(2)
         a = dense.gather(1, lo[:, :, None].expand(-1, -1, 2))
         b = dense.gather(1, (lo + 1)[:, :, None].expand(-1, -1, 2))
