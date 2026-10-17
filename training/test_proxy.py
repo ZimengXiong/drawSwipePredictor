@@ -11,11 +11,13 @@ import torch
 from torch import nn
 
 from intrinsic_features import intrinsic_features
+from cross_model import RouteCrossRanker
+from large_encoder import expand_encoder
 from generative_fit import MotorFitter
 from character_edit import ctc_edit_components, edit_log_likelihood
 from character_model import character_targets, candidate_ctc_cost
 from motor_sampler import MotorSampler
-from retrieval_model import curve
+from retrieval_model import curve, build_encoder, encoder_features
 from train_pair import evaluate
 from train_proxy import RECORD, corpus, proxy_scores
 
@@ -86,6 +88,30 @@ class ProxyTests(unittest.TestCase):
         self.assertTrue(torch.isfinite(paths).all())
         (paths - torch.randn_like(paths)).square().mean().backward()
         self.assertTrue(torch.isfinite(parameters.grad).all())
+
+    def test_larger_initialization_preserves_trained_predictions(self):
+        torch.set_num_threads(2)
+        original, expanded = build_encoder("large").eval(), build_encoder("giant").eval()
+        expand_encoder(expanded, original.state_dict())
+        paths = torch.randn(2, 64, 2)
+        with torch.no_grad():
+            expected = original(encoder_features(original, paths))
+            actual = expanded(encoder_features(expanded, paths))
+        torch.testing.assert_close(actual, expected, atol=2e-5, rtol=2e-5)
+
+    def test_cross_ranker_cannot_use_candidate_position(self):
+        torch.set_num_threads(2)
+        model = RouteCrossRanker().eval()
+        # Use a nonzero score head so the test covers the learned correction.
+        torch.nn.init.normal_(model.head[-1].weight, std=0.1)
+        targets, lengths, _ = character_targets(["hello", "world", "helical"])
+        sequence, raw, embedding = torch.randn(2, 128, 32), torch.randn(2, 8, 64), torch.randn(2, 128)
+        candidates = torch.tensor([[0, 1, 2], [2, 0, 1]])
+        similarity = torch.randn(2, 3)
+        with torch.no_grad():
+            expected = model(sequence, raw, embedding, candidates, similarity, targets, lengths)
+            actual = model(sequence, raw, embedding, candidates.flip(1), similarity.flip(1), targets, lengths).flip(1)
+        torch.testing.assert_close(actual, expected, atol=2e-5, rtol=2e-5)
 
     def test_word_mode_order_cannot_change_scores(self):
         query = torch.nn.functional.normalize(torch.randn(8, 128), dim=1)

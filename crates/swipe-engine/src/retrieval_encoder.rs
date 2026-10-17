@@ -82,7 +82,7 @@ impl Encoder {
         let mut residual = Vec::new();
         if large {
             let dilations = if giant {
-                vec![1, 2, 4, 8].repeat(4)
+                [1, 2, 4, 8].repeat(4)
             } else {
                 vec![1, 2, 4, 8, 1, 2]
             };
