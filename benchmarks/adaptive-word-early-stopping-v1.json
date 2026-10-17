@@ -1,0 +1,111 @@
+{
+  "test_data_used": false,
+  "stage": "adaptive-words-v1",
+  "pid": 92158,
+  "last_completed_epoch": 30,
+  "best_epoch": 5,
+  "epochs_without_improvement": 25,
+  "best": {
+    "epoch": 5,
+    "loss": 0.8644222068786621,
+    "validation": {
+      "adaptive": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1152,
+          "correct_top5": 1198,
+          "top1": 0.96,
+          "top5": 0.9983333333333333
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2096,
+          "correct_top5": 2309,
+          "top1": 0.8733333333333333,
+          "top5": 0.9620833333333333
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6146,
+          "correct_top5": 7531,
+          "top1": 0.7316666666666667,
+          "top5": 0.896547619047619
+        }
+      },
+      "uniform": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1147,
+          "correct_top5": 1198,
+          "top1": 0.9558333333333333,
+          "top5": 0.9983333333333333
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2098,
+          "correct_top5": 2306,
+          "top1": 0.8741666666666666,
+          "top5": 0.9608333333333333
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6113,
+          "correct_top5": 7512,
+          "top1": 0.7277380952380952,
+          "top5": 0.8942857142857142
+        }
+      },
+      "mature_pair": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1154,
+          "correct_top5": 1198,
+          "top1": 0.9616666666666667,
+          "top5": 0.9983333333333333
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2098,
+          "correct_top5": 2309,
+          "top1": 0.8741666666666666,
+          "top5": 0.9620833333333333
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6141,
+          "correct_top5": 7528,
+          "top1": 0.7310714285714286,
+          "top5": 0.8961904761904762
+        }
+      }
+    },
+    "expert_weight_sums_by_difficulty": [
+      [
+        114.8251724243164,
+        1.5849573612213135,
+        422.28228759765625,
+        661.3078002929688
+      ],
+      [
+        231.98875427246094,
+        3.3694891929626465,
+        845.570068359375,
+        1319.07177734375
+      ],
+      [
+        828.8635864257812,
+        13.324892044067383,
+        2964.053466796875,
+        4593.75927734375
+      ]
+    ],
+    "seconds": 247.88157437500195
+  },
+  "history_sha256": "0363a573e24907c41de8e7fd5688e9033b9f9ffccd95d21268082085cc9d746f",
+  "reason": "Stop after at least20 completed rounds without a development gain; preserve every saved checkpoint and prioritize larger capacity and structural evidence.",
+  "limits": "Early stopping uses development only. Decoder scores may use a subset; full reports remain separate. No benchmark or confirmation evaluation.",
+  "preserved_checkpoints_sha256": {
+    "best.pt": "dd9570b87e394d7e509c061b3891fda3b967de83bf891d9536bf1a6057bd7b4a"
+  },
+  "checkpoint_limit": "This trainer saves the best checkpoint only; no latest checkpoint was produced."
+}
