@@ -70,12 +70,54 @@
   },
   "checks": {
     "python_tests_passed": 15,
-    "rust_workspace_tests_passed": 19,
+    "rust_workspace_tests_passed": 20,
     "engine_clippy": "passed with warnings denied"
   },
   "limits": [
     "Development results are not benchmark results.",
     "Experimental cross-attention decoders are not yet exported to native inference; character decoding has CLI parity support.",
     "Training is still running; the app retains the previously validated bundled model."
-  ]
+  ],
+  "complete_system": {
+    "primary_sha256": "139e5072ce1c6cc55dc80f663269b8b7dc0401f9dbe57ecb9adef41b7ffcfadf",
+    "auxiliary_sha256": "f52d8dbf1f7a594f9ee537cd742135a2a0aec10b298355e8a268023aa46facac",
+    "development": {
+      "samples": 12000,
+      "vocabulary": 60000,
+      "seed": 700003,
+      "writer_start": 700005100009,
+      "writer_end": 700005112009,
+      "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+    },
+    "full_vocabulary": 60000,
+    "test_data_used": false,
+    "selected": {
+      "auxiliary_weight": 0.5,
+      "proxy_weight": 2.0,
+      "deletion_probability": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9350000023841858,
+          "top5": 0.996666669845581
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8295833468437195,
+          "top5": 0.9487500190734863
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.6785714030265808,
+          "top5": 0.8530952334403992
+        }
+      },
+      "shortlist_recall": {
+        "clean": 1.0,
+        "loose": 0.997083306312561,
+        "memory": 0.9876190423965454
+      }
+    },
+    "native_validation": "benchmarks/complete-native-validation.json"
+  }
 }

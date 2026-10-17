@@ -83,3 +83,28 @@ cargo run --release -p swipe-engine --example retrieval_cli -- \
 For a separately trained frozen decoder, also pass `--decoder-checkpoint` to `export_character.py`. The exporter and runtime bind the decoder to the exact encoder and word bank. Verification checks character probabilities and final word rankings. Native CTC also supports marginalizing one missing interior key.
 
 Cross-attention models are not yet exported to native inference. A selected complete system must pass native parity checks before it replaces the app's model.
+
+## Combine complementary word models
+
+`evaluate_complete.py` compares a joint checkpoint with an auxiliary word model on the entire declared development corpus. It retrieves all candidates naturally from the full vocabulary, selects blend settings on development data, and retains exact-word scoring.
+
+```sh
+uv run --directory training python evaluate_complete.py \
+  --primary checkpoints/complete-joint-frozen.pt \
+  --auxiliary checkpoints/complete-intrinsic-frozen.pt \
+  --output checkpoints/complete-development-v1.json
+uv run --directory training python export_retrieval.py \
+  --checkpoint checkpoints/complete-joint-frozen.pt --output checkpoints/complete-native
+uv run --directory training python export_ensemble.py \
+  --auxiliary-checkpoint checkpoints/complete-intrinsic-frozen.pt \
+  --selection checkpoints/complete-development-v1.json --output checkpoints/complete-native
+uv run --directory training python export_character.py \
+  --retrieval-checkpoint checkpoints/complete-joint-frozen.pt \
+  --auxiliary-checkpoint checkpoints/complete-intrinsic-frozen.pt \
+  --output checkpoints/complete-native
+cargo run --release -p swipe-engine --example retrieval_cli -- \
+  --model training/checkpoints/complete-native \
+  --verify-character training/checkpoints/complete-native/character-verification.json
+```
+
+The exported decoder binds to both encoders, both word banks, and the blend weight. Changing any of them requires a matching export. These directory exports work through the CLI; the bundled app still uses the previously validated model.

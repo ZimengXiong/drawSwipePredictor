@@ -1,0 +1,59 @@
+{
+  "reference": "Five transformed canonical routes; no benchmark inputs",
+  "test_data_used": false,
+  "vocabulary": 60000,
+  "queries_after_warmup": 25,
+  "median_ms": 62.201333,
+  "p95_ms": 67.556292,
+  "conditions": "M4 Max with concurrent GPU training",
+  "binding_failures_rejected": {
+    "changed_weight": "Error: \"character decoder belongs to a different encoder or word bank\"",
+    "wrong_auxiliary": "Error: \"auxiliary model does not match the exported ensemble\"",
+    "missing_auxiliary": "Error: \"No such file or directory (os error 2)\""
+  },
+  "parity": [
+    "hello: maximum character log-probability error 0.00003624; exact top-five ranking matches",
+    "world: maximum character log-probability error 0.00004768; exact top-five ranking matches",
+    "keyboard: maximum character log-probability error 0.00002098; exact top-five ranking matches",
+    "lunchbox: maximum character log-probability error 0.00005722; exact top-five ranking matches",
+    "alpacas: maximum character log-probability error 0.00004625; exact top-five ranking matches"
+  ],
+  "artifact_hashes": {
+    "checkpoint_sha256": "139e5072ce1c6cc55dc80f663269b8b7dc0401f9dbe57ecb9adef41b7ffcfadf",
+    "encoder_sha256": "4bd8f256be90e2aa76e0711d48bb760f54305ae75693ec15d0a99aa4042eefe1",
+    "words_sha256": "80b595ff433d0d35fd624fca1123a3781446a5bfd54afd139d0063b925ea3d54",
+    "auxiliary_encoder_tag": 10020330231585054804,
+    "auxiliary_bank_tag": 3943035721848009941,
+    "character": {
+      "sha256": "c8fb925d1c307a914af396de8dab8149d0c05a380543260cded29934eb973b89",
+      "checkpoint_sha256": "139e5072ce1c6cc55dc80f663269b8b7dc0401f9dbe57ecb9adef41b7ffcfadf",
+      "proxy_weight": 2.0,
+      "deletion_probability": 0.0,
+      "length_power": 0.3,
+      "selection": "Development only; exact-word scoring and naturally retrieved top128 candidates"
+    }
+  },
+  "development_selection": {
+    "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+    "selection_sha256": "9f2fed182c6e178352b33572acfa0bcb91ff6a57015c7c764fdc6b45a3807a61",
+    "proxy_weight": 2.0,
+    "deletion_probability": 0.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9350000023841858,
+        "top5": 0.996666669845581
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8295833468437195,
+        "top5": 0.9487500190734863
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.6785714030265808,
+        "top5": 0.8530952334403992
+      }
+    }
+  }
+}
