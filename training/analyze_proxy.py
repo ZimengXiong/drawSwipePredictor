@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Inspect development errors and shortlist recall without opening the benchmark."""
 import argparse
+from collections import Counter
+import hashlib
 import json
 from pathlib import Path
 
@@ -39,10 +41,27 @@ def main():
             for target, predictions in zip(truth[:, 0].tolist(), ranked[:, :5].tolist()):
                 if predictions[0] != target and len(failures) < 30:
                     failures.append({"target": saved["words"][target], "predictions": [saved["words"][i] for i in predictions]})
-    accuracy = torch.cat(hits).float().mean(0).tolist()
+    hits = torch.cat(hits).float().cpu()
+    accuracy = hits.mean(0).tolist()
+    target_words = [saved["words"][int(i)] for i in labels.cpu()]
+    routes = ["".join(c for i, c in enumerate(word) if i == 0 or c != word[i - 1]) for word in saved["words"]]
+    route_counts = Counter(routes)
+    groups = {}
+    for name, mask in {
+        "length_4_to_5": [4 <= len(word) <= 5 for word in target_words],
+        "length_6_to_8": [6 <= len(word) <= 8 for word in target_words],
+        "length_9_to_12": [9 <= len(word) <= 12 for word in target_words],
+        "shared_collapsed_route": [route_counts[routes[int(i)]] > 1 for i in labels.cpu()],
+        "unique_collapsed_route": [route_counts[routes[int(i)]] == 1 for i in labels.cpu()],
+    }.items():
+        mask = torch.tensor(mask)
+        groups[name] = {"samples": int(mask.sum()),
+                        "recall": dict(zip(["top1", "top5", "top32", "top128"], hits[mask].mean(0).tolist()))}
     report = {"checkpoint_epoch": saved["epoch"] + 1, "development_samples": len(paths),
               "recall": dict(zip(["top1", "top5", "top32", "top128"], accuracy)), "errors": failures,
-              "test_data_used": False, "development_sha256": info["sha256"]}
+              "groups": groups, "checkpoint_sha256": hashlib.sha256(args.checkpoint.read_bytes()).hexdigest(),
+              "test_data_used": False, "development_sha256": info["sha256"],
+              "scoring": "Exact full word; route groups are diagnostics only and grant no alias credit"}
     args.output.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
 

@@ -1,0 +1,56 @@
+{
+  "kind": "Matched exploratory development probe; all methods use the same natural 64 candidates",
+  "test_data_used": false,
+  "samples": 128,
+  "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "retriever_sha256": "57c94b93375c25c1818dda66972b4c86cd16990f84b9c433028b94d1c38e2f50",
+  "baseline_top1": 0.5390625,
+  "controls": [
+    {
+      "method": "cold start, 30 fitting steps",
+      "raw_report_sha256": "26ec979ddf106b2ec0e9d907433f8b06b5de0f428b4814e9e57d1ed648e49a31",
+      "initializer_sha256": null,
+      "best": {
+        "regularization": 0.02,
+        "proxy_weight": 0.01,
+        "top1": 0.59375,
+        "top5": 0.765625
+      }
+    },
+    {
+      "method": "epoch-20 learned start, 30 fitting steps",
+      "raw_report_sha256": "4a1fc703df3e694d52fc3ca624954e3b250e376fe3d84574fd21cc5c42649268",
+      "initializer_sha256": "da18b761c7af619a6df7a805bf1c584d86ab30df319e06e4431dc04ed8d13af2",
+      "best": {
+        "regularization": 0.001,
+        "proxy_weight": 0.001,
+        "top1": 0.609375,
+        "top5": 0.7890625
+      }
+    },
+    {
+      "method": "completed epoch-95 learned start, 30 fitting steps",
+      "raw_report_sha256": "ac2fc33818ae4dae069b83e670cb411d7d225f943744c38df85123b9ab08d1bb",
+      "initializer_sha256": "5304d5adcf4ad11cff70ac1e91217aabbb90eaebb2099be3568340d7f55b350f",
+      "best": {
+        "regularization": 0.005,
+        "proxy_weight": 0.005,
+        "top1": 0.609375,
+        "top5": 0.8046875
+      }
+    },
+    {
+      "method": "cold start, 200 fitting steps; cached first 128 rows",
+      "raw_report_sha256": "2d33e2b9651452039aec9e297c681aa952a4264c75c1125fcb21fa01105036d6",
+      "initializer_sha256": null,
+      "best": {
+        "regularization": 0.02,
+        "proxy_weight": 0.005,
+        "top1": 0.6171875,
+        "top5": 0.7734375
+      }
+    }
+  ],
+  "decision": "No deployment. Warm initialization does not beat longer cold fitting in this small recognition probe. This does not test the stronger completed word models.",
+  "limits": "Calibration settings selected on these same 128 development drawings; not a blind evaluation or a measured runtime improvement."
+}

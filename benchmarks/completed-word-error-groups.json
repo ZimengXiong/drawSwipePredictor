@@ -1,0 +1,61 @@
+{
+  "checkpoint_epoch": 167,
+  "development_samples": 8400,
+  "recall": {
+    "top1": 0.7101190686225891,
+    "top5": 0.8745238184928894,
+    "top32": 0.9670237898826599,
+    "top128": 0.9920238256454468
+  },
+  "groups": {
+    "length_4_to_5": {
+      "samples": 1951,
+      "recall": {
+        "top1": 0.42593541741371155,
+        "top5": 0.7196309566497803,
+        "top32": 0.9215787053108215,
+        "top128": 0.9825730323791504
+      }
+    },
+    "length_6_to_8": {
+      "samples": 4017,
+      "recall": {
+        "top1": 0.7176997661590576,
+        "top5": 0.8797610402107239,
+        "top32": 0.9701269865036011,
+        "top128": 0.991784930229187
+      }
+    },
+    "length_9_to_12": {
+      "samples": 2432,
+      "recall": {
+        "top1": 0.9255756735801697,
+        "top5": 0.9901315569877625,
+        "top32": 0.9983552694320679,
+        "top128": 1.0
+      }
+    },
+    "shared_collapsed_route": {
+      "samples": 362,
+      "recall": {
+        "top1": 0.2983425557613373,
+        "top5": 0.7099447250366211,
+        "top32": 0.9447513818740845,
+        "top128": 0.9944751262664795
+      }
+    },
+    "unique_collapsed_route": {
+      "samples": 8038,
+      "recall": {
+        "top1": 0.7286638617515564,
+        "top5": 0.8819357752799988,
+        "top32": 0.968026876449585,
+        "top128": 0.9919134378433228
+      }
+    }
+  },
+  "checkpoint_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "test_data_used": false,
+  "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "scoring": "Exact full word; route groups are diagnostics only and grant no alias credit"
+}
