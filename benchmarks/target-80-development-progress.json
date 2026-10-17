@@ -69,7 +69,7 @@
     "bank_sha256": "78e952febb44f57f3922420e66ecd94ca0509db28a4c51fa4a7f973a35b050b8"
   },
   "checks": {
-    "python_tests_passed": 17,
+    "python_tests_passed": 18,
     "rust_workspace_tests_passed": 20,
     "engine_clippy": "passed with warnings denied"
   },
@@ -153,5 +153,55 @@
     ],
     "limits": "Development only. The balanced continuation is running; no claim that it improves this initializer. The fixed benchmark remains unopened during these experiments."
   },
-  "motor_blend": "Rejected after fixed development cross-check; see benchmarks/motor-combination-fixed-development.json"
+  "motor_blend": "Rejected after fixed development cross-check; see benchmarks/motor-combination-fixed-development.json",
+  "completed_word_encoder": {
+    "kind": "Completed standard word encoder; strong enlarged-model initializer",
+    "test_data_used": false,
+    "full_vocabulary": 60000,
+    "checkpoint_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+    "checkpoint_epoch": 167,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9624999761581421,
+        "top5": 0.9975000023841858
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8637499809265137,
+        "top5": 0.9579166769981384
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7101190686225891,
+        "top5": 0.8745238184928894
+      }
+    },
+    "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+    "expansion_initial_validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9624999761581421,
+        "top5": 0.9975000023841858
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8637499809265137,
+        "top5": 0.9579166769981384
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7101190686225891,
+        "top5": 0.8745238184928894
+      }
+    },
+    "expanded_initialization_native_parity": [
+      "hello: maximum embedding error 0.00000042",
+      "world: maximum embedding error 0.00000102",
+      "keyboard: maximum embedding error 0.00000022",
+      "lunchbox: maximum embedding error 0.00000058",
+      "alpacas: maximum embedding error 0.00000046"
+    ],
+    "limits": "Development only. Enlarged-model results describe its preserved initialization, not a completed larger-model training result. The fixed benchmark has not been rerun."
+  }
 }

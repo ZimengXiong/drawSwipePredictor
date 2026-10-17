@@ -1,0 +1,44 @@
+{
+  "primary_sha256": "139e5072ce1c6cc55dc80f663269b8b7dc0401f9dbe57ecb9adef41b7ffcfadf",
+  "auxiliary_sha256": "f52d8dbf1f7a594f9ee537cd742135a2a0aec10b298355e8a268023aa46facac",
+  "fit_retriever_sha256": "57c94b93375c25c1818dda66972b4c86cd16990f84b9c433028b94d1c38e2f50",
+  "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "writer_selection": {
+    "difficulty": "memory",
+    "offset": 512,
+    "samples": 1024
+  },
+  "test_data_used": false,
+  "calibration_frozen": true,
+  "omission_prior": 0.35,
+  "regularization": 0.02,
+  "motor_weight": 32.0,
+  "baseline_complete_top1": 0.6767578125,
+  "trials": [
+    {
+      "temperature": 0.0001,
+      "top1": 0.6845703125,
+      "top5": 0.841796875,
+      "gained": 52,
+      "lost": 44
+    }
+  ],
+  "selected": {
+    "temperature": 0.0001,
+    "top1": 0.6845703125,
+    "top5": 0.841796875,
+    "gained": 52,
+    "lost": 44
+  },
+  "source_sha256": {
+    "fits": "efbaa8876c6b50bde9ca0adf5002a3390fdccb298dc70e9a1542d4848030147c",
+    "combination": "429f0e7ebdd837294581fc235e966727f3bb7d22fc2cb9f8cb739e890821b3da",
+    "motor_calibration": "9711159b3898d21ad9b2be51acb6f83f8bd0344278a9dde3807404e40b379aec"
+  },
+  "limits": "Reused development data for component selection; not an untouched benchmark or confirmation result.",
+  "exploratory_paired_bootstrap_95_interval": [
+    -0.0107421875,
+    0.0263671875
+  ],
+  "disposition": "Keep this score experimental. The reused development batch gains only eight answers overall; evidence is insufficient to add the slow fitting path to the default recognizer."
+}
