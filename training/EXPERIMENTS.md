@@ -296,7 +296,7 @@ The expanded-real-data stage stopped after 136 completed rounds, 81 beyond its b
 
 `combine_route_spelling.py` adds visited-route costs to a previously selected spelling configuration. It binds both systems to the same context, word mixture, development corpus, and natural candidate lists. The zero-route setting must reproduce the existing spelling counts before a full-development comparison is accepted. Missing words remain misses. No target word or true visited route enters inference.
 
-The first 512-row diagnostic improves six hard first choices over its spelling control: 270 versus 264 out of 349. This supports a full comparison; it does not establish 77.36% accuracy across all hard development rows. The full visited-route replay is still running. The combination has no native exporter yet. Scored arrays are retained so reporting repairs do not require another model pass.
+The first 512-row diagnostic improves six hard first choices over its spelling control: 270 versus 264 out of 349. This supports a full comparison; it does not establish 77.36% accuracy across all hard development rows. The full visited-route model reaches 6,152/8,400 hard first choices (73.24%). The complete fusion comparison retains zero route weight and the 6,171-hit spelling baseline. Every baseline count matches, with input hashes unchanged. The nonzero fusion proposal has no native exporter. Scored arrays are retained so reporting repairs do not require another model pass.
 
 The initial wide encoder completed all 180 rounds, with its best at round 174 (73.04% hard development). Its weights are frozen before a follow-up stage using all 31 million exact-generator writers. That stage retains real recordings and augmented canonical routes, including positive examples outside the cached target-length range. It changes the data mixture as well as the schedule and is not a controlled width-only experiment.
 
@@ -307,3 +307,13 @@ The initial wide encoder completed all 180 rounds, with its best at round 174 (7
 The paired wide-encoder runs use the same completed checkpoint, random seed, 31 training shards, real recordings, batch size, optimizer rates, and 200-round schedule. Their only configuration differences are the output directory and normalization flag. Both reproduce identical initial development counts. This tests an early regression in the normal-statistics control; it does not yet establish a trained gain.
 
 The adaptive gate stopped after 25 rounds without improvement, and the nine-layer decoder after 22. Their saved checkpoints remain available. The gate trainer produced a best checkpoint only; the decoder also preserved its latest checkpoint. This frees compute for the larger decoder, structural-route evidence, and the paired normalization experiment.
+
+## Recover unrounded controls
+
+`label_memory_waypoints` exports latent control coordinates alongside the unchanged writer's actual stroke. It reproduces key errors, row shifts, omissions, endpoint errors, global pose, drift, and wave. Interior drift uses the fixed midpoint of each rounded corner. The labels exclude observation jitter. Tests check original-stroke identity, endpoint noise bounds, and clean keyboard geometry. `synthetic.rs` remains unchanged.
+
+`prepare_waypoint_supervision.py` generates 300,000 fresh training writers in seed block 720051. It combines uniform sampling across all 60,000 words with 20% arbitrary keyboard routes. Every count from two to 32 has positive examples. It applies the observed stroke's exact centering and RMS scale to both points and targets. The first 10,000 writers form an internal holdout. Stored model inputs contain points; corner coordinates and counts are loss targets.
+
+`WaypointDecoder` predicts unrounded locations and uncertainty. Its inference method enumerates every possible count from two to 32 and receives no true count, target word, writer identity, or difficulty. Training conditions its supervised location loss on the known training count and separately predicts that count from the stroke. These internal diagnostics are not complete-word accuracy.
+
+The first five rounds improve internal count accuracy to 66.18%, while conditional location MSE stays near 0.567. Lower conditional loss therefore does not yet establish better corner reconstruction. This motivates checking alignment supervision and loss balance before using the model as word evidence. The experiment remains in training and has no word-recognition or native result yet.
