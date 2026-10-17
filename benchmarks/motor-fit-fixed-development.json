@@ -1,0 +1,36 @@
+{
+  "experiment": "Fixed-setting motor-fit development cross-check",
+  "test_data_used": false,
+  "calibration_frozen": true,
+  "writer_selection": {
+    "difficulty": "memory",
+    "offset": 512,
+    "samples": 1024
+  },
+  "baseline_top1": 0.6240234375,
+  "selected": {
+    "regularization": 0.02,
+    "proxy_weight": 0.005,
+    "top1": 0.6708984375,
+    "top5": 0.833984375
+  },
+  "paired_counts": {
+    "gained": 89,
+    "lost": 41
+  },
+  "paired_gain": 0.046875,
+  "paired_bootstrap_95_interval": [
+    0.02536621093750001,
+    0.068359375
+  ],
+  "development_sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+  "frozen_retriever_sha256": "57c94b93375c25c1818dda66972b4c86cd16990f84b9c433028b94d1c38e2f50",
+  "calibration_sha256": "9711159b3898d21ad9b2be51acb6f83f8bd0344278a9dde3807404e40b379aec",
+  "source_artifact_sha256": "efbaa8876c6b50bde9ca0adf5002a3390fdccb298dc70e9a1542d4848030147c",
+  "launch_commit": "05c79e4",
+  "loaded_renderer_module_sha256": "8078c21360bf95204e5b4e46be622aa10b06f2f3e991eff6e3a201d237edc5a8",
+  "limits": [
+    "Development cross-check, not benchmark accuracy. The base recognizer was selected on development data.",
+    "The raw evaluator hashes the working renderer file at completion. This run used the default solver launched at 05c79e4; subsequent optional-initializer changes leave that default solver unchanged."
+  ]
+}

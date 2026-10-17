@@ -1,0 +1,10 @@
+{
+  "source": "FUTO training split only",
+  "records": 150000,
+  "word_types": 15865,
+  "median_records_per_word": 3.0,
+  "maximum_records_for_one_word": 1826,
+  "top_100_word_share": 0.23392,
+  "top_1000_word_share": 0.56512,
+  "test_data_used": false
+}
