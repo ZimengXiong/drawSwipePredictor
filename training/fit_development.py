@@ -20,16 +20,30 @@ def main():
     parser.add_argument("--data", type=Path, default=Path("data/memory-proxy/validation.bin"))
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--samples", type=int, default=256)
+    parser.add_argument("--offset", type=int, default=0)
+    parser.add_argument("--fixed-calibration", type=Path)
     parser.add_argument("--candidates", type=int, default=32)
     parser.add_argument("--steps", type=int, default=80)
     parser.add_argument("--batch", type=int, default=2)
     args = parser.parse_args()
+    if min(args.samples, args.batch, args.steps) < 1 or args.offset < 0:
+        parser.error("use positive counts and a nonnegative development offset")
     torch.set_num_threads(4)
     saved = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     rows, info = corpus(args.data)
     if info["sha256"] != saved["metadata"]["validation_corpus"]["sha256"]:
         raise ValueError("motor fitting experiments require the declared development corpus")
-    selected = np.flatnonzero(rows["difficulty"] == 2)[:args.samples]
+    selected = np.flatnonzero(rows["difficulty"] == 2)[args.offset:args.offset + args.samples]
+    if len(selected) != args.samples:
+        raise ValueError("requested development slice is unavailable")
+    fixed = None
+    if args.fixed_calibration:
+        fixed = json.loads(args.fixed_calibration.read_text())
+        if fixed["development_sha256"] != info["sha256"] or fixed["frozen_retriever_sha256"] != hashlib.sha256(args.checkpoint.read_bytes()).hexdigest():
+            raise ValueError("fixed motor calibration sources differ")
+        earlier = fixed["writer_selection"]
+        if not (args.offset >= earlier["offset"] + earlier["samples"] or args.offset + args.samples <= earlier["offset"]):
+            raise ValueError("fixed-calibration development slices overlap")
     paths = torch.tensor(np.array(rows["points"][selected]), device="mps")
     labels = torch.tensor(np.array(rows["label"][selected], dtype=np.int64), device="mps")
     encoder = build_encoder(saved["metadata"]["arguments"].get("architecture", "small")).to("mps").eval()
@@ -51,16 +65,19 @@ def main():
     labels = labels.cpu()
     candidates, similarity = results["candidates"], results["similarity"]
     trials = []
-    for regularization in [0.0, 0.0002, 0.001, 0.005, 0.02]:
+    for regularization in ([fixed["selected"]["regularization"]] if fixed else [0.0, 0.0002, 0.001, 0.005, 0.02]):
         cost = (results["errors"] + regularization * results["penalties"]).min(2).values
-        for weight in [0.0, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0]:
+        for weight in ([fixed["selected"]["proxy_weight"]] if fixed else [0.0, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0]):
             scores = -cost + weight * similarity
             ranked = candidates.gather(1, scores.argsort(dim=1, descending=True, stable=True))
             trials.append({"regularization": regularization, "proxy_weight": weight,
                 "top1": float((ranked[:, 0] == labels).float().mean()),
                 "top5": float((ranked[:, :5] == labels[:, None]).any(1).float().mean())})
     report = {"development_sha256": info["sha256"], "checkpoint_sha256": hashlib.sha256(args.checkpoint.read_bytes()).hexdigest(),
-        "test_data_used": False, "samples": len(paths), "baseline_top1": float((candidates[:, 0] == labels).float().mean()),
+        "test_data_used": False, "calibration_frozen": fixed is not None,
+        "calibration_sha256": hashlib.sha256(args.fixed_calibration.read_bytes()).hexdigest() if fixed else None,
+        "optimization_regularization": 0.0002, "renderer_sha256": hashlib.sha256(Path(__file__).with_name("generative_fit.py").read_bytes()).hexdigest(),
+        "samples": len(paths), "baseline_top1": float((candidates[:, 0] == labels).float().mean()),
         "shortlist_recall": float((candidates == labels[:, None]).any(1).float().mean()),
         "best": max(trials, key=lambda row: row["top1"]), "trials": trials,
         "arguments": {key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()}}

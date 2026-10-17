@@ -28,5 +28,10 @@
     "This uses a weaker frozen retriever and 512 drawings. It is not comparable to the full-development result of the newer combined system.",
     "No benchmark or confirmation evaluation. No app model replacement."
   ],
-  "next": "Keep settings fixed for a broader development check before selecting or amortizing the fitting method."
+  "next": "Keep settings fixed for a broader development check before selecting or amortizing the fitting method.",
+  "writer_selection": {
+    "difficulty": "memory",
+    "offset": 0,
+    "samples": 512
+  }
 }
