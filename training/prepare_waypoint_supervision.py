@@ -40,6 +40,14 @@ def normalize_targets(raw, targets):
     return ((sampled-center)/scale).astype(np.float32), ((targets-origin-center)/scale).astype(np.float32)
 
 
+def validate_arc_targets(values, count):
+    values=np.asarray(values,dtype=np.float64)
+    if (values.shape!=(count,) or not np.isfinite(values).all()
+            or values[0]!=0 or values[-1]!=1 or np.any(np.diff(values)<0)):
+        raise ValueError('arc targets must cover zero to one in chronological order')
+    return values.astype(np.float32)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--checkpoint', type=Path, required=True)
@@ -50,6 +58,8 @@ def main():
     parser.add_argument('--seed', type=int, default=900919)
     parser.add_argument('--random-route-fraction', type=float, default=0.2)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--with-progress', action='store_true')
+    parser.add_argument('--reference-data', type=Path)
     args = parser.parse_args()
     if (args.output.exists() or not 0 < args.internal_holdout < args.samples < 1000003
             or not 0 <= args.random_route_fraction <= 1):
@@ -70,6 +80,8 @@ def main():
     source = Path(__file__)
     source_hash, generator_hash = digest(source), digest(Path('../crates/swipe-engine/src/synthetic.rs'))
     random_count = 0
+    progress=np.zeros((args.samples,32),np.float32) if args.with_progress else None
+    reference_hash=digest(args.reference_data) if args.reference_data else None
     with tempfile.TemporaryDirectory(prefix='drawswipe-waypoint-labels-') as directory:
         cli = Path(directory)/'labels'
         shutil.copy2(args.cli, cli)
@@ -101,19 +113,32 @@ def main():
                     raise ValueError('waypoint count differs from retained visits')
                 path, corners = normalize_targets(record['points'], record['waypoints'])
                 points[index], targets[index, :len(corners)], counts[index] = path, corners, len(corners)
+                if progress is not None:
+                    progress[index,:len(corners)]=validate_arc_targets(record['arc_positions'],len(corners))
             if end % 16384 == 0 or end == args.samples:
                 print(json.dumps({'finished': end, 'total': args.samples}), flush=True)
         if digest(cli) != cli_hash or digest(source) != source_hash or digest(Path('../crates/swipe-engine/src/synthetic.rs')) != generator_hash:
             raise ValueError('label implementation changed during preparation')
+    if args.reference_data:
+        with np.load(args.reference_data,allow_pickle=False) as reference:
+            for name,array in [('points',points),('waypoints',targets),('counts',counts)]:
+                if not np.array_equal(reference[name],array):
+                    raise ValueError('new supervision changed original '+name)
+        if digest(args.reference_data)!=reference_hash:
+            raise ValueError('reference data changed during preparation')
     args.output.parent.mkdir(parents=True, exist_ok=True)
     temporary = args.output.with_suffix('.npz.tmp')
     with temporary.open('wb') as output:
-        np.savez(output, points=points, waypoints=targets, counts=counts)
+        arrays={'points':points,'waypoints':targets,'counts':counts}
+        if progress is not None:arrays['arc_positions']=progress
+        np.savez(output,**arrays)
     temporary.replace(args.output)
     info['sha256'] = digest(args.output)
     report = {'test_data_used': False, 'split': 'train', 'samples': args.samples,
               'internal_holdout': args.internal_holdout, 'checkpoint_sha256': context_hash,
               'validation_corpus': metadata['validation_corpus'], 'corpora': [info],
+              'target_schema': 'waypoints_arc_v2' if args.with_progress else 'waypoints_v1',
+              'reference_data_sha256':reference_hash, 'base_arrays_identical_to_reference':bool(args.reference_data),
               'seed': args.seed, 'random_route_samples': random_count,
               'data_sha256': info['sha256'], 'cli_sha256': cli_hash,
               'source_sha256': source_hash, 'generator_sha256': generator_hash,

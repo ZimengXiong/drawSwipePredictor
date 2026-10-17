@@ -16,6 +16,7 @@ struct TrainingSample {
     points: Vec<(f64, f64)>,
     waypoints: Vec<[f64; 2]>,
     visited_keys: String,
+    arc_positions: Vec<f64>,
 }
 
 fn annotate(request: &Request) -> Result<TrainingSample, String> {
@@ -76,7 +77,7 @@ fn annotate(request: &Request) -> Result<TrainingSample, String> {
     let aspect = aspect.powf(strength);
     let drift = [rng.signed() * 0.45, rng.signed() * 0.4];
     let phase = rng.unit() * std::f64::consts::TAU;
-    let _speed = (rng.signed() * 0.6).exp();
+    let speed = (rng.signed() * 0.6).exp();
     let count = 45 + rng.index(140);
     if points.len() != count {
         return Err("waypoint RNG replay differs from the unchanged generator".into());
@@ -105,8 +106,36 @@ fn annotate(request: &Request) -> Result<TrainingSample, String> {
             ]
         })
         .collect();
+    let mut cumulative = vec![0.0];
+    for pair in points.windows(2) {
+        cumulative.push(
+            cumulative.last().unwrap() + (pair[1].0 - pair[0].0).hypot(pair[1].1 - pair[0].1),
+        );
+    }
+    let total = *cumulative.last().unwrap();
+    if total <= 0.0 {
+        return Err("arc supervision requires a moving observed stroke".into());
+    }
+    let arc_positions = (0..keys.len())
+        .map(|index| {
+            let time = if index == 0 {
+                0.0
+            } else if index == last {
+                1.0
+            } else {
+                (18 * (index - 1) + 13) as f64 / denominator
+            };
+            // Invert acquisition timing, then express the corner midpoint in the
+            // observed polyline's arc coordinates. Timing remains supervision only.
+            let position = time.powf(speed.recip()) * (count - 1) as f64;
+            let lower = (position as usize).min(count - 2);
+            let fraction = position - lower as f64;
+            (cumulative[lower] + fraction * (cumulative[lower + 1] - cumulative[lower])) / total
+        })
+        .collect();
     Ok(TrainingSample {
         points,
+        arc_positions,
         waypoints,
         visited_keys: keys.iter().map(|(letter, _)| *letter).collect(),
     })
@@ -141,6 +170,13 @@ mod tests {
                     let raw = SyntheticWriter::new(writer).draw(word, difficulty);
                     assert_eq!(sample.points, raw);
                     assert_eq!(sample.waypoints.len(), sample.visited_keys.len());
+                    assert_eq!(sample.arc_positions.len(), sample.waypoints.len());
+                    assert_eq!(sample.arc_positions[0], 0.0);
+                    assert_eq!(*sample.arc_positions.last().unwrap(), 1.0);
+                    assert!(sample
+                        .arc_positions
+                        .windows(2)
+                        .all(|pair| pair[0] <= pair[1]));
                     let maximum = if matches!(difficulty, Difficulty::Clean) {
                         1e-9
                     } else {
@@ -154,6 +190,20 @@ mod tests {
                     }
                 }
             }
+        }
+    }
+
+    #[test]
+    fn clean_corner_arc_position_matches_physical_segment_lengths() {
+        let expected = 1.25_f64.sqrt() / (1.25_f64.sqrt() + 2.0_f64.sqrt());
+        for writer in 0..80 {
+            let sample = annotate(&Request {
+                word: "qaz".into(),
+                writer,
+                difficulty: Difficulty::Clean,
+            })
+            .unwrap();
+            assert!((sample.arc_positions[1] - expected).abs() < 1e-9);
         }
     }
 
