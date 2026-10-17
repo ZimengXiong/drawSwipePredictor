@@ -1,0 +1,30 @@
+{
+  "epoch": 0,
+  "selected": {
+    "length_power": 1.0,
+    "proxy_weight": 8.0,
+    "validation": {
+      "clean": {
+        "samples": 323,
+        "top1": 0.9566563367843628,
+        "top5": 1.0
+      },
+      "loose": {
+        "samples": 626,
+        "top1": 0.8674121499061584,
+        "top5": 0.9584664702415466
+      },
+      "memory": {
+        "samples": 2051,
+        "top1": 0.728425145149231,
+        "top5": 0.8956606388092041
+      }
+    }
+  },
+  "best_score": 0.728425145149231,
+  "test_data_used": false,
+  "hard_samples": 2051,
+  "development_samples": 3000,
+  "full_vocabulary": 60000,
+  "limits": "Initialized nine-layer decoder with the independent exact-low retriever. Subset baseline only; not a trained gain, full-development score, or benchmark score. Do not compare directly with 6,131/8,400."
+}
