@@ -5,12 +5,24 @@ import struct
 import torch
 from torch.nn import functional as F
 
-from autoregressive_model import SpellingDecoder, load_decoder
+from autoregressive_model import SpellingDecoder, load_decoder, word_tokens
 from widen_spelling import widen_decoder
 from export_spelling import spelling_binary
 
 
 class SpellingWidthTests(unittest.TestCase):
+    def test_trailing_padding_can_be_removed_without_dropping_candidates(self):
+        torch.manual_seed(38)
+        model = SpellingDecoder(width=48, layers=1).eval()
+        inputs, targets, _ = word_tokens(['cat', 'dog', 'extraordinarilylongunusedword'])
+        candidates = torch.tensor([[0, 1]])
+        memory = torch.randn(1, 32, 48)
+        full = model(memory.expand(2, -1, -1), inputs[candidates.flatten()])
+        labels = targets[candidates.flatten()]
+        costs = (-full.log_softmax(-1).gather(2, labels[..., None]).squeeze(-1) * (labels != 0)).sum(1)
+        trimmed = model.candidate_cost(memory, candidates, inputs, targets)
+        torch.testing.assert_close(trimmed.flatten(), costs, atol=1e-5, rtol=1e-6)
+
     def test_native_header_retains_width_and_every_parameter(self):
         model = SpellingDecoder(width=384, layers=1)
         binary = spelling_binary(model, 11, 12, 13, 8, 2.0, 0.7)

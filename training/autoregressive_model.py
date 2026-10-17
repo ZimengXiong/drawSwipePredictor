@@ -83,6 +83,10 @@ class SpellingDecoder(nn.Module):
         ids = candidates.reshape(-1)
         expanded = memory[:, None].expand(-1, count, -1, -1).reshape(-1, 32, memory.shape[-1])
         labels = targets[ids]
-        logits = self(expanded, inputs[ids])
+        # Future padding cannot affect earlier causal predictions. Retain every
+        # candidate while avoiding attention over unused trailing positions.
+        width = int((labels != PAD).sum(1).max())
+        labels = labels[:, :width]
+        logits = self(expanded, inputs[ids, :width])
         token_cost = -logits.log_softmax(-1).gather(2, labels[:, :, None]).squeeze(2)
         return (token_cost * (labels != PAD)).sum(1).reshape(batch, count)

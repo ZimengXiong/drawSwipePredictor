@@ -249,8 +249,9 @@ def main():
             else:
                 sequence, raw, embeddings = encode(encoder, paths)
             memory = model.encode_memory(sequence, raw, embeddings)
-            logits = model(memory, inputs[labels])
-            loss = F.cross_entropy(logits.flatten(0, 1), targets[labels].flatten(), ignore_index=0)
+            teacher_width = int(lengths[labels].max())
+            logits = model(memory, inputs[labels, :teacher_width])
+            loss = F.cross_entropy(logits.flatten(0, 1), targets[labels, :teacher_width].flatten(), ignore_index=0)
             if args.ranking_candidates:
                 with torch.no_grad():
                     retrieval_query = retriever(encoder_features(retriever, paths)) if args.fine_tune_encoder or args.retrieval_checkpoint else embeddings
