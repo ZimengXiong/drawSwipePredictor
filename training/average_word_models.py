@@ -59,7 +59,7 @@ def main():
     parser.add_argument("--data", type=Path, default=Path("data/memory-proxy/validation.bin"))
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--fractions", type=float, nargs="+", default=[0.0, 0.25, 0.5, 0.75, 1.0])
-    parser.add_argument("--bn-batches", type=int, default=50)
+    parser.add_argument("--bn-batches", type=int, default=0)
     parser.add_argument("--batch", type=int, default=512)
     parser.add_argument("--seed", type=int, default=900479)
     args = parser.parse_args()
@@ -89,7 +89,8 @@ def main():
     model = build_encoder(architecture).to("mps").eval()
     trials, best, best_saved, best_source = [], None, None, None
     options = [("original", float(i), i) for i in range(2)]
-    options += [("average_with_training_normalization", fraction, None) for fraction in args.fractions]
+    method = "average_with_training_normalization" if args.bn_batches else "average"
+    options += [(method, fraction, None) for fraction in args.fractions]
     for method, fraction, source in options:
         state = sources[source]["model"] if source is not None else average_state(sources[0]["model"], sources[1]["model"], fraction)
         model.load_state_dict(state)

@@ -25,11 +25,27 @@ from train_proxy import RECORD, corpus, proxy_scores, real_word_groups, balanced
 from reference_density import mixture_similarity
 from evaluate_training_exposure import exposure_bias
 from average_word_models import average_state
+from export_ensemble import pair_configuration
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_native_pair_export_does_not_drop_selected_models(self):
+        selected = {"checkpoints": [{"sha256": name} for name in ["a", "b", "c"]],
+                    "selected": {"weights": [0.0, 0.25, 0.75], "validation": {}}}
+        self.assertEqual(pair_configuration(selected, "c", "b")["auxiliary_weight"], 0.25)
+        with self.assertRaisesRegex(ValueError, "every selected component"):
+            pair_configuration(selected, "c", "a")
+        selected["selected"]["weights"] = [0.25, 0.25, 0.5]
+        with self.assertRaisesRegex(ValueError, "every selected component"):
+            pair_configuration(selected, "c", "b")
+        legacy = {"primary_sha256": "c", "auxiliary_sha256": "b",
+                  "selected": {"auxiliary_weight": 0.5, "proxy_weight": 2.0}}
+        self.assertEqual(pair_configuration(legacy, "c", "b"), legacy["selected"])
+        with self.assertRaisesRegex(ValueError, "sources differ"):
+            pair_configuration(legacy, "a", "b")
+
     def test_word_model_averaging_preserves_tracking_buffers_and_rejects_shape_changes(self):
         first = {"weights": torch.randn(3, 2), "tracked": torch.tensor(7)}
         second = {"weights": torch.randn(3, 2), "tracked": torch.tensor(11)}

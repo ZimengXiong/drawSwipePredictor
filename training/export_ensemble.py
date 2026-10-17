@@ -3,12 +3,30 @@
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 import subprocess
 import sys
 
 from export_retrieval import fingerprint
 from train_joint import load_checkpoint
+
+
+def pair_configuration(selection, primary_hash, auxiliary_hash):
+    """Require every selected word-model component to reach the native pair."""
+    if "checkpoints" not in selection:
+        if selection["primary_sha256"] != primary_hash or selection["auxiliary_sha256"] != auxiliary_hash:
+            raise ValueError("ensemble selection sources differ from the exported models")
+        return selection["selected"]
+    weights = selection["selected"]["weights"]
+    sources = selection["checkpoints"]
+    if len(weights) != len(sources) or any(not math.isfinite(w) or not 0 <= w <= 1 for w in weights) or abs(sum(weights) - 1) > 1e-6:
+        raise ValueError("invalid word-ensemble weights")
+    active = {source["sha256"]: weight for source, weight in zip(sources, weights) if weight > 0}
+    if len(active) != sum(weight > 0 for weight in weights) or len(active) != 2 or set(active) != {primary_hash, auxiliary_hash}:
+        raise ValueError("native pair must contain every selected component exactly")
+    return {"auxiliary_weight": active[auxiliary_hash], "proxy_weight": None,
+            "deletion_probability": 0.0, "validation": selection["selected"]["validation"]}
 
 
 def main():
@@ -20,14 +38,15 @@ def main():
     selection = json.loads(args.selection.read_text())
     auxiliary, source_hash = load_checkpoint(args.auxiliary_checkpoint)
     manifest = json.loads((args.output / "manifest.json").read_text())
-    if selection["test_data_used"] or selection["primary_sha256"] != manifest["checkpoint_sha256"] or selection["auxiliary_sha256"] != source_hash:
-        raise ValueError("ensemble selection sources differ from the exported models")
+    if selection["test_data_used"]:
+        raise ValueError("ensemble selection must use development data")
+    chosen = pair_configuration(selection, manifest["checkpoint_sha256"], source_hash)
     development = selection["development"]["sha256"]
     if development != auxiliary["metadata"]["validation_corpus"]["sha256"] or development != manifest["training"]["validation_corpus"]["sha256"]:
         raise ValueError("ensemble selection requires the declared development corpus")
-    if selection["full_vocabulary"] != manifest["vocabulary"] or manifest["vocabulary"] != len(auxiliary["words"]):
+    size = selection["full_vocabulary"] if "full_vocabulary" in selection else selection["development"]["vocabulary"]
+    if size != manifest["vocabulary"] or manifest["vocabulary"] != len(auxiliary["words"]):
         raise ValueError("ensemble vocabularies differ")
-    chosen = selection["selected"]
     weight = chosen["auxiliary_weight"]
     if not 0 < weight <= 1:
         raise ValueError("development selected the primary model alone; keep its base export")

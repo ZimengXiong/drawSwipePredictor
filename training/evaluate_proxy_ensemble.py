@@ -70,7 +70,7 @@ def main():
             size = int((difficulties == i).sum())
             metrics[name] = {"samples": size, **dict(zip(["top1", "top5", "top32", "top128"], (correct[i] / size).tolist()))}
         trials.append({"weights": mixing, "validation": metrics})
-    report = {"checkpoints": reports, "development": info, "test_data_used": False,
+    report = {"checkpoints": reports, "development": info, "test_data_used": False, "full_vocabulary": len(words),
         "selection": "Full-vocabulary exact-word memory development top1", "trials": trials,
         "selected": max(trials, key=lambda row: row["validation"]["memory"]["top1"])}
     args.output.parent.mkdir(parents=True, exist_ok=True)

@@ -144,7 +144,9 @@ Cross-attention models are not yet exported to native inference. A selected comp
 
 ## Combine complementary word models
 
-`average_word_models.py --first <checkpoint> --second <checkpoint> --output <directory>` compares two aligned models from the same training lineage. It includes both unchanged source models as controls, then tests parameter and word-vector averages. Batch-normalization statistics are refreshed using declared training paths only. The selected checkpoint must beat the source controls on full development; otherwise the utility preserves the better source file. These single-model averages complement the prediction ensembles below.
+`average_word_models.py --first <checkpoint> --second <checkpoint> --output <directory>` compares two aligned models from the same training lineage. It includes both unchanged source models as controls, then tests parameter and word-vector averages. Optional `--bn-batches` refreshes normalization statistics using declared training paths only. This is off by default: the cached-only recalibration population reduced accuracy in the initial experiment. The selected checkpoint must beat the source controls on full development; otherwise the utility preserves the better source file.
+
+`evaluate_proxy_ensemble.py` compares prediction mixtures on full development. When exactly two word models receive positive weights, its report can be passed directly to `export_ensemble.py`. The exporter requires both selected components and rejects a report that would silently discard a third model. `verify_word_ensemble.py --primary <checkpoint> --auxiliary <checkpoint> --model <export-directory> --output <report>` checks artifact hashes, exact top-five words, and word costs against the native CLI. Only points are sent to native inference.
 
 `evaluate_complete.py` compares a joint checkpoint with an auxiliary word model on the entire declared development corpus. It retrieves all candidates naturally from the full vocabulary, selects blend settings on development data, and retains exact-word scoring.
 
