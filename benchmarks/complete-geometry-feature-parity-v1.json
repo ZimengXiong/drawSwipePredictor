@@ -1,0 +1,14 @@
+{
+  "test_data_used": false,
+  "training_sha256": "557eb33b55d76c7c0b27b792f26b17b163006ca1ba13435a9a4e62436d6ce235",
+  "raw_replay_cases": 12,
+  "native_cli_sha256": "34ce4574f3432e679e229536d069d8271d718041827795bf2a941876925dd697",
+  "replay_cli_sha256": "d2ff5becfcd5a7c54c422646cf70681e8b5ea35b1ccef001f80fee46d577ac64",
+  "source_manifest_sha256": "e77149fdda0c22ca19c2fd26e6cd2be7b7deef53e595908a11570a18ec8e0157",
+  "feature_schema": "complete_geometry_v1",
+  "features": 20,
+  "popularity_feature_is_zero": true,
+  "metadata_independence_verified": true,
+  "complete_scores_and_top5_unchanged": true,
+  "limits": "Training-data replay and feature implementation checks only. No new ranker, development accuracy, benchmark evaluation, or confirmation evaluation."
+}

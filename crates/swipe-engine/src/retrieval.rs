@@ -27,6 +27,26 @@ struct AdditionalModel {
     bank_tag: u64,
 }
 
+fn complete_candidate(
+    query: &Query,
+    geometry: &Geometry,
+    prediction: Prediction,
+    best: f32,
+) -> Candidate {
+    Candidate {
+        features: query.features(
+            geometry,
+            [
+                prediction.raw_score as f32,
+                prediction.rating as f32,
+                0.0,
+                prediction.rating as f32 - best,
+            ],
+        ),
+        word: prediction.word,
+    }
+}
+
 /// Native neural recognizer. Load matching exported encoder and word-bank files.
 ///
 /// The encoder maps a gesture to a unit vector. Word vectors are cached at
@@ -468,6 +488,32 @@ impl RetrievalEngine {
             .collect()
     }
 
+    /// Compare complete spelling predictions with geometry, excluding popularity.
+    pub fn complete_ranking_features(&self, path: &[(f64, f64)], limit: usize) -> Vec<Candidate> {
+        if self.spelling.is_none()
+            || self.ranker.is_some()
+            || self.prior_weight != 0.0
+            || self.adaptive_prior
+            || self.tta_degrees != 0.0
+        {
+            return Vec::new();
+        }
+        let predictions = self.predict_from_path(path, limit);
+        let Some(query) = Query::new(path) else {
+            return Vec::new();
+        };
+        let best = predictions
+            .first()
+            .map_or(0.0, |prediction| prediction.rating as f32);
+        predictions
+            .into_iter()
+            .map(|prediction| {
+                let index = self.word_ids[&prediction.word];
+                complete_candidate(&query, &self.words[index].geometry, prediction, best)
+            })
+            .collect()
+    }
+
     pub fn predict_from_path(&self, path: &[(f64, f64)], limit: usize) -> Vec<Prediction> {
         if self.spelling_required && self.spelling.is_none() {
             return Vec::new();
@@ -736,6 +782,25 @@ fn fingerprint(data: &[u8]) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn complete_features_ignore_popularity_and_preserve_complete_costs() {
+        let path = [(0.0, 0.0), (1.0, 2.0), (3.0, 1.0)];
+        let query = Query::new(&path).unwrap();
+        let geometry = Geometry::new("hello");
+        let prediction = |popularity| Prediction {
+            word: "hello".into(),
+            raw_score: 0.2,
+            rating: -12.5,
+            popularity,
+            breakdown: ScoreBreakdown::default(),
+        };
+        let first = complete_candidate(&query, &geometry, prediction(0.0), -13.0);
+        let second = complete_candidate(&query, &geometry, prediction(1.0), -13.0);
+        assert_eq!(first.features, second.features);
+        assert_eq!(&first.features[..4], &[0.2, -12.5, 0.0, 0.5]);
+        assert!(first.features.iter().all(|value| value.is_finite()));
+    }
 
     #[test]
     fn word_bank_width_must_match_its_encoder() {

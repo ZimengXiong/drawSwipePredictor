@@ -147,6 +147,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let value: serde_json::Value = serde_json::from_str(&line?)?;
         let points: Vec<(f64, f64)> = serde_json::from_value(value["points"].clone())?;
         let start = std::time::Instant::now();
+        if args.iter().any(|a| a == "--complete-features") {
+            if args.iter().any(|a| a == "--features") {
+                return Err("choose one candidate feature mode".into());
+            }
+            let count: usize = option(&args, "--candidates").unwrap_or("128").parse()?;
+            if !(1..=128).contains(&count) {
+                return Err("complete features require one to 128 candidates".into());
+            }
+            println!(
+                "{}",
+                serde_json::json!({"schema": "complete_geometry_v1",
+                "candidates": engine.complete_ranking_features(&points, count)})
+            );
+            continue;
+        }
         if args.iter().any(|a| a == "--features") {
             let count = option(&args, "--candidates").unwrap_or("32").parse()?;
             println!(
