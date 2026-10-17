@@ -1,0 +1,673 @@
+{
+  "encoder_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "decoder_sha256": "680431d83a7a758ce77ffc14dbda066510abf6bdf649dd6b1e67dd28163c3760",
+  "retrieval_sha256": null,
+  "word_retrieval": [
+    {
+      "sha256": "5d223181ccae3aeb34cabff4dc05e8e12c84fdce10a8da822ab3c440f4cc12f6",
+      "weight": 0.5
+    },
+    {
+      "sha256": "0368c06c3f1b2838d4c8215ac90ad2823bfb797ac789c369b488adebfb4bc837",
+      "weight": 0.5
+    }
+  ],
+  "retrieval_auxiliary_sha256": null,
+  "retrieval_auxiliary_weight": 0.0,
+  "retrieval_selection_sha256": "cb3b40b3166ef67a4bf4764f662884c61c465336eab5e710ce86bfca018f0244",
+  "joint_context": false,
+  "context_state_source_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "decoder_epoch": 1,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "samples": 12000,
+  "selected": {
+    "length_power": 0.3,
+    "proxy_weight": 4.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9608333110809326,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.871666669845581,
+        "top5": 0.9612500071525574
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7346428632736206,
+        "top5": 0.8996428847312927
+      }
+    }
+  },
+  "shortlist_recall": {
+    "clean": 1.0,
+    "loose": 1.0,
+    "memory": 0.9958333373069763
+  },
+  "trials": [
+    {
+      "length_power": 0.0,
+      "proxy_weight": null,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9616666436195374,
+          "top5": 0.9983333349227905
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8741666674613953,
+          "top5": 0.9620833396911621
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.731071412563324,
+          "top5": 0.8961904644966125
+        }
+      }
+    },
+    {
+      "length_power": 0.0,
+      "proxy_weight": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.8416666388511658,
+          "top5": 0.9558333158493042
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.7191666960716248,
+          "top5": 0.8641666769981384
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.5502380728721619,
+          "top5": 0.7383333444595337
+        }
+      }
+    },
+    {
+      "length_power": 0.0,
+      "proxy_weight": 0.25,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.909166693687439,
+          "top5": 0.9891666769981384
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.7941666841506958,
+          "top5": 0.9245833158493042
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.636904776096344,
+          "top5": 0.8248809576034546
+        }
+      }
+    },
+    {
+      "length_power": 0.0,
+      "proxy_weight": 0.5,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9391666650772095,
+          "top5": 0.9950000047683716
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8320833444595337,
+          "top5": 0.9449999928474426
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.6817857027053833,
+          "top5": 0.8583333492279053
+        }
+      }
+    },
+    {
+      "length_power": 0.0,
+      "proxy_weight": 1.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9558333158493042,
+          "top5": 0.996666669845581
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8604166507720947,
+          "top5": 0.9558333158493042
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7132142782211304,
+          "top5": 0.8848809599876404
+        }
+      }
+    },
+    {
+      "length_power": 0.0,
+      "proxy_weight": 2.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9616666436195374,
+          "top5": 0.9983333349227905
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.871666669845581,
+          "top5": 0.9591666460037231
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7276190519332886,
+          "top5": 0.8938094973564148
+        }
+      }
+    },
+    {
+      "length_power": 0.0,
+      "proxy_weight": 4.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9608333110809326,
+          "top5": 0.9983333349227905
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8733333349227905,
+          "top5": 0.9604166746139526
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7317857146263123,
+          "top5": 0.8977380990982056
+        }
+      }
+    },
+    {
+      "length_power": 0.0,
+      "proxy_weight": 8.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9608333110809326,
+          "top5": 0.9991666674613953
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.872083306312561,
+          "top5": 0.9612500071525574
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7338095307350159,
+          "top5": 0.8989285826683044
+        }
+      }
+    },
+    {
+      "length_power": 0.3,
+      "proxy_weight": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.8424999713897705,
+          "top5": 0.9541666507720947
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.7145833373069763,
+          "top5": 0.8512499928474426
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.5441666841506958,
+          "top5": 0.7285714149475098
+        }
+      }
+    },
+    {
+      "length_power": 0.3,
+      "proxy_weight": 0.25,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9300000071525574,
+          "top5": 0.9933333396911621
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8254166841506958,
+          "top5": 0.940416693687439
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.6651190519332886,
+          "top5": 0.8477380871772766
+        }
+      }
+    },
+    {
+      "length_power": 0.3,
+      "proxy_weight": 0.5,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9524999856948853,
+          "top5": 0.996666669845581
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8550000190734863,
+          "top5": 0.9554166793823242
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7052381038665771,
+          "top5": 0.8802381157875061
+        }
+      }
+    },
+    {
+      "length_power": 0.3,
+      "proxy_weight": 1.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9591666460037231,
+          "top5": 0.9991666674613953
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8691666722297668,
+          "top5": 0.9595833420753479
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7259523868560791,
+          "top5": 0.8929761648178101
+        }
+      }
+    },
+    {
+      "length_power": 0.3,
+      "proxy_weight": 2.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9583333134651184,
+          "top5": 0.9991666674613953
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8754166960716248,
+          "top5": 0.9608333110809326
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7307142615318298,
+          "top5": 0.8984524011611938
+        }
+      }
+    },
+    {
+      "length_power": 0.3,
+      "proxy_weight": 4.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9608333110809326,
+          "top5": 0.9991666674613953
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.871666669845581,
+          "top5": 0.9612500071525574
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7346428632736206,
+          "top5": 0.8996428847312927
+        }
+      }
+    },
+    {
+      "length_power": 0.3,
+      "proxy_weight": 8.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9599999785423279,
+          "top5": 0.9983333349227905
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8725000023841858,
+          "top5": 0.9608333110809326
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7329761981964111,
+          "top5": 0.8974999785423279
+        }
+      }
+    },
+    {
+      "length_power": 0.7,
+      "proxy_weight": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.8416666388511658,
+          "top5": 0.9508333206176758
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.6970833539962769,
+          "top5": 0.8341666460037231
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.5330952405929565,
+          "top5": 0.7045238018035889
+        }
+      }
+    },
+    {
+      "length_power": 0.7,
+      "proxy_weight": 0.25,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9483333230018616,
+          "top5": 0.996666669845581
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8550000190734863,
+          "top5": 0.9537500143051147
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7019047737121582,
+          "top5": 0.8740476369857788
+        }
+      }
+    },
+    {
+      "length_power": 0.7,
+      "proxy_weight": 0.5,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9591666460037231,
+          "top5": 0.9991666674613953
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8687499761581421,
+          "top5": 0.9587500095367432
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7252380847930908,
+          "top5": 0.8929761648178101
+        }
+      }
+    },
+    {
+      "length_power": 0.7,
+      "proxy_weight": 1.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9583333134651184,
+          "top5": 0.9991666674613953
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8762500286102295,
+          "top5": 0.9620833396911621
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7311905026435852,
+          "top5": 0.8980952501296997
+        }
+      }
+    },
+    {
+      "length_power": 0.7,
+      "proxy_weight": 2.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9583333134651184,
+          "top5": 0.9991666674613953
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.871666669845581,
+          "top5": 0.9624999761581421
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7340475916862488,
+          "top5": 0.8989285826683044
+        }
+      }
+    },
+    {
+      "length_power": 0.7,
+      "proxy_weight": 4.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9599999785423279,
+          "top5": 0.9983333349227905
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8725000023841858,
+          "top5": 0.9616666436195374
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7329761981964111,
+          "top5": 0.8973809480667114
+        }
+      }
+    },
+    {
+      "length_power": 0.7,
+      "proxy_weight": 8.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9608333110809326,
+          "top5": 0.9983333349227905
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.871666669845581,
+          "top5": 0.9612500071525574
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7320238351821899,
+          "top5": 0.8970237970352173
+        }
+      }
+    },
+    {
+      "length_power": 1.0,
+      "proxy_weight": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.8374999761581421,
+          "top5": 0.9449999928474426
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.684583306312561,
+          "top5": 0.815833330154419
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.5190476179122925,
+          "top5": 0.684166669845581
+        }
+      }
+    },
+    {
+      "length_power": 1.0,
+      "proxy_weight": 0.25,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9549999833106995,
+          "top5": 0.9991666674613953
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8666666746139526,
+          "top5": 0.9599999785423279
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7179762125015259,
+          "top5": 0.8845238089561462
+        }
+      }
+    },
+    {
+      "length_power": 1.0,
+      "proxy_weight": 0.5,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9583333134651184,
+          "top5": 0.9991666674613953
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8758333325386047,
+          "top5": 0.9620833396911621
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7301190495491028,
+          "top5": 0.8955952525138855
+        }
+      }
+    },
+    {
+      "length_power": 1.0,
+      "proxy_weight": 1.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9591666460037231,
+          "top5": 0.9991666674613953
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8741666674613953,
+          "top5": 0.9624999761581421
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.733214259147644,
+          "top5": 0.8991666436195374
+        }
+      }
+    },
+    {
+      "length_power": 1.0,
+      "proxy_weight": 2.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9583333134651184,
+          "top5": 0.9983333349227905
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.871666669845581,
+          "top5": 0.9616666436195374
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7338095307350159,
+          "top5": 0.8985714316368103
+        }
+      }
+    },
+    {
+      "length_power": 1.0,
+      "proxy_weight": 4.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9608333110809326,
+          "top5": 0.9983333349227905
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8712499737739563,
+          "top5": 0.9620833396911621
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7325000166893005,
+          "top5": 0.8970237970352173
+        }
+      }
+    },
+    {
+      "length_power": 1.0,
+      "proxy_weight": 8.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "top1": 0.9608333110809326,
+          "top5": 0.9983333349227905
+        },
+        "loose": {
+          "samples": 2400,
+          "top1": 0.8725000023841858,
+          "top5": 0.9624999761581421
+        },
+        "memory": {
+          "samples": 8400,
+          "top1": 0.7321428656578064,
+          "top5": 0.8971428275108337
+        }
+      }
+    }
+  ],
+  "rules": "All development rows; natural top128; exact full words; no target insertion or alias credit",
+  "raw_report_sha256": "c7f9a41bf6c9b40c7b9fe567f667f832b7692c40cb02830cd7e5d491678f7613",
+  "native_verified": false,
+  "limits": "Full development. Canonical native parity passes; full point-only native replay remains in progress. No benchmark or confirmation evaluation."
+}
