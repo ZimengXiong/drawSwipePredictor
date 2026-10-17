@@ -30,13 +30,30 @@ from average_word_models import average_state
 from export_ensemble import pair_configuration
 from evaluate_spelling import retrieval_pair_weight, selected_word_weights
 from covariance_density import factor_covariance, gaussian_costs
-from train_autoregressive import differentiable_context
+from train_autoregressive import differentiable_context, validate_retrieval_source
 from fetch_additional_real_swipes import training_record
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_independent_negative_mining_rejects_other_writers_and_word_order(self):
+        source = {"words": ["cat", "dog"], "metadata": {"test_data_used": False,
+                  "train_corpus": {"sha256": "train"}, "validation_corpus": {"sha256": "development"}}}
+        validate_retrieval_source(source, source)
+        for field in ["train_corpus", "validation_corpus"]:
+            wrong = json.loads(json.dumps(source))
+            wrong["metadata"][field]["sha256"] = "confirmation"
+            with self.assertRaisesRegex(ValueError, "declared training and development"):
+                validate_retrieval_source(wrong, source)
+        wrong = json.loads(json.dumps(source))
+        wrong["metadata"]["test_data_used"] = True
+        with self.assertRaisesRegex(ValueError, "provenance"):
+            validate_retrieval_source(wrong, source)
+        wrong = {**source, "words": list(reversed(source["words"]))}
+        with self.assertRaisesRegex(ValueError, "vocabulary"):
+            validate_retrieval_source(wrong, source)
+
     def test_deeper_decoder_preserves_scores_and_learns_added_outputs(self):
         original = SpellingDecoder(width=48, layers=1).eval()
         expanded = SpellingDecoder(width=48, layers=3).eval()

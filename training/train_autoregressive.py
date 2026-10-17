@@ -23,6 +23,15 @@ from train_proxy import corpus, proxy_scores, sample_corpora, real_word_groups, 
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def validate_retrieval_source(retrieved, context):
+    """Keep hard-negative mining inside the declared vocabulary and writer splits."""
+    if retrieved["words"] != context["words"] or retrieved["metadata"]["test_data_used"]:
+        raise ValueError("independent retriever vocabulary or data provenance differs")
+    for key in ["train_corpus", "validation_corpus"]:
+        if retrieved["metadata"][key]["sha256"] != context["metadata"][key]["sha256"]:
+            raise ValueError("independent retriever must use the declared training and development writers")
+
+
 def differentiable_context(encoder, paths):
     """Retain gradients through stroke features used by the spelling decoder."""
     raw = encoder_features(encoder, paths)
@@ -77,6 +86,8 @@ def main():
     parser.add_argument("--seed", type=int, default=900419)
     parser.add_argument("--validation-seed", type=int)
     parser.add_argument("--init-decoder", type=Path)
+    parser.add_argument("--retrieval-checkpoint", type=Path,
+                        help="Independent frozen word model for mining negatives and development candidates")
     parser.add_argument("--decoder-layers", type=int, choices=[3, 6, 9, 12],
                         help="Decoder depth; defaults to the source depth or three blocks")
     parser.add_argument("--ranking-candidates", type=int, default=0)
@@ -92,6 +103,8 @@ def main():
         parser.error("ranking requires an initialized decoder and 2 to 128 candidates")
     if args.fine_tune_encoder and not args.ranking_candidates:
         parser.error("encoder fine-tuning requires initialized candidate ranking")
+    if args.retrieval_checkpoint and not args.ranking_candidates:
+        parser.error("independent retrieval requires initialized candidate ranking")
     if args.fresh_fraction is not None and not 0 <= args.fresh_fraction <= 0.7:
         parser.error("fresh fraction must be between zero and 0.7")
     torch.set_num_threads(4)
@@ -108,6 +121,14 @@ def main():
     if args.fine_tune_encoder:
         encoder.requires_grad_(True)
     proxies, words = saved["proxies"].to(device), saved["words"]
+    retrieval_hash = encoder_hash
+    if args.retrieval_checkpoint:
+        retrieved, retrieval_hash = load_checkpoint(args.retrieval_checkpoint)
+        validate_retrieval_source(retrieved, saved)
+        retriever = build_encoder(retrieved["metadata"]["arguments"].get("architecture", "small")).to(device).eval().requires_grad_(False)
+        retriever.load_state_dict(retrieved["model"])
+        proxies = retrieved["proxies"].to(device)
+        del retrieved
     inputs, targets, lengths = [values.to(device) for values in word_tokens(words)]
     if inputs.shape[1] > 64:
         raise ValueError("word tokens exceed decoder position capacity")
@@ -134,7 +155,10 @@ def main():
         encoded = [encode(encoder, part) for part in paths.split(192)]
         for i, name in enumerate(["sequence", "raw", "embedding"]):
             validation[name] = torch.cat([part[i] for part in encoded])
-        ranked = [proxy_scores(part, proxies).topk(128, dim=1) for part in validation["embedding"].split(192)]
+        retrieval_embeddings = validation["embedding"]
+        if args.retrieval_checkpoint:
+            retrieval_embeddings = torch.cat([retriever(encoder_features(retriever, part)) for part in paths.split(192)])
+        ranked = [proxy_scores(part, proxies).topk(128, dim=1) for part in retrieval_embeddings.split(192)]
         validation.update(similarity=torch.cat([part.values for part in ranked]), candidates=torch.cat([part.indices for part in ranked]))
     validation_paths = paths
     del encoded, ranked, saved
@@ -164,6 +188,8 @@ def main():
     optimizer = torch.optim.AdamW(groups_to_train, weight_decay=0.001)
     schedule = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=0.00001)
     metadata = {"encoder_sha256": encoder_hash, "encoder_path": str(args.checkpoint),
+        "retrieval_sha256": retrieval_hash,
+        "retrieval_role": "Frozen full-vocabulary negative mining and natural development candidates; context features remain separately bound",
         "decoder_parameters": sum(parameter.numel() for parameter in model.parameters()),
         "decoder_initialization_sha256": decoder_hash,
         "fine_tuned_context": args.fine_tune_encoder,
@@ -218,7 +244,7 @@ def main():
             loss = F.cross_entropy(logits.flatten(0, 1), targets[labels].flatten(), ignore_index=0)
             if args.ranking_candidates:
                 with torch.no_grad():
-                    retrieval_query = retriever(encoder_features(retriever, paths)) if args.fine_tune_encoder else embeddings
+                    retrieval_query = retriever(encoder_features(retriever, paths)) if args.fine_tune_encoder or args.retrieval_checkpoint else embeddings
                     similarity = proxy_scores(retrieval_query, proxies)
                     alternatives = similarity.masked_fill(torch.arange(len(words), device=device)[None] == labels[:, None], -torch.inf).topk(128, dim=1).indices
                     priority = torch.rand(alternatives.shape, device=device)
