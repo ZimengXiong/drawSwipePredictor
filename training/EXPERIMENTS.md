@@ -113,6 +113,8 @@ The decoder receives stroke features and candidate letters. It receives no targe
 
 `--decoder-layers` expands a warm decoder to six, nine, or twelve blocks. Added blocks start with zero attention and feed-forward outputs, preserving the original spelling scores while allowing their output projections to learn immediately. Checkpoint loading infers the full depth from tensor names and rejects missing blocks or shrinking. The nine-block decoder has 5,422,109 parameters. Its initializer passes all five native spelling-cost and exact top-five references. Legacy three-block serialization remains byte-identical; deeper exports use `SWPSP002` with an explicit bounded depth. Initialization parity is not an accuracy gain.
 
+The first trained nine-block checkpoint reaches 6,138/8,400, or 73.07%, on full hard development with the existing word mixture. Compared with the verified three-block system, it gains seven hard, two clean, and eight loose first choices, while losing two hard top-five hits. Its trained weights pass five native reference cases and seven corruption checks. Full native replay and latency measurement remain separate checks; the preview retains the verified 72.99% model.
+
 For ranking training, `--retrieval-checkpoint` supplies an independent frozen word model for negative mining and natural development candidates. The context encoder remains separately bound. The independent model must have the same complete vocabulary, training corpus hash, and development corpus hash, with no test data used. Training positives remain labeled supervision; evaluation never inserts the target. This lets a deeper decoder learn against a stronger recognizer's confusions rather than the context encoder's older word predictions.
 
 After training, use `evaluate_spelling.py --checkpoint <word-checkpoint> --decoder <spelling-checkpoint> --output <report>` to select scores on all 12,000 development drawings. The evaluator checks both checkpoint bindings and the development hash. It rejects other corpora, including the reserved confirmation set.
@@ -122,6 +124,8 @@ Add `--retrieval-checkpoint <word-checkpoint>` to test the decoder with candidat
 For an already selected pair of word models, also pass `--retrieval-auxiliary <checkpoint> --retrieval-selection <report>`. This preserves the report's fixed mixture instead of tuning another retrieval weight. Both source hashes, the complete vocabulary, and the development hash must match. The evaluator rejects selections that used test data or would drop a component. It then selects spelling scores around the pair's naturally retrieved candidates and retains the pair-only control.
 
 For a larger fixed mixture, pass each active `--word-checkpoint` and its `--word-selection` report. The evaluator requires every selected source exactly once, checks all hashes and development splits, and supports independently sized word embeddings. It retains the complete word-only control while selecting spelling scores. `evaluate_proxy_ensemble.py` includes all quarter-weight mixtures, including three-component mixtures, plus the equal-weight mixture. A selected mixture must have a matching native implementation before promotion; a two-model export cannot silently discard extra components.
+
+The sparse search can compare six candidate checkpoints while selecting at most four active components. `evaluate_uniform_words.py` separately tests the equal-weight average without that component restriction. The six-model control reaches 6,123/8,400 hard word-only first choices, compared with 6,122 for the sparse search's wide/synthetic-only pair. Both complete spelling combinations are evaluated before selection. A winning larger mixture requires native support for every active component. The multiplicative uniform formulation matches spelling selection; an earlier scalar-division control has identical aggregate hit counts and remains recorded.
 
 `export_spelling.py` adds a selected decoder to a separate native word-model directory. Supply `--context-checkpoint`, `--retrieval-checkpoint`, `--decoder`, `--selection`, and `--output`; a word mixture also needs every auxiliary checkpoint through `--word-checkpoint`. The legacy pair export also accepts `--auxiliary-checkpoint`. The export retains the decoder's original encoder alongside the retrieval encoders. Its binary binds to that encoder, the complete word bank, all retrieval encoders, and their selected mixture weights. It rejects stale selections and directories containing other rankers. The bundled app is not changed by a directory export.
 
@@ -152,6 +156,20 @@ Evaluation uses the existing full-vocabulary retriever's natural top 128 candida
 `evaluate_training_exposure.py` separately checks whether uneven real-recording exposure affects ranking. It derives class offsets from the checkpoint's hashed training recordings and recorded sampling method, using the same procedural floor for every word. It never uses word popularity, word length, or vocabulary rank. A single correction strength is selected on full development, with zero correction included. This is a limited exposure hypothesis, not an exact correction for the full training distribution.
 
 ## Verify without computer use
+
+`prepare_complete_geometry.py` mines a second-pass geometry experiment around the complete spelling recognizer. Its 20 scalar inputs combine learned scores with independent route alignment. Word frequency is replaced with zero. Candidate identities and labels are stored only for loss and scoring; writer identities and difficulty never enter prediction requests. Every candidate comes from the observed stroke's natural top 128.
+
+The separate `replay_memory_writers` data generator reconstructs raw strokes from training records. Twelve replay cases reproduce the original generator's points and corpus records exactly. Feature extraction ignores supplied label metadata and preserves baseline scores and candidate order. Mining checks every regenerated normalized curve, freezes private executable copies, and verifies all model-file hashes. Training excludes reserved and overlapping writer blocks. Development must keep every declared row and reproduce the existing native top-one and top-five counts before its cache is accepted.
+
+The production experiment uses 50,000 training writers sampled from the 31-million-writer pool and all 12,000 development rows. `train_complete_geometry.py` trains a small shared residual network on those cached features. It derives a query-relative geometry margin from alignment costs, uses training-only normalization, and includes zero correction during selection. Missing targets remain misses in evaluation. CPU training is the default. A correction must establish a full-development gain and pass native integration before promotion.
+
+```sh
+uv run --directory training python train_complete_geometry.py \
+  --train data/complete-geometry-v1/train.npz \
+  --development data/complete-geometry-v1/development.npz \
+  --model checkpoints/exact-wide-complete-native-v1 \
+  --output checkpoints/complete-geometry-ranker-v1
+```
 
 All checks use the command line. The native exporter supports the compact, large, intrinsic, giant, wide512, and massive word encoders. Word-bank widths must match their encoder outputs. `verify_word_model.py --checkpoint <checkpoint> --model <directory> --output <report>` also verifies exact top-five words and costs over the full dictionary. Export to a separate directory, then compare native embeddings with PyTorch reference values:
 
