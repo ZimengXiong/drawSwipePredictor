@@ -9,8 +9,8 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
-from retrieval_model import GestureEncoder, features
-from train_proxy import corpus
+from retrieval_model import GestureEncoder, build_encoder, encoder_features, features
+from train_proxy import corpus, proxy_scores
 
 
 def main():
@@ -31,16 +31,16 @@ def main():
     select = chooser.choice(len(rows), min(args.samples, len(rows)), replace=False)
     paths = np.array(rows["points"][select])
     labels = np.array(rows["label"][select], dtype=np.int64)
-    model = GestureEncoder().to("mps").eval()
+    model = build_encoder(saved["metadata"]["arguments"].get("architecture", "small")).to("mps").eval()
     model.load_state_dict(saved["model"])
-    bank = F.normalize(saved["proxies"].to("mps"), dim=1)
+    bank = saved["proxies"].to("mps")
     candidates = np.zeros((len(paths), 128), dtype=np.int32)
     distances = np.zeros((len(paths), 128), dtype=np.float32)
     positive_distance = np.zeros(len(paths), dtype=np.float32)
     with torch.no_grad():
         for start in range(0, len(paths), 256):
-            query = model(features(torch.tensor(paths[start:start + 256], device="mps")))
-            score = query @ bank.T
+            query = model(encoder_features(model, torch.tensor(paths[start:start + 256], device="mps")))
+            score = proxy_scores(query, bank)
             values, indices = score.topk(128, dim=1)
             candidates[start:start + len(query)] = indices.cpu().numpy()
             distances[start:start + len(query)] = (1 - values).clamp_min(0).cpu().numpy()
