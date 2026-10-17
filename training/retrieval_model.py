@@ -140,3 +140,12 @@ def augment(paths: torch.Tensor, *, force_memory: bool = False) -> torch.Tensor:
     left = result.gather(1, (indices - 1).unsqueeze(2).expand(-1, -1, 2))
     right = result.gather(1, indices.unsqueeze(2).expand(-1, -1, 2))
     return left + weight * (right - left)
+
+
+def build_encoder(architecture="small"):
+    if architecture == "small":
+        return GestureEncoder()
+    if architecture == "large":
+        from large_encoder import LargeGestureEncoder
+        return LargeGestureEncoder()
+    raise ValueError(f"unknown encoder architecture: {architecture}")

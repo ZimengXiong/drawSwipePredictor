@@ -14,7 +14,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from motor_sampler import MotorSampler
-from retrieval_model import GestureEncoder, augment, features, load_recordings, vocabulary
+from retrieval_model import GestureEncoder, augment, build_encoder, features, load_recordings, vocabulary
 
 ROOT = Path(__file__).resolve().parents[1]
 RECORD = np.dtype([("label", "<u4"), ("difficulty", "<u4"), ("writer", "<u8"), ("points", "<f4", (64, 2))])
@@ -61,6 +61,7 @@ def main():
     parser.add_argument("--batch", type=int, default=768)
     parser.add_argument("--learning-rate", type=float, default=0.00015)
     parser.add_argument("--seed", type=int, default=812831)
+    parser.add_argument("--architecture", choices=["small", "large"], default="small")
     parser.add_argument("--fresh-fraction", type=float, default=0.0)
     parser.add_argument("--resume", type=Path)
     parser.add_argument("--device", default="mps")
@@ -96,9 +97,18 @@ def main():
     for difficulty, name in enumerate(["clean", "loose", "memory"]):
         mask = validation["difficulty"] == difficulty
         datasets[name] = (torch.tensor(np.array(validation["points"][mask]), device=device), torch.tensor(np.array(validation["label"][mask], dtype=np.int64), device=device))
-    model = GestureEncoder().to(device)
+    model = build_encoder(args.architecture).to(device)
     initial = torch.load(args.init_model, map_location=device, weights_only=False)
-    model.load_state_dict(initial["model"])
+    initial_architecture = initial["metadata"]["arguments"].get("architecture", "small")
+    teacher = None
+    if args.architecture != initial_architecture:
+        compatible = {key: value for key, value in initial["model"].items() if key in model.state_dict() and model.state_dict()[key].shape == value.shape}
+        model.load_state_dict(compatible, strict=False)
+        teacher = build_encoder(initial_architecture).to(device).eval()
+        teacher.load_state_dict(initial["model"])
+        teacher.requires_grad_(False)
+    else:
+        model.load_state_dict(initial["model"])
     model.eval()
     sampler = MotorSampler(words, device) if args.fresh_fraction else None
     with torch.no_grad():
@@ -146,6 +156,13 @@ def main():
             query = model(features(paths))
             logits = 32.0 * query @ F.normalize(proxies, dim=1).T
             loss = F.cross_entropy(logits, labels)
+            if teacher is not None:
+                with torch.no_grad():
+                    target_vectors = teacher(features(paths))
+                # Preserve the useful coarse geometry while the larger model
+                # learns evidence that the smaller encoder cannot represent.
+                weight = 2.0 if epoch < 5 else 0.1
+                loss = loss + weight * (1 - (query * target_vectors).sum(1)).mean()
             if not torch.isfinite(loss):
                 raise RuntimeError("nonfinite proxy loss")
             optimizer.zero_grad(set_to_none=True)
