@@ -23,7 +23,9 @@ def main():
     parser.add_argument("--retrieval-cli", type=Path, default=Path("../target/release/examples/retrieval_cli"))
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    manifest = json.loads((args.model / "manifest.json").read_text())
+    manifest_bytes = (args.model / "manifest.json").read_bytes()
+    manifest = json.loads(manifest_bytes)
+    cli_hash = hashlib.sha256(args.retrieval_cli.read_bytes()).hexdigest()
     expected = json.loads(args.python_report.read_text())
     rows, info = corpus(args.data)
     if manifest["training"]["validation_corpus"]["sha256"] != info["sha256"] or expected["development"]["sha256"] != info["sha256"] or expected["test_data_used"]:
@@ -35,7 +37,8 @@ def main():
         raise ValueError("native replay vocabulary differs")
     report = {"test_data_used": False, "development": info, "full_vocabulary": info["vocabulary"],
               "selection_sha256": hashlib.sha256(args.python_report.read_bytes()).hexdigest(),
-              "native_manifest_sha256": hashlib.sha256((args.model / "manifest.json").read_bytes()).hexdigest()}
+              "native_manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
+              "native_cli_sha256": cli_hash}
     artifacts = {"encoder.bin": manifest["encoder_sha256"], "words.bin": manifest["words_sha256"]}
     if manifest.get("auxiliary_weight", 0.0):
         auxiliary = json.loads((args.model / "auxiliary/manifest.json").read_text())
@@ -95,6 +98,13 @@ def main():
             if process.poll() is None:
                 process.terminate()
                 process.wait()
+        if (args.model / "manifest.json").read_bytes() != manifest_bytes:
+            raise ValueError("native manifest changed during development replay")
+        if hashlib.sha256(args.retrieval_cli.read_bytes()).hexdigest() != cli_hash:
+            raise ValueError("native executable changed during development replay")
+        for name, digest in artifacts.items():
+            if hashlib.sha256((args.model / name).read_bytes()).hexdigest() != digest:
+                raise ValueError(f"native artifact changed during development replay: {name}")
         metrics, matches = {}, True
         for level, name in enumerate(["clean", "loose", "memory"]):
             size = int((rows["difficulty"] == level).sum())
@@ -103,6 +113,7 @@ def main():
             for column, key in enumerate(["top1", "top5"]):
                 matches &= int(counts[level, column]) == round(expected["selected"]["validation"][name][key] * size)
         report.update(validation=metrics, matches_python_hit_counts=bool(matches), evaluated_rows=len(cases),
+                      native_files_unchanged_through_replay=True,
                       median_milliseconds=float(np.median(timings)), p95_milliseconds=float(np.quantile(timings, 0.95)),
                       limits="Development only; regenerated raw strokes reproduce the unchanged corpus hash. Concurrent training affects timing. No benchmark or blind-confirmation evaluation.")
     args.output.parent.mkdir(parents=True, exist_ok=True)
