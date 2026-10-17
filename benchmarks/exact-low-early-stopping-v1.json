@@ -1,0 +1,60 @@
+{
+  "test_data_used": false,
+  "run": "proxy-exact-low-v1",
+  "reason": "More than 50 completed epochs without improving its best checkpoint. Preserve that checkpoint in the selected system and negative miner; release resources for deeper training.",
+  "last_completed": {
+    "epoch": 107,
+    "loss": 0.8018894559144973,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9599999785423279,
+        "top5": 0.9991666674613953
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8700000047683716,
+        "top5": 0.9608333110809326
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7235714197158813,
+        "top5": 0.893928587436676
+      }
+    },
+    "best_score": 0.7258333563804626,
+    "seconds": 81.21879829198588,
+    "improved": false
+  },
+  "best": {
+    "epoch": 53,
+    "loss": 0.8259064546227455,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9574999809265137,
+        "top5": 0.9983333349227905
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8708333373069763,
+        "top5": 0.9608333110809326
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7258333563804626,
+        "top5": 0.8920238018035889
+      }
+    },
+    "best_score": 0.7258333563804626,
+    "seconds": 88.22512791698682,
+    "improved": true
+  },
+  "artifacts_sha256": {
+    "best.pt": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+    "latest.pt": "298a278a2798ed0877769734f52b0b278b47406f2f967873ea062dbd361532fa",
+    "run.json": "cb4914074db5e1a1164a3df3b8ff14b38a07b7ca6373fe2f4b192016d2c03d92",
+    "history.jsonl": "1db4f76d58a1a9c3a1679de170ab215fd4f646a5cbfd82538cdbb3749a79b49e"
+  },
+  "action": "SIGINT after verifying live process identity. No checkpoint removed or overwritten."
+}
