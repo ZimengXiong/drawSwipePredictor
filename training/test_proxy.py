@@ -11,6 +11,7 @@ import torch
 from torch import nn
 
 from intrinsic_features import intrinsic_features
+from amortized_motor import AmortizedMotor, retained_training_keys
 from cross_model import RouteCrossRanker
 from large_encoder import expand_encoder
 from generative_fit import MotorFitter
@@ -121,6 +122,28 @@ class ProxyTests(unittest.TestCase):
             expected = model(sequence, raw, embedding, candidates, similarity, targets, lengths)
             actual = model(sequence, raw, embedding, candidates.flip(1), similarity.flip(1), targets, lengths).flip(1)
         torch.testing.assert_close(actual, expected, atol=2e-5, rtol=2e-5)
+
+    def test_motor_initializer_preserves_start_and_learns_through_renderer(self):
+        torch.set_num_threads(2)
+        torch.manual_seed(11231)
+        words = ["helical", "lunchbox", "alpacas"]
+        fitter = MotorFitter(words, "cpu")
+        sampler = MotorSampler(words, "cpu")
+        paths, known = sampler.sample(torch.arange(3), strength=1.0, return_metadata=True)
+        model = AmortizedMotor(fitter.keys.shape[1])
+        keys, lengths = retained_training_keys(known, model.max_keys)
+        parameters = model(paths, keys, lengths, fitter)
+        torch.testing.assert_close(parameters, torch.zeros_like(parameters), atol=0, rtol=0)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+        for step in range(2):
+            parameters = model(paths, keys, lengths, fitter)
+            loss = (fitter.render(keys, lengths, parameters) - paths).square().mean()
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            self.assertTrue(all(torch.isfinite(p.grad).all() for p in model.parameters() if p.grad is not None))
+            if step == 1:
+                self.assertGreater(model.view[1].weight.grad.abs().sum().item(), 0)
+            optimizer.step()
 
     def test_word_mode_order_cannot_change_scores(self):
         query = torch.nn.functional.normalize(torch.randn(8, 128), dim=1)
