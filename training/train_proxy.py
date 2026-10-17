@@ -179,6 +179,11 @@ def main():
     start, best = 0, -1.0
     if args.resume:
         saved = torch.load(args.resume, map_location=device, weights_only=False)
+        if saved["words"] != words or saved["metadata"]["validation_corpus"]["sha256"] != validation_info["sha256"]:
+            raise ValueError("resume checkpoint vocabulary or development writers differ")
+        recorded = [saved["metadata"]["train_corpus"]] + saved["metadata"].get("extra_train_corpora", [])
+        if [record["sha256"] for record in recorded] != [info["sha256"] for _, info in shards]:
+            raise ValueError("resume checkpoint training shards differ")
         model.load_state_dict(saved["model"])
         proxies.data.copy_(saved["proxies"])
         optimizer.load_state_dict(saved["optimizer"])
@@ -192,6 +197,7 @@ def main():
         "input_features": "geometry only; labels and writer identities are never model inputs",
         "motor_sampler_sha256": hashlib.sha256((ROOT / "training/motor_sampler.py").read_bytes()).hexdigest() if sampler else None,
         "proxy_initialization_sha256": hashlib.sha256(args.proxy_init.read_bytes()).hexdigest() if args.proxy_init else None,
+        "resume_sha256": hashlib.sha256(args.resume.read_bytes()).hexdigest() if args.resume else None,
         "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()}
     (args.output / "run.json").write_text(json.dumps(metadata, indent=2) + "\n")
     print(json.dumps({"initial_validation": evaluate(model, proxies, datasets)}), flush=True)

@@ -54,7 +54,11 @@ def expand_encoder(model, original):
         if new.shape == old.shape:
             new.copy_(old)
         elif new.ndim == old.ndim and all(a >= b for a, b in zip(new.shape, old.shape)):
-            if old.ndim >= 2 or name.endswith("bias"):
+            # New hidden outputs need nonzero activations. Their following
+            # layer's added input columns stay zero, preserving predictions
+            # while allowing those columns to receive gradients immediately.
+            widening_outputs = old.ndim >= 2 and new.shape[0] > old.shape[0] and new.shape[1:] == old.shape[1:]
+            if old.ndim >= 2 and not widening_outputs:
                 new.zero_()
             new[tuple(slice(0, size) for size in old.shape)].copy_(old)
     model.load_state_dict(state)
