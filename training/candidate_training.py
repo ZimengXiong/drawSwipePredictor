@@ -58,7 +58,11 @@ def validation_cache(encoder, experts, rows, selected):
 def evaluate(model, cache, tokens, lengths, geometry, labels, difficulty):
     model.eval()
     corrections = []
+    neutral = all(torch.count_nonzero(parameter) == 0 for parameter in model.compatibility[-1].parameters())
     for start in range(0, len(labels), 4):
+        if neutral:
+            corrections.append(torch.zeros_like(cache['similarity'][start:start+4], device='cpu'))
+            continue
         context = [cache[name][start:start+4] for name in ['sequence', 'raw', 'embedding']]
         memory = model.encode_memory(*context)
         corrections.append(model.candidate_scores(memory, cache['candidates'][start:start+4],
