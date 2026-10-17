@@ -29,11 +29,28 @@ from average_word_models import average_state
 from export_ensemble import pair_configuration
 from evaluate_spelling import retrieval_pair_weight
 from covariance_density import factor_covariance, gaussian_costs
+from train_autoregressive import differentiable_context
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_joint_spelling_updates_encoder_without_changing_running_statistics(self):
+        torch.set_num_threads(2)
+        encoder = build_encoder("large").eval()
+        decoder = SpellingDecoder(layers=1).eval()
+        before = encoder.stages[1].running_mean.clone()
+        paths = torch.randn(2, 64, 2)
+        sequence, raw, embedding = differentiable_context(encoder, paths)
+        memory = decoder.encode_memory(sequence, raw, embedding)
+        inputs, targets, _ = word_tokens(["letter", "bookkeeper"])
+        logits = decoder(memory, inputs)
+        loss = torch.nn.functional.cross_entropy(logits.flatten(0, 1), targets.flatten(), ignore_index=0)
+        loss.backward()
+        self.assertGreater(encoder.stages[0].weight.grad.abs().sum().item(), 0)
+        self.assertTrue(torch.isfinite(encoder.stages[0].weight.grad).all())
+        torch.testing.assert_close(encoder.stages[1].running_mean, before, atol=0, rtol=0)
+
     def test_factored_covariance_matches_direct_gaussian_likelihood(self):
         torch.manual_seed(900593)
         references = torch.randn(4, 8, 7)

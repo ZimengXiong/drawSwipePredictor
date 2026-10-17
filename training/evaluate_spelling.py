@@ -67,9 +67,9 @@ def main():
     device = "mps"
     architecture = saved["metadata"]["arguments"].get("architecture", "small")
     encoder = build_encoder(architecture).to(device).eval().requires_grad_(False)
-    encoder.load_state_dict(saved["model"])
+    encoder.load_state_dict(decoded.get("context_model", saved["model"]))
     retrieval_encoder = encoder
-    if retrieval_hash != encoder_hash:
+    if retrieval_hash != encoder_hash or "context_model" in decoded:
         retrieval_architecture = retrieved["metadata"]["arguments"].get("architecture", "small")
         retrieval_encoder = build_encoder(retrieval_architecture).to(device).eval().requires_grad_(False)
         retrieval_encoder.load_state_dict(retrieved["model"])
@@ -107,6 +107,8 @@ def main():
         "retrieval_sha256": retrieval_hash,
         "retrieval_auxiliary_sha256": auxiliary_hash, "retrieval_auxiliary_weight": auxiliary_weight,
         "retrieval_selection_sha256": selection_hash,
+        "joint_context": "context_model" in decoded,
+        "context_state_source_sha256": decoder_hash if "context_model" in decoded else encoder_hash,
         "decoder_epoch": decoded["epoch"] + 1, "development": info,
         "test_data_used": False, "full_vocabulary": len(saved["words"]),
         "samples": len(rows), "selected": chosen, "shortlist_recall": recall, "trials": trials,

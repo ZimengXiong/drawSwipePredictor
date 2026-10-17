@@ -79,8 +79,13 @@ def main():
             raise ValueError("native auxiliary artifact binding differs")
         binding.extend(struct.pack("<QQf", *tags, auxiliary_weight))
     context_directory = args.output / "spelling"
+    export_context = args.context_checkpoint
+    if "context_model" in decoded:
+        context_directory.mkdir(parents=True, exist_ok=True)
+        export_context = context_directory / "joint-context.pt"
+        torch.save({**context, "model": decoded["context_model"]}, export_context)
     subprocess.run([sys.executable, str(Path(__file__).with_name("export_retrieval.py")),
-                    "--checkpoint", str(args.context_checkpoint), "--output", str(context_directory)], check=True)
+                    "--checkpoint", str(export_context), "--output", str(context_directory)], check=True)
     context_bytes = (context_directory / "encoder.bin").read_bytes()
     channels = 16 if context["metadata"]["arguments"].get("architecture") in ["intrinsic", "giant"] else 8
     model = SpellingDecoder(channels).eval()
@@ -107,6 +112,8 @@ def main():
         result.load_state_dict(record["model"])
         return result
     context_encoder, retrieval_encoder = encoder(context), encoder(retrieved)
+    if "context_model" in decoded:
+        context_encoder.load_state_dict(decoded["context_model"])
     auxiliary_encoder = encoder(auxiliary) if auxiliary else None
     proxies = retrieved["proxies"].to(device)
     auxiliary_proxies = auxiliary["proxies"].to(device) if auxiliary else None
@@ -142,7 +149,9 @@ def main():
         temporary.write_bytes(content); temporary.replace(args.output / name)
     manifest["spelling"] = {"sha256": hashlib.sha256(binary).hexdigest(), "tag": fingerprint(binary), "checkpoint_sha256": decoder_hash,
         "verification_sha256": hashlib.sha256((args.output / "spelling-verification.json").read_bytes()).hexdigest(),
-        "context_checkpoint_sha256": context_hash, "context_encoder_sha256": hashlib.sha256(context_bytes).hexdigest(),
+        "context_checkpoint_sha256": decoder_hash if "context_model" in decoded else context_hash,
+        "context_initializer_sha256": context_hash, "context_encoder_sha256": hashlib.sha256(context_bytes).hexdigest(),
+        "joint_context": "context_model" in decoded,
         "selection_sha256": hashlib.sha256(selection_bytes).hexdigest(), "selected": chosen}
     (args.output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"Exported {len(binary):,} bytes of bound spelling weights", flush=True)

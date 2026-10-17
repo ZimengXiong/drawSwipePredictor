@@ -2,6 +2,7 @@
 """Learn full spelling likelihoods on independent training writers."""
 
 import argparse
+import copy
 import hashlib
 import json
 from pathlib import Path
@@ -14,12 +15,26 @@ from torch.nn import functional as F
 
 from autoregressive_model import SpellingDecoder, word_tokens
 from motor_sampler import MotorSampler
-from retrieval_model import build_encoder, load_recordings
+from retrieval_model import build_encoder, encoder_features, load_recordings
 from train_character import encode
 from train_joint import load_checkpoint
 from train_proxy import corpus, proxy_scores, sample_corpora, real_word_groups, balanced_real_indices
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def differentiable_context(encoder, paths):
+    """Retain gradients through stroke features used by the spelling decoder."""
+    raw = encoder_features(encoder, paths)
+    sequence = encoder.encode_sequence(raw)
+    return sequence, raw, encoder.embed_sequence(sequence)
+
+
+@torch.no_grad()
+def refresh_context(encoder, paths, validation):
+    parts = [encode(encoder, part) for part in paths.split(192)]
+    for i, name in enumerate(["sequence", "raw", "embedding"]):
+        validation[name] = torch.cat([part[i] for part in parts])
 
 
 @torch.no_grad()
@@ -64,11 +79,18 @@ def main():
     parser.add_argument("--init-decoder", type=Path)
     parser.add_argument("--ranking-candidates", type=int, default=0)
     parser.add_argument("--learning-rate", type=float, default=0.0004)
+    parser.add_argument("--fine-tune-encoder", action="store_true")
+    parser.add_argument("--encoder-learning-rate", type=float, default=0.00001)
+    parser.add_argument("--fresh-fraction", type=float)
     args = parser.parse_args()
     if min(args.epochs, args.steps, args.batch, args.evaluate_every, args.validation_samples) < 1:
         parser.error("counts must be positive")
     if args.ranking_candidates and (not 2 <= args.ranking_candidates <= 128 or not args.init_decoder):
         parser.error("ranking requires an initialized decoder and 2 to 128 candidates")
+    if args.fine_tune_encoder and not args.ranking_candidates:
+        parser.error("encoder fine-tuning requires initialized candidate ranking")
+    if args.fresh_fraction is not None and not 0 <= args.fresh_fraction <= 0.7:
+        parser.error("fresh fraction must be between zero and 0.7")
     torch.set_num_threads(4)
     torch.manual_seed(args.seed)
     rng = np.random.default_rng(args.seed)
@@ -79,6 +101,9 @@ def main():
         raise ValueError("spelling decoder requires a residual encoder")
     encoder = build_encoder(architecture).to(device).eval().requires_grad_(False)
     encoder.load_state_dict(saved["model"])
+    retriever = copy.deepcopy(encoder) if args.fine_tune_encoder else encoder
+    if args.fine_tune_encoder:
+        encoder.requires_grad_(True)
     proxies, words = saved["proxies"].to(device), saved["words"]
     inputs, targets, lengths = [values.to(device) for values in word_tokens(words)]
     if inputs.shape[1] > 64:
@@ -108,8 +133,9 @@ def main():
             validation[name] = torch.cat([part[i] for part in encoded])
         ranked = [proxy_scores(part, proxies).topk(128, dim=1) for part in validation["embedding"].split(192)]
         validation.update(similarity=torch.cat([part.values for part in ranked]), candidates=torch.cat([part.indices for part in ranked]))
-    del paths, encoded, ranked, saved
-    sampler = MotorSampler(words, device)
+    validation_paths = paths
+    del encoded, ranked, saved
+    sampler = MotorSampler(words, device) if args.fresh_fraction != 0 else None
     real_path = ROOT / "training/data/futo-large/train.jsonl"
     real, real_labels = load_recordings(real_path, {word: i for i, word in enumerate(words)})
     groups = real_word_groups(real_labels, device)
@@ -121,11 +147,21 @@ def main():
         if initial["metadata"]["encoder_sha256"] != encoder_hash or initial["words"] != words:
             raise ValueError("decoder initialization belongs to a different encoder or dictionary")
         model.load_state_dict(initial["model"])
+        if "context_model" in initial:
+            if not args.fine_tune_encoder:
+                raise ValueError("a jointly trained decoder requires its learned context")
+            encoder.load_state_dict(initial["context_model"])
+            refresh_context(encoder, validation_paths, validation)
         del initial
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=0.001)
+    groups_to_train = [{"params": model.parameters(), "lr": args.learning_rate}]
+    if args.fine_tune_encoder:
+        groups_to_train.append({"params": encoder.parameters(), "lr": args.encoder_learning_rate})
+    optimizer = torch.optim.AdamW(groups_to_train, weight_decay=0.001)
     schedule = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=0.00001)
     metadata = {"encoder_sha256": encoder_hash, "encoder_path": str(args.checkpoint),
         "decoder_initialization_sha256": decoder_hash,
+        "fine_tuned_context": args.fine_tune_encoder,
+        "context_normalization": "Fixed running statistics; encoder stays in evaluation mode during gradient updates",
         "objective": "Listwise candidate classification plus 0.25 times letter cross entropy" if args.ranking_candidates else "Full-spelling teacher-forced cross entropy",
         "arguments": {key: [str(p) for p in value] if key == "extra_train" else str(value) if isinstance(value, Path) else value for key, value in vars(args).items()},
         "train_corpora": [info for _, info in shards], "validation_corpus": val_info,
@@ -149,28 +185,35 @@ def main():
         print(json.dumps({"initial_spelling_validation": chosen}), flush=True)
         initial_path = args.output / "best.pt.tmp"
         torch.save({"model": model.state_dict(), "optimizer": optimizer.state_dict(), "scheduler": schedule.state_dict(),
-                    "epoch": -1, "best_score": best, "selected": chosen, "metadata": metadata, "words": words}, initial_path)
+                    "epoch": -1, "best_score": best, "selected": chosen, "metadata": metadata, "words": words,
+                    **({"context_model": encoder.state_dict()} if args.fine_tune_encoder else {})}, initial_path)
         initial_path.replace(args.output / "best.pt")
         (args.output / "best-metrics.json").write_text(json.dumps(initial_report, indent=2) + "\n")
     for epoch in range(args.epochs):
         model.train()
         began, accumulated = time.monotonic(), 0.0
         for step in range(args.steps):
-            nr, ns = args.batch * 15 // 100, args.batch // 4
+            nr = args.batch * 15 // 100
+            ns = args.batch // 4 if args.fresh_fraction is None else args.batch - nr - int(args.batch * args.fresh_fraction)
             nf = args.batch - nr - ns
             ri = balanced_real_indices(groups, nr)
             synthetic_paths, synthetic_labels = sample_corpora(shards, ns, rng, device)
-            fresh = sampler.labels(nf)
-            paths = torch.cat([real[ri], synthetic_paths, sampler.sample(fresh)])
-            labels = torch.cat([real_labels[ri], synthetic_labels, fresh])
-            with torch.no_grad():
+            path_parts, label_parts = [real[ri], synthetic_paths], [real_labels[ri], synthetic_labels]
+            if nf:
+                fresh = sampler.labels(nf)
+                path_parts.append(sampler.sample(fresh)); label_parts.append(fresh)
+            paths, labels = torch.cat(path_parts), torch.cat(label_parts)
+            if args.fine_tune_encoder:
+                sequence, raw, embeddings = differentiable_context(encoder, paths)
+            else:
                 sequence, raw, embeddings = encode(encoder, paths)
             memory = model.encode_memory(sequence, raw, embeddings)
             logits = model(memory, inputs[labels])
             loss = F.cross_entropy(logits.flatten(0, 1), targets[labels].flatten(), ignore_index=0)
             if args.ranking_candidates:
                 with torch.no_grad():
-                    similarity = proxy_scores(embeddings, proxies)
+                    retrieval_query = retriever(encoder_features(retriever, paths)) if args.fine_tune_encoder else embeddings
+                    similarity = proxy_scores(retrieval_query, proxies)
                     alternatives = similarity.masked_fill(torch.arange(len(words), device=device)[None] == labels[:, None], -torch.inf).topk(128, dim=1).indices
                     priority = torch.rand(alternatives.shape, device=device)
                     priority[:, :16] += 1
@@ -187,7 +230,8 @@ def main():
                 raise RuntimeError("nonfinite spelling loss")
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 5)
+            trainable = [*model.parameters()] + ([*encoder.parameters()] if args.fine_tune_encoder else [])
+            torch.nn.utils.clip_grad_norm_(trainable, 5)
             optimizer.step()
             accumulated += loss.item()
         schedule.step()
@@ -195,6 +239,8 @@ def main():
         chosen, improved = None, False
         if epoch == 0 or (epoch + 1) % args.evaluate_every == 0:
             model.eval()
+            if args.fine_tune_encoder:
+                refresh_context(encoder, validation_paths, validation)
             chosen, trials = evaluate(model, validation, inputs, targets, lengths)
             score = chosen["validation"]["memory"]["top1"]
             improved = score > best
@@ -204,7 +250,8 @@ def main():
         with (args.output / "history.jsonl").open("a") as output:
             output.write(json.dumps(report) + "\n")
         checkpoint = {"model": model.state_dict(), "optimizer": optimizer.state_dict(), "scheduler": schedule.state_dict(),
-                      "epoch": epoch, "best_score": best, "selected": chosen, "metadata": metadata, "words": words}
+                      "epoch": epoch, "best_score": best, "selected": chosen, "metadata": metadata, "words": words,
+                      **({"context_model": encoder.state_dict()} if args.fine_tune_encoder else {})}
         temporary = args.output / "latest.pt.tmp"
         torch.save(checkpoint, temporary); temporary.replace(args.output / "latest.pt")
         if improved:
