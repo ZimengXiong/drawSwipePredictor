@@ -2,11 +2,31 @@
 from pathlib import Path
 import tempfile
 import unittest
+import torch
 
 from prepare_complete_geometry import model_inventory, validate_roles
+from train_complete_geometry import derived_features, metrics
 
 
 class CompleteGeometryTests(unittest.TestCase):
+    def test_derived_margin_uses_each_query_and_rejects_popularity(self):
+        raw = torch.zeros(2, 3, 20)
+        raw[..., 4] = torch.tensor([[3.0, 1.0, 2.0], [8.0, 9.0, 7.0]])
+        result = derived_features(raw)
+        torch.testing.assert_close(result[..., 2], torch.tensor([[2.0, 0.0, 1.0], [1.0, 2.0, 0.0]]))
+        self.assertTrue(torch.all(raw[..., 2] == 0))
+        raw[..., 2] = 0.9
+        with self.assertRaisesRegex(ValueError, "unused popularity"):
+            derived_features(raw)
+
+    def test_metrics_count_missing_targets_and_exact_classes(self):
+        candidates = torch.tensor([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
+        scores = torch.tensor([[3.0, 2.0, 1.0]] * 3)
+        result = metrics(scores, candidates, torch.tensor([0, 99, 7]), torch.tensor([2, 2, 2]))
+        self.assertEqual(result["memory"]["samples"], 3)
+        self.assertEqual(result["memory"]["correct_top1"], 1)
+        self.assertEqual(result["memory"]["correct_top5"], 2)
+
     def test_training_rejects_reserved_and_overlapping_writers(self):
         development = {"vocabulary": 60000, "samples": 12000, "sha256": "dev", "seed": 700003,
                        "writer_start": 2000000, "writer_end": 2012000}
