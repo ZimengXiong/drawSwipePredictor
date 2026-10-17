@@ -61,7 +61,7 @@ def main():
     words, counts, paths = vocabulary(ROOT / "word_freq.txt", limit)
     model = model.to(args.device)
     if "proxies" in checkpoint:
-        vectors = torch.nn.functional.normalize(checkpoint["proxies"], dim=1).numpy()
+        vectors = torch.nn.functional.normalize(checkpoint["proxies"], dim=-1).numpy()
         if limit != len(vectors):
             raise ValueError("learned proxy vocabulary must match the exported vocabulary")
     else:
@@ -80,8 +80,11 @@ def main():
         if saved["words"].tolist() != words:
             raise ValueError("calibrated vocabulary differs from exported vocabulary")
         vectors = saved["vectors"]
-    bank = bytearray(b"SWPBK001")
-    bank.extend(struct.pack("<QII", fingerprint(encoded), len(words), vectors.shape[1]))
+    centers = vectors.shape[1] if vectors.ndim == 3 else 1
+    bank = bytearray(b"SWPBK002" if centers > 1 else b"SWPBK001")
+    bank.extend(struct.pack("<QII", fingerprint(encoded), len(words), vectors.shape[-1]))
+    if centers > 1:
+        bank.extend(struct.pack("<I", centers))
     popularity = np.log1p(counts) / np.log1p(counts.max())
     for word, pop, vector in zip(words, popularity, vectors):
         name = word.encode("ascii")
@@ -102,7 +105,7 @@ def main():
     training_metadata = json.loads(json.dumps(checkpoint["metadata"]).replace(str(ROOT) + "/", ""))
     report = {
         "schema_version": 1, "architecture": architecture,
-        "points": 64, "channels": 16 if architecture == "intrinsic" else 8, "embedding": 128, "vocabulary": len(words),
+        "points": 64, "channels": 16 if architecture == "intrinsic" else 8, "embedding": 128, "vocabulary": len(words), "route_centers": centers,
         "checkpoint_epoch": checkpoint["epoch"] + 1, "validation_score": checkpoint["best_score"],
         "encoder_sha256": hashlib.sha256(encoded).hexdigest(),
         "words_sha256": hashlib.sha256(bank).hexdigest(),

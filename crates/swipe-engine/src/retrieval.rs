@@ -22,6 +22,7 @@ pub struct RetrievalEngine {
     words: Vec<Word>,
     word_ids: HashMap<String, usize>,
     vectors: Vec<[f32; DIM]>,
+    centers: usize,
     prior_weight: f32,
     tta_degrees: f32,
     adaptive_prior: bool,
@@ -75,7 +76,10 @@ impl RetrievalEngine {
 
     pub fn from_bytes(model: &[u8], bank: &[u8]) -> Result<Self, String> {
         let encoder = Encoder::from_bytes(model)?;
-        if bank.get(..8) != Some(b"SWPBK001") || bank.len() < 24 {
+        let multiple = bank.get(..8) == Some(b"SWPBK002");
+        if (!multiple && bank.get(..8) != Some(b"SWPBK001"))
+            || bank.len() < if multiple { 28 } else { 24 }
+        {
             return Err("unsupported route word-bank format".into());
         }
         let tag = u64::from_le_bytes(bank[8..16].try_into().unwrap());
@@ -87,9 +91,17 @@ impl RetrievalEngine {
         if dimension != DIM || count == 0 || count > bank.len() / (2 + 4 + DIM * 4) {
             return Err("invalid route word-bank dimensions".into());
         }
-        let mut position = 24;
+        let centers = if multiple {
+            u32::from_le_bytes(bank[24..28].try_into().unwrap()) as usize
+        } else {
+            1
+        };
+        if !(1..=8).contains(&centers) {
+            return Err("invalid number of word-route centers".into());
+        }
+        let mut position = if multiple { 28 } else { 24 };
         let mut words = Vec::with_capacity(count);
-        let mut vectors = Vec::with_capacity(count);
+        let mut vectors = Vec::with_capacity(count * centers);
         let mut seen = HashSet::new();
         for _ in 0..count {
             let length = bank
@@ -111,7 +123,7 @@ impl RetrievalEngine {
             }
             position += length;
             let values = bank
-                .get(position..position + (DIM + 1) * 4)
+                .get(position..position + (DIM * centers + 1) * 4)
                 .ok_or("truncated word-bank vector")?;
             let values: Vec<_> = values
                 .as_chunks::<4>()
@@ -122,10 +134,13 @@ impl RetrievalEngine {
             if values.iter().any(|v| !v.is_finite()) || !(0.0..=1.0).contains(&values[0]) {
                 return Err("invalid word-bank values".into());
             }
-            let vector: [f32; DIM] = values[1..].try_into().unwrap();
-            let norm = vector.iter().map(|v| v * v).sum::<f32>();
-            if !(0.99..=1.01).contains(&norm) {
-                return Err("word-bank vector is not normalized".into());
+            for center in values[1..].chunks_exact(DIM) {
+                let vector: [f32; DIM] = center.try_into().unwrap();
+                let norm = vector.iter().map(|v| v * v).sum::<f32>();
+                if !(0.99..=1.01).contains(&norm) {
+                    return Err("word-bank vector is not normalized".into());
+                }
+                vectors.push(vector);
             }
             if text.bytes().all(|b| b == text.as_bytes()[0]) {
                 return Err("stationary word-bank route".into());
@@ -135,8 +150,7 @@ impl RetrievalEngine {
                 text,
                 popularity: values[0],
             });
-            vectors.push(vector);
-            position += (DIM + 1) * 4;
+            position += (DIM * centers + 1) * 4;
         }
         if position != bank.len() {
             return Err("word bank has trailing data".into());
@@ -150,6 +164,7 @@ impl RetrievalEngine {
                 .collect(),
             words,
             vectors,
+            centers,
             prior_weight: 0.025,
             tta_degrees: 0.0,
             adaptive_prior: false,
@@ -186,7 +201,7 @@ impl RetrievalEngine {
     /// Restrict the frequency-ordered vocabulary, for paired benchmarks.
     pub fn truncate_vocabulary(&mut self, count: usize) {
         self.words.truncate(count);
-        self.vectors.truncate(count);
+        self.vectors.truncate(count * self.centers);
     }
 
     pub fn set_prior_weight(&mut self, weight: f32) {
@@ -306,10 +321,10 @@ impl RetrievalEngine {
         }
         let mut ranked: Vec<_> = self
             .vectors
-            .iter()
+            .chunks_exact(self.centers)
             .enumerate()
-            .map(|(index, vector)| {
-                let similarity = dot(&query, vector);
+            .map(|(index, centers)| {
+                let similarity = center_similarity(&query, centers);
                 let distance = (1.0 - similarity).max(0.0);
                 let popularity = self.words[index].popularity;
                 let rating = if self.adaptive_prior {
@@ -358,6 +373,28 @@ impl RetrievalEngine {
             })
             .collect()
     }
+}
+
+/// Soft assignment preserves distinct motor modes without adding word priors.
+fn center_similarity(query: &[f32; DIM], centers: &[[f32; DIM]]) -> f32 {
+    if centers.len() == 1 {
+        return dot(query, &centers[0]);
+    }
+    let mut scores = [0.0_f32; 8];
+    for (score, center) in scores.iter_mut().zip(centers) {
+        *score = dot(query, center);
+    }
+    let maximum = scores[..centers.len()]
+        .iter()
+        .copied()
+        .fold(f32::NEG_INFINITY, f32::max);
+    let (mut numerator, mut denominator) = (0.0, 0.0);
+    for score in &scores[..centers.len()] {
+        let weight = ((score - maximum) / 0.1).exp();
+        numerator += weight * score;
+        denominator += weight;
+    }
+    numerator / denominator
 }
 
 fn fingerprint(data: &[u8]) -> u64 {
