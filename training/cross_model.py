@@ -36,6 +36,8 @@ class RouteCrossRanker(nn.Module):
             coordinates = coordinates - (coordinates * present).sum(1, keepdim=True) / sizes.reshape(-1, 1, 1)
             scale = (coordinates.square().sum(2) * (~padding)).sum(1) / sizes.reshape(-1)
             coordinates = coordinates / scale.clamp_min(1e-6).sqrt()[:, None, None]
+            endpoint = coordinates.gather(1, (sizes.reshape(-1, 1, 1) - 1).expand(-1, -1, 2))
+            coordinates = torch.where(padding[:, :, None], endpoint, coordinates)
             previous = torch.cat([coordinates[:, :1], coordinates[:, :-1]], dim=1)
             following = torch.cat([coordinates[:, 1:], coordinates[:, -1:]], dim=1)
             progress = positions[None].expand(len(coordinates), -1) / (sizes.reshape(-1, 1) - 1).clamp_min(1)
