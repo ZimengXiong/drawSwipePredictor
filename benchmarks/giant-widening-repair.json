@@ -1,0 +1,35 @@
+{
+  "source_sha256": "7ff5d7b2ebfd7440c0f9b73aa4540564043f6bc14457473b869e99e2a5ad8b8c",
+  "source_epoch": 5,
+  "seed": 900359,
+  "revived": [
+    {
+      "block": 0,
+      "hidden_channels": 320
+    },
+    {
+      "block": 1,
+      "hidden_channels": 320
+    },
+    {
+      "block": 2,
+      "hidden_channels": 320
+    },
+    {
+      "block": 3,
+      "hidden_channels": 320
+    },
+    {
+      "block": 4,
+      "hidden_channels": 320
+    },
+    {
+      "block": 5,
+      "hidden_channels": 320
+    }
+  ],
+  "max_embedding_change": 0.0,
+  "reference": "Eight random geometry probes; no evaluation data",
+  "test_data_used": false,
+  "optimizer_parameter_order_unchanged": true
+}

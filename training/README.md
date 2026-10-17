@@ -2,6 +2,8 @@
 
 The retrieval model learns to match a drawing to a word's keyboard route. Training combines real human recordings, synthetic drawings, and new distortions generated on the GPU. You do not need to record or label gestures yourself.
 
+For the larger-model experiments and the protected 80% target, see [the experiment guide](EXPERIMENTS.md).
+
 Run these commands from the repository root. Install Rust, Python, and [uv](https://docs.astral.sh/uv/) first.
 
 ## Get real recordings
