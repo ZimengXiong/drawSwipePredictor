@@ -1,0 +1,91 @@
+{
+  "checkpoints": [
+    {
+      "path": "checkpoints/completed-intrinsic-v1.pt",
+      "sha256": "89a68311ded7735485a232d212691ea5e941c7fdee11318ff6f0358fcb741727",
+      "architecture": "intrinsic",
+      "epoch": 178
+    },
+    {
+      "path": "checkpoints/exact-low-probe-v1.pt",
+      "sha256": "678119fdb5a287e2a845520e48afc6dd546294a64e313df047daa5586caa4706",
+      "architecture": "large",
+      "epoch": 53
+    },
+    {
+      "path": "checkpoints/wide512-probe-v1.pt",
+      "sha256": "be02eac8fa11d5dc1bd29613fcba7de1456ce1dbfd698fb9f11f3e1426f13dee",
+      "architecture": "wide512",
+      "epoch": 86
+    },
+    {
+      "path": "checkpoints/wide512-probe-v2.pt",
+      "sha256": "9035e7f8637fce217ea1b240e35e4c3dd0db05979292e494d18e43e193231950",
+      "architecture": "wide512",
+      "epoch": 100
+    },
+    {
+      "path": "checkpoints/synthetic-only-probe-v2.pt",
+      "sha256": "5f0a9b1a6b42d1f82d8d7648486271d1e200850342686171c66a51288b1699a6",
+      "architecture": "large",
+      "epoch": 41
+    },
+    {
+      "path": "checkpoints/real-expanded-probe-v1.pt",
+      "sha256": "f055a302b235b9cb4f74d61c0781267371cb5ea0dccad48fb314a2a96be054d6",
+      "architecture": "large",
+      "epoch": 55
+    }
+  ],
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "test_data_used": false,
+  "full_vocabulary": 60000,
+  "weight_grid": "Quarter-weight simplex mixtures with at most four active models; equal weights included for two to four candidates",
+  "native_component_limit": 4,
+  "source_sha256": "28a54a7fc00736d8cc591c37875b30bfc45a983aca3c4ee467f64afc55ec9a99",
+  "selection": "Full-vocabulary exact-word memory development top1",
+  "selected": {
+    "weights": [
+      0,
+      0,
+      0,
+      0.5,
+      0.5,
+      0
+    ],
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "top1": 0.9624999761581421,
+        "top5": 0.9991666674613953,
+        "top32": 1.0,
+        "top128": 1.0
+      },
+      "loose": {
+        "samples": 2400,
+        "top1": 0.8687499761581421,
+        "top5": 0.9616666436195374,
+        "top32": 0.9933333396911621,
+        "top128": 1.0
+      },
+      "memory": {
+        "samples": 8400,
+        "top1": 0.7288095355033875,
+        "top5": 0.8927381038665771,
+        "top32": 0.9769047498703003,
+        "top128": 0.9953571557998657
+      }
+    }
+  },
+  "raw_report_sha256": "8d37caac4436e66b7d8b5549746bbd8a3d5badd00056d0b2ae1b85582311f205",
+  "native_verified": false,
+  "promoted_to_app": false,
+  "limits": "All development rows and all 60,000 candidates. No benchmark or confirmation evaluation. Complete spelling comparisons remain separate from word-only scores."
+}
