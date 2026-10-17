@@ -1,6 +1,7 @@
 //! Word retrieval using a neural embedding learned from real and synthetic swipes.
 use crate::character::CharacterModel;
 use crate::retrieval_encoder::{dot, Encoder, DIM};
+use crate::spelling::SpellingModel;
 use crate::{Prediction, ScoreBreakdown};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -35,6 +36,8 @@ pub struct RetrievalEngine {
     adaptive_prior: bool,
     ranker: Option<Ranker>,
     character: Option<CharacterModel>,
+    spelling: Option<(Encoder, SpellingModel)>,
+    spelling_required: bool,
     auxiliary: Option<Auxiliary>,
     auxiliary_weight: f32,
     auxiliary_tags: [u64; 2],
@@ -121,6 +124,32 @@ impl RetrievalEngine {
                 engine.character = Some(model);
             }
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error.to_string()),
+        }
+        match std::fs::read(directory.as_ref().join("spelling.bin")) {
+            Ok(bytes) => {
+                let model = SpellingModel::from_bytes(&bytes)?;
+                let context = std::fs::read(directory.as_ref().join("spelling/encoder.bin"))
+                    .map_err(|e| e.to_string())?;
+                if model.context_tag != fingerprint(&context)
+                    || model.encoder_tag != fingerprint(&encoder)
+                    || model.bank_tag != engine.character_binding(&bank)
+                {
+                    return Err("spelling decoder belongs to a different retrieval context".into());
+                }
+                if engine.ranker.is_some()
+                    || engine.character.is_some()
+                    || engine.prior_weight != 0.0
+                    || engine.tta_degrees != 0.0
+                    || engine.adaptive_prior
+                    || engine.words.iter().any(|word| word.text.len() >= 64)
+                {
+                    return Err("spelling decoding requires its exported retrieval settings".into());
+                }
+                engine.spelling = Some((Encoder::from_bytes(&context)?, model));
+            }
+            Err(error)
+                if error.kind() == std::io::ErrorKind::NotFound && !engine.spelling_required => {}
             Err(error) => return Err(error.to_string()),
         }
         Ok(engine)
@@ -249,6 +278,8 @@ impl RetrievalEngine {
             adaptive_prior: false,
             ranker: None,
             character: None,
+            spelling: None,
+            spelling_required: false,
             auxiliary: None,
             auxiliary_weight: 0.0,
             auxiliary_tags: [0, 0],
@@ -270,6 +301,8 @@ impl RetrievalEngine {
             auxiliary_encoder_tag: u64,
             #[serde(default)]
             auxiliary_bank_tag: u64,
+            #[serde(default)]
+            spelling: Option<serde_json::Value>,
         }
         let settings: Settings = serde_json::from_str(json).map_err(|e| e.to_string())?;
         if !(0.0..=2.0).contains(&settings.prior_weight)
@@ -283,6 +316,7 @@ impl RetrievalEngine {
         self.adaptive_prior = settings.adaptive_prior;
         self.auxiliary_weight = settings.auxiliary_weight;
         self.auxiliary_tags = [settings.auxiliary_encoder_tag, settings.auxiliary_bank_tag];
+        self.spelling_required = settings.spelling.is_some();
         Ok(())
     }
 
@@ -317,6 +351,13 @@ impl RetrievalEngine {
             .log_probabilities(&self.encoder.context(path)?)
     }
 
+    /// Expose full spelling costs for cross-runtime verification.
+    pub fn spelling_costs(&self, path: &[(f64, f64)], words: &[String]) -> Option<Vec<f32>> {
+        let (encoder, model) = self.spelling.as_ref()?;
+        let memory = model.prepare(&encoder.context(path)?)?;
+        words.iter().map(|word| model.cost(&memory, word)).collect()
+    }
+
     /// Extract the same candidate features used during deployed reranking.
     pub fn ranking_features(&self, path: &[(f64, f64)], limit: usize) -> Vec<Candidate> {
         let predictions = self.retrieve(path, limit, true);
@@ -345,6 +386,33 @@ impl RetrievalEngine {
     }
 
     pub fn predict_from_path(&self, path: &[(f64, f64)], limit: usize) -> Vec<Prediction> {
+        if let Some((encoder, model)) = &self.spelling {
+            if limit == 0 {
+                return Vec::new();
+            }
+            let Some(context) = encoder.context(path) else {
+                return Vec::new();
+            };
+            let Some(memory) = model.prepare(&context) else {
+                return Vec::new();
+            };
+            let Some(query) = self.encoder.embed(path) else {
+                return Vec::new();
+            };
+            let mut candidates = self.rank_query(&query, path, 128, false);
+            for candidate in &mut candidates {
+                let Some(cost) = model.cost(&memory, &candidate.word) else {
+                    return Vec::new();
+                };
+                candidate.rating = (cost
+                    / ((candidate.word.len() + 1) as f32).powf(model.length_power)
+                    - model.proxy_weight * 32.0 * (1.0 - candidate.raw_score as f32))
+                    as f64;
+            }
+            candidates.sort_by(|a, b| a.rating.total_cmp(&b.rating).then(a.word.cmp(&b.word)));
+            candidates.truncate(limit);
+            return candidates;
+        }
         if let Some(model) = &self.character {
             if limit == 0 {
                 return Vec::new();
