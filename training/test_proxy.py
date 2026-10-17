@@ -11,6 +11,7 @@ import torch
 from torch import nn
 
 from intrinsic_features import intrinsic_features
+from generative_fit import MotorFitter
 from character_edit import ctc_edit_components, edit_log_likelihood
 from character_model import character_targets, candidate_ctc_cost
 from motor_sampler import MotorSampler
@@ -65,6 +66,26 @@ class ProxyTests(unittest.TestCase):
         torch.testing.assert_close(combined[2], ordinary[2])
         gradients = torch.autograd.grad(combined.sum(), probabilities)[0]
         self.assertTrue(torch.isfinite(gradients).all())
+
+    def test_motor_fitter_preserves_endpoints_in_omission_hypotheses(self):
+        fitter = MotorFitter(["abaca", "world", "abcd"], "cpu")
+        candidates = torch.arange(3)[None]
+        keys, lengths, valid, variants = fitter.hypotheses(candidates)
+        keys, lengths = keys[valid.reshape(-1)], lengths[valid.reshape(-1)]
+        originals = fitter.keys[candidates.reshape(-1)][:, None].expand(-1, variants, -1).reshape(-1, fitter.keys.shape[1])[valid.reshape(-1)]
+        torch.testing.assert_close(keys[:, 0], originals[:, 0])
+        ends = keys[torch.arange(len(keys)), lengths - 1]
+        expected = fitter.keys[torch.arange(3), fitter.lengths - 1][:, None].expand(-1, variants).reshape(-1)[valid.reshape(-1)]
+        torch.testing.assert_close(ends, expected)
+        self.assertEqual(int(valid[-1].sum()), 1)
+
+    def test_motor_fitter_has_finite_gradients(self):
+        fitter = MotorFitter(["helical", "pineapples"], "cpu")
+        parameters = torch.zeros(2, 70 + fitter.keys.shape[1] - 2, requires_grad=True)
+        paths = fitter.render(fitter.keys, fitter.lengths, parameters)
+        self.assertTrue(torch.isfinite(paths).all())
+        (paths - torch.randn_like(paths)).square().mean().backward()
+        self.assertTrue(torch.isfinite(parameters.grad).all())
 
     def test_word_mode_order_cannot_change_scores(self):
         query = torch.nn.functional.normalize(torch.randn(8, 128), dim=1)

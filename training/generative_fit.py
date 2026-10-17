@@ -52,7 +52,7 @@ class MotorFitter:
         points = torch.where((positions == 0)[:, :, None], first[:, None], points)
         points = torch.where((positions >= lengths[:, None] - 1)[:, :, None], last[:, None], points)
         amount = 0.275 + p[:, 59:60, None] * 0.175
-        asymmetry = 1 + p[:, 60:61, None] * 0.35
+        asymmetry = 1 + p[:, 70:70 + width - 2, None] * 0.35
         current = points[:, 1:-1]
         entry = current + amount * (points[:, :-2] - current)
         exit = current + amount * asymmetry * (points[:, 2:] - current)
@@ -103,7 +103,7 @@ class MotorFitter:
         keep = valid.reshape(-1)
         keys, lengths = keys[keep], lengths[keep]
         repeated = query[:, None, None].expand(-1, candidates.shape[1], variants, -1, -1).reshape(-1, 64, 2)[keep]
-        parameters = torch.zeros(len(keys), 70, device=self.device, requires_grad=True)
+        parameters = torch.zeros(len(keys), 70 + keys.shape[1] - 2, device=self.device, requires_grad=True)
         optimizer = torch.optim.Adam([parameters], lr=learning_rate)
         best = torch.full((len(keys),), torch.inf, device=self.device)
         best_error, best_penalty = best.clone(), best.clone()
