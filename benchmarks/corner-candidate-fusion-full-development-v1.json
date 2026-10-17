@@ -1,0 +1,167 @@
+{
+  "test_data_used": false,
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "samples": 12000,
+  "full_vocabulary": 60000,
+  "source_sha256": "aa6eb03a38f71f9506747a8853ff11f39c42cf5ea251332796cb5451e4e011e3",
+  "inputs_sha256": {
+    "checkpoints/route-spelling-full-v1.json": "7b2d5f60f53d6536f161d3e0242ce892535fa3e569a6643f97b8dab1d8cbba20",
+    "checkpoints/visited-routes-full-development-v1.json": "d9fc3207332fd6a7c5b03f2c9ebf8b8ac2d80db0111b46ef59238333a8065d2e",
+    "data/memory-proxy/validation.bin": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+    "checkpoints/waypoint-aligned-full-v2.json": "1c15c2cab3770a47db6ef8b0fbf060b18cb16b2e6254ae28ef76540fe1156b2e",
+    "checkpoints/candidate-matcher-full-v1.json": "7ac560412ad1d46a2991d721bc9c7e264f68c65ef1d7da972ab9893a09c49c26",
+    "checkpoints/route-spelling-full-v1.scores.npz": "5939d4d876aa40d8874329237217cdff6f016a2ce3cb92634939f8020e3f7397",
+    "checkpoints/visited-routes-full-development-v1.scores.npz": "c087ef87ebc223d7b09ff955489a0533eb1da7772bceeb9a965092ffcf006977",
+    "checkpoints/waypoint-aligned-full-v2.scores.npz": "b1e8d098b3d81c358468b40e9a6064be77dad97248e324c105d07abcf0dca62e",
+    "checkpoints/candidate-matcher-full-v1.scores.npz": "7662580a476380640d63e23feaab55ef0450fcf52fdfc990cbc638d1628ac2dd",
+    "checkpoints/proxy-giant-strong-init.pt": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1"
+  },
+  "evidence": [
+    {
+      "path": "checkpoints/waypoint-aligned-full-v2.json",
+      "sha256": "1c15c2cab3770a47db6ef8b0fbf060b18cb16b2e6254ae28ef76540fe1156b2e",
+      "kind": "corners"
+    },
+    {
+      "path": "checkpoints/candidate-matcher-full-v1.json",
+      "sha256": "7ac560412ad1d46a2991d721bc9c7e264f68c65ef1d7da972ab9893a09c49c26",
+      "kind": "matcher"
+    }
+  ],
+  "both_baseline_counts_verified": true,
+  "inputs_unchanged_through_scoring": true,
+  "selected": {
+    "base": "complete",
+    "weights": [
+      1.0,
+      0.0
+    ],
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "correct_top1": 1154,
+        "correct_top5": 1198,
+        "top1": 0.9616666666666667,
+        "top5": 0.9983333333333333
+      },
+      "loose": {
+        "samples": 2400,
+        "correct_top1": 2102,
+        "correct_top5": 2319,
+        "top1": 0.8758333333333334,
+        "top5": 0.96625
+      },
+      "memory": {
+        "samples": 8400,
+        "correct_top1": 6193,
+        "correct_top5": 7546,
+        "top1": 0.7372619047619048,
+        "top5": 0.8983333333333333
+      }
+    }
+  },
+  "selected_by_base": {
+    "word": {
+      "base": "word",
+      "weights": [
+        1.0,
+        0.0
+      ],
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1155,
+          "correct_top5": 1199,
+          "top1": 0.9625,
+          "top5": 0.9991666666666666
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2104,
+          "correct_top5": 2324,
+          "top1": 0.8766666666666667,
+          "top5": 0.9683333333333334
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6181,
+          "correct_top5": 7536,
+          "top1": 0.7358333333333333,
+          "top5": 0.8971428571428571
+        }
+      }
+    },
+    "complete": {
+      "base": "complete",
+      "weights": [
+        1.0,
+        0.0
+      ],
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1154,
+          "correct_top5": 1198,
+          "top1": 0.9616666666666667,
+          "top5": 0.9983333333333333
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2102,
+          "correct_top5": 2319,
+          "top1": 0.8758333333333334,
+          "top5": 0.96625
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6193,
+          "correct_top5": 7546,
+          "top1": 0.7372619047619048,
+          "top5": 0.8983333333333333
+        }
+      }
+    }
+  },
+  "native_supported": false,
+  "limits": "Full separate development only. All rows and identical natural128 candidates retained. Cached scores originate from point-only inference; labels and difficulty are used only for selection and reporting. No target insertion, aliases, benchmark, or confirmation data.",
+  "raw_report_sha256": "d52be3ad21dccf065ae9134f0db3d358cb58e942281d971fc1ee54a8421d1884",
+  "trial_csv_sha256": "cd7e843dd540f22e9f2eecf67c41f13ea512495fc9ff887310bcbbd8d4ef2b48",
+  "trial_count": 98,
+  "matcher_word_only": {
+    "base": "word",
+    "weights": [
+      0.0,
+      0.5
+    ],
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "correct_top1": 1150,
+        "correct_top5": 1198,
+        "top1": 0.9583333333333334,
+        "top5": 0.9983333333333333
+      },
+      "loose": {
+        "samples": 2400,
+        "correct_top1": 2099,
+        "correct_top5": 2317,
+        "top1": 0.8745833333333334,
+        "top5": 0.9654166666666667
+      },
+      "memory": {
+        "samples": 8400,
+        "correct_top1": 6153,
+        "correct_top5": 7530,
+        "top1": 0.7325,
+        "top5": 0.8964285714285715
+      }
+    }
+  }
+}

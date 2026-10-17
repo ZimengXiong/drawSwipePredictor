@@ -1,0 +1,255 @@
+{
+  "test_data_used": false,
+  "kind": "matcher",
+  "development": {
+    "samples": 12000,
+    "vocabulary": 60000,
+    "seed": 700003,
+    "writer_start": 700005100009,
+    "writer_end": 700005112009,
+    "sha256": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e"
+  },
+  "samples": 12000,
+  "full_development": true,
+  "full_vocabulary": 60000,
+  "encoder_sha256": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+  "evidence_sha256": "060bb648ecb6e6b09adf690178b3756de1b08746c47339fc7cce0f692ce2abe2",
+  "evidence_epoch": 1,
+  "source_sha256": {
+    "evaluate_candidate_evidence.py": "b3df2d8e5fcb00a16b6a39f3a44317c7d89cc423b69b81ada048f05a6c5bec62",
+    "candidate_model.py": "df881d7b7fdd9247a6c2f3472f0bcd7dd4b5376fc5b9f44f903e22ce791debc0",
+    "autoregressive_model.py": "ed7359182c6d3cbb842e3e9c5b4353367e1f752649b000743dc05173d6856a7d",
+    "visited_route_model.py": "a82b1601bffec3448c0632cc9945c0d91cf7a1671c2f19ea474d99e36d39de7e",
+    "retrieval_model.py": "6be42de79e9777a97ef5cebcba60ce8b96fc840cdbf43aee532501e25cd87d4d",
+    "large_encoder.py": "41767ccc94c0d872490cb8a76866fb5f564d6c3179218bd0e2b0ed51c284a7e4",
+    "train_character.py": "cc7be7cc0cdda75cc37fbb90dd2b487853c09ff721a82e3e2b1d1c94defcb6fc"
+  },
+  "inputs_sha256": {
+    "checkpoints/proxy-giant-strong-init.pt": "228041dfd3329c4fb597756d7e850eca5513488fef420fab0c64ed7b5e67f9d1",
+    "checkpoints/candidate-matcher-probe-v1.pt": "060bb648ecb6e6b09adf690178b3756de1b08746c47339fc7cce0f692ce2abe2",
+    "checkpoints/route-spelling-full-v1.json": "7b2d5f60f53d6536f161d3e0242ce892535fa3e569a6643f97b8dab1d8cbba20",
+    "checkpoints/visited-routes-full-development-v1.json": "d9fc3207332fd6a7c5b03f2c9ebf8b8ac2d80db0111b46ef59238333a8065d2e",
+    "data/memory-proxy/validation.bin": "b44e8ddf9ad45402aceb6c88e2d9cc8a36e415bef508a87c9e6981914498a85e",
+    "checkpoints/route-spelling-full-v1.scores.npz": "5939d4d876aa40d8874329237217cdff6f016a2ce3cb92634939f8020e3f7397",
+    "checkpoints/visited-routes-full-development-v1.scores.npz": "c087ef87ebc223d7b09ff955489a0533eb1da7772bceeb9a965092ffcf006977"
+  },
+  "score_cache_sha256": "7662580a476380640d63e23feaab55ef0450fcf52fdfc990cbc638d1628ac2dd",
+  "fixed_spelling_settings": {
+    "length_power": 0.3,
+    "proxy_weight": 4.0
+  },
+  "baseline_full_counts_verified": true,
+  "inputs_unchanged_through_scoring": true,
+  "trials": [
+    {
+      "evidence_weight": 0.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1153,
+          "correct_top5": 1199,
+          "top1": 0.9608333333333333,
+          "top5": 0.9991666666666666
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2092,
+          "correct_top5": 2307,
+          "top1": 0.8716666666666667,
+          "top5": 0.96125
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6171,
+          "correct_top5": 7557,
+          "top1": 0.7346428571428572,
+          "top5": 0.8996428571428572
+        }
+      }
+    },
+    {
+      "evidence_weight": 0.1,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1151,
+          "correct_top5": 1199,
+          "top1": 0.9591666666666666,
+          "top5": 0.9991666666666666
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2091,
+          "correct_top5": 2310,
+          "top1": 0.87125,
+          "top5": 0.9625
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6167,
+          "correct_top5": 7552,
+          "top1": 0.7341666666666666,
+          "top5": 0.8990476190476191
+        }
+      }
+    },
+    {
+      "evidence_weight": 0.25,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1151,
+          "correct_top5": 1198,
+          "top1": 0.9591666666666666,
+          "top5": 0.9983333333333333
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2091,
+          "correct_top5": 2312,
+          "top1": 0.87125,
+          "top5": 0.9633333333333334
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6168,
+          "correct_top5": 7554,
+          "top1": 0.7342857142857143,
+          "top5": 0.8992857142857142
+        }
+      }
+    },
+    {
+      "evidence_weight": 0.5,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1150,
+          "correct_top5": 1198,
+          "top1": 0.9583333333333334,
+          "top5": 0.9983333333333333
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2097,
+          "correct_top5": 2315,
+          "top1": 0.87375,
+          "top5": 0.9645833333333333
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6156,
+          "correct_top5": 7543,
+          "top1": 0.7328571428571429,
+          "top5": 0.8979761904761905
+        }
+      }
+    },
+    {
+      "evidence_weight": 1.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1152,
+          "correct_top5": 1198,
+          "top1": 0.96,
+          "top5": 0.9983333333333333
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2102,
+          "correct_top5": 2310,
+          "top1": 0.8758333333333334,
+          "top5": 0.9625
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6143,
+          "correct_top5": 7527,
+          "top1": 0.7313095238095239,
+          "top5": 0.8960714285714285
+        }
+      }
+    },
+    {
+      "evidence_weight": 2.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1143,
+          "correct_top5": 1198,
+          "top1": 0.9525,
+          "top5": 0.9983333333333333
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 2094,
+          "correct_top5": 2304,
+          "top1": 0.8725,
+          "top5": 0.96
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 6042,
+          "correct_top5": 7444,
+          "top1": 0.7192857142857143,
+          "top5": 0.8861904761904762
+        }
+      }
+    },
+    {
+      "evidence_weight": 4.0,
+      "validation": {
+        "clean": {
+          "samples": 1200,
+          "correct_top1": 1131,
+          "correct_top5": 1195,
+          "top1": 0.9425,
+          "top5": 0.9958333333333333
+        },
+        "loose": {
+          "samples": 2400,
+          "correct_top1": 1983,
+          "correct_top5": 2235,
+          "top1": 0.82625,
+          "top5": 0.93125
+        },
+        "memory": {
+          "samples": 8400,
+          "correct_top1": 5589,
+          "correct_top5": 6950,
+          "top1": 0.6653571428571429,
+          "top5": 0.8273809523809523
+        }
+      }
+    }
+  ],
+  "selected": {
+    "evidence_weight": 0.0,
+    "validation": {
+      "clean": {
+        "samples": 1200,
+        "correct_top1": 1153,
+        "correct_top5": 1199,
+        "top1": 0.9608333333333333,
+        "top5": 0.9991666666666666
+      },
+      "loose": {
+        "samples": 2400,
+        "correct_top1": 2092,
+        "correct_top5": 2307,
+        "top1": 0.8716666666666667,
+        "top5": 0.96125
+      },
+      "memory": {
+        "samples": 8400,
+        "correct_top1": 6171,
+        "correct_top5": 7557,
+        "top1": 0.7346428571428572,
+        "top5": 0.8996428571428572
+      }
+    }
+  },
+  "native_supported": false,
+  "limits": "Fixed complete spelling baseline and identical natural128 lists from all60000 words. Every selected row counts, including missing targets. Prediction receives points and public candidate spellings only. No true target, visited count, writer identity, or difficulty enters inference. No benchmark or confirmation used. Subset scores are not full-development accuracy."
+}
