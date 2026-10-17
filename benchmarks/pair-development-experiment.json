@@ -1,0 +1,30 @@
+{
+  "experiment": "pair-proxy-v1",
+  "status": "stopped after 40 epochs because memory development accuracy stalled",
+  "best": {
+    "epoch": 21,
+    "loss": 0.9131399687131246,
+    "validation": {
+      "clean": {
+        "samples": 304,
+        "top1": 0.9440789222717285,
+        "top5": 0.9967105388641357
+      },
+      "loose": {
+        "samples": 608,
+        "top1": 0.7615131735801697,
+        "top5": 0.8865131735801697
+      },
+      "memory": {
+        "samples": 2088,
+        "top1": 0.5507662892341614,
+        "top5": 0.7356321811676025
+      }
+    },
+    "seconds": 5.681672250007978,
+    "best_score": 0.5507662892341614,
+    "improved": true
+  },
+  "test_data_used": false,
+  "next_step": "Prioritize the larger residual encoder and fresh online writers; retain candidate-comparison research as a development experiment."
+}
