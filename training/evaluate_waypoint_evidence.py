@@ -56,6 +56,7 @@ def main():
         raise ValueError('training count-prior source differs')
     bound = {str(path): digest(path) for path in [args.checkpoint, args.corners,
              args.training_data, args.fusion_report, args.route_report]}
+    bound[str(args.data)] = info['sha256']
     sources = {name: digest(Path(name)) for name in ['evaluate_waypoint_evidence.py',
                'waypoint_evidence.py', 'waypoint_model.py', 'aligned_waypoint_model.py',
                'retrieval_model.py', 'large_encoder.py', 'visited_route_model.py']}
