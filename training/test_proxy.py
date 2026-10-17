@@ -14,7 +14,7 @@ from torch import nn
 
 from intrinsic_features import intrinsic_features
 from amortized_motor import AmortizedMotor, retained_training_keys
-from autoregressive_model import SpellingDecoder, word_tokens, END
+from autoregressive_model import SpellingDecoder, word_tokens, END, decoder_dimensions, load_decoder, expand_decoder
 from cross_model import RouteCrossRanker
 from large_encoder import expand_encoder, expand_word_space
 from generative_fit import MotorFitter, route_mixture_cost
@@ -37,6 +37,31 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProxyTests(unittest.TestCase):
+    def test_deeper_decoder_preserves_scores_and_learns_added_outputs(self):
+        original = SpellingDecoder(width=48, layers=1).eval()
+        expanded = SpellingDecoder(width=48, layers=3).eval()
+        expand_decoder(expanded, original.state_dict())
+        memory = torch.randn(2, 32, 48)
+        inputs = torch.tensor([[27, 3, 1, 20], [27, 4, 15, 7]])
+        with torch.no_grad():
+            torch.testing.assert_close(expanded(memory, inputs), original(memory, inputs), atol=0, rtol=0)
+        optimizer = torch.optim.AdamW(expanded.parameters(), lr=0.001)
+        targets = torch.tensor([[3, 1, 20, 28], [4, 15, 7, 28]])
+        torch.nn.functional.cross_entropy(expanded(memory, inputs).flatten(0, 1), targets.flatten()).backward()
+        for block in expanded.decoder.layers[1:]:
+            for output in [block.self_attn.out_proj, block.multihead_attn.out_proj, block.linear2]:
+                self.assertTrue(torch.isfinite(output.weight.grad).all())
+                self.assertGreater(output.weight.grad.norm().item(), 0)
+        optimizer.step()
+        self.assertEqual(decoder_dimensions(expanded.state_dict()), (48, 3, 64))
+        restored = load_decoder(expanded.state_dict(), 8).eval()
+        torch.testing.assert_close(restored(memory, inputs), expanded(memory, inputs), atol=0, rtol=0)
+        with self.assertRaisesRegex(ValueError, "remove blocks"):
+            expand_decoder(original, expanded.state_dict())
+        invalid = {key: value for key, value in expanded.state_dict().items() if not key.startswith("decoder.layers.1.")}
+        with self.assertRaisesRegex(ValueError, "contiguous"):
+            load_decoder(invalid, 8)
+
     def test_synthetic_only_batch_keeps_generated_errors_and_label_order(self):
         empty = torch.empty(0, 64, 2)
         empty_labels = torch.empty(0, dtype=torch.long)

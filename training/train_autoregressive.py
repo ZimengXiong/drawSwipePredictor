@@ -13,7 +13,7 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
-from autoregressive_model import SpellingDecoder, word_tokens
+from autoregressive_model import SpellingDecoder, word_tokens, decoder_dimensions, expand_decoder
 from motor_sampler import MotorSampler
 from retrieval_model import build_encoder, encoder_features, load_recordings
 from train_character import encode
@@ -77,6 +77,8 @@ def main():
     parser.add_argument("--seed", type=int, default=900419)
     parser.add_argument("--validation-seed", type=int)
     parser.add_argument("--init-decoder", type=Path)
+    parser.add_argument("--decoder-layers", type=int, choices=[3, 6, 9, 12],
+                        help="Decoder depth; defaults to the source depth or three blocks")
     parser.add_argument("--ranking-candidates", type=int, default=0)
     parser.add_argument("--learning-rate", type=float, default=0.0004)
     parser.add_argument("--fine-tune-encoder", action="store_true")
@@ -143,13 +145,13 @@ def main():
     real, real_labels = load_recordings(real_path, {word: i for i, word in enumerate(words)})
     groups = real_word_groups(real_labels, device)
     real, real_labels = torch.tensor(real, device=device), torch.tensor(real_labels, device=device)
-    model = SpellingDecoder(getattr(encoder, "input_channels", 8)).to(device)
-    decoder_hash = None
+    initial, decoder_hash = load_checkpoint(args.init_decoder) if args.init_decoder else (None, None)
+    args.decoder_layers = args.decoder_layers or (decoder_dimensions(initial["model"])[1] if initial else 3)
+    model = SpellingDecoder(getattr(encoder, "input_channels", 8), layers=args.decoder_layers).to(device)
     if args.init_decoder:
-        initial, decoder_hash = load_checkpoint(args.init_decoder)
         if initial["metadata"]["encoder_sha256"] != encoder_hash or initial["words"] != words:
             raise ValueError("decoder initialization belongs to a different encoder or dictionary")
-        model.load_state_dict(initial["model"])
+        expand_decoder(model, initial["model"])
         if "context_model" in initial:
             if not args.fine_tune_encoder:
                 raise ValueError("a jointly trained decoder requires its learned context")
@@ -162,6 +164,7 @@ def main():
     optimizer = torch.optim.AdamW(groups_to_train, weight_decay=0.001)
     schedule = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=0.00001)
     metadata = {"encoder_sha256": encoder_hash, "encoder_path": str(args.checkpoint),
+        "decoder_parameters": sum(parameter.numel() for parameter in model.parameters()),
         "decoder_initialization_sha256": decoder_hash,
         "fine_tuned_context": args.fine_tune_encoder,
         "context_normalization": "Fixed running statistics; encoder stays in evaluation mode during gradient updates",

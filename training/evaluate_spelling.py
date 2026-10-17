@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from autoregressive_model import SpellingDecoder, word_tokens
+from autoregressive_model import load_decoder, word_tokens
 from export_ensemble import pair_configuration
 from retrieval_model import build_encoder
 from train_autoregressive import evaluate
@@ -106,8 +106,7 @@ def main():
             word_encoder = build_encoder(record["metadata"]["arguments"].get("architecture", "small")).to(device).eval().requires_grad_(False)
             word_encoder.load_state_dict(record["model"])
         word_models.append((word_encoder, record["proxies"].to(device), weight))
-    model = SpellingDecoder(getattr(encoder, "input_channels", 8)).to(device).eval()
-    model.load_state_dict(decoded["model"])
+    model = load_decoder(decoded["model"], getattr(encoder, "input_channels", 8)).to(device).eval()
     model.requires_grad_(False)
     inputs, targets, lengths = [value.to(device) for value in word_tokens(saved["words"])]
     paths = torch.tensor(np.array(rows["points"]), device=device)

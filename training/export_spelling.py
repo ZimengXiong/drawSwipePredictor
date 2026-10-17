@@ -11,13 +11,47 @@ import sys
 
 import torch
 
-from autoregressive_model import SpellingDecoder, word_tokens
+from autoregressive_model import load_decoder, word_tokens
 from export_retrieval import fingerprint, floats
 from retrieval_model import build_encoder, curve, encoder_features
 from train_character import encode
 from train_joint import load_checkpoint
 from train_proxy import proxy_scores
 from export_word_mixture import auxiliary_components, word_binding
+
+
+def spelling_binary(model, context_tag, encoder_tag, bank_tag, channels, proxy_weight, length_power):
+    """Serialize every decoder block while preserving the legacy three-block format."""
+    layers = len(model.decoder.layers)
+    if model.symbols.embedding_dim != 192 or model.positions.num_embeddings != 64 or not 1 <= layers <= 12:
+        raise ValueError("native spelling requires width 192, 64 token positions, and one to twelve blocks")
+    binary = bytearray((b"SWPSP001" if layers == 3 else b"SWPSP002") +
+                       struct.pack("<QQQIff", context_tag, encoder_tag, bank_tag, channels, proxy_weight, length_power))
+    if layers != 3:
+        binary.extend(struct.pack("<I", layers))
+
+    def linear(layer):
+        binary.extend(floats(layer.weight))
+        binary.extend(floats(layer.bias))
+
+    def attention(layer):
+        binary.extend(floats(layer.in_proj_weight))
+        binary.extend(floats(layer.in_proj_bias))
+        linear(layer.out_proj)
+
+    linear(model.memory)
+    for tensor in [model.memory_position, model.symbols.weight, model.positions.weight]:
+        binary.extend(floats(tensor))
+    for block in model.decoder.layers:
+        for norm in [block.norm1, block.norm2, block.norm3]:
+            linear(norm)
+        attention(block.self_attn)
+        attention(block.multihead_attn)
+        linear(block.linear1)
+        linear(block.linear2)
+    linear(model.decoder.norm)
+    linear(model.output)
+    return bytes(binary)
 
 
 def main():
@@ -101,24 +135,9 @@ def main():
                     "--checkpoint", str(export_context), "--output", str(context_directory)], check=True)
     context_bytes = (context_directory / "encoder.bin").read_bytes()
     channels = 16 if context["metadata"]["arguments"].get("architecture") in ["intrinsic", "giant", "massive"] else 8
-    model = SpellingDecoder(channels).eval()
-    model.load_state_dict(decoded["model"])
-    binary = bytearray(b"SWPSP001" + struct.pack("<QQQIff", fingerprint(context_bytes), fingerprint(encoder_bytes),
-                                              word_binding(manifest, bank_bytes), channels, chosen["proxy_weight"], chosen["length_power"]))
-    def linear(layer):
-        binary.extend(floats(layer.weight)); binary.extend(floats(layer.bias))
-    def attention(layer):
-        binary.extend(floats(layer.in_proj_weight)); binary.extend(floats(layer.in_proj_bias))
-        linear(layer.out_proj)
-    linear(model.memory)
-    for tensor in [model.memory_position, model.symbols.weight, model.positions.weight]:
-        binary.extend(floats(tensor))
-    for block in model.decoder.layers:
-        for norm in [block.norm1, block.norm2, block.norm3]:
-            linear(norm)
-        attention(block.self_attn); attention(block.multihead_attn)
-        linear(block.linear1); linear(block.linear2)
-    linear(model.decoder.norm); linear(model.output)
+    model = load_decoder(decoded["model"], channels).eval()
+    binary = spelling_binary(model, fingerprint(context_bytes), fingerprint(encoder_bytes), word_binding(manifest, bank_bytes),
+                             channels, chosen["proxy_weight"], chosen["length_power"])
     device = "mps"
     def encoder(record):
         result = build_encoder(record["metadata"]["arguments"].get("architecture", "small")).to(device).eval()
@@ -161,6 +180,7 @@ def main():
         "context_checkpoint_sha256": decoder_hash if "context_model" in decoded else context_hash,
         "context_initializer_sha256": context_hash, "context_encoder_sha256": hashlib.sha256(context_bytes).hexdigest(),
         "joint_context": "context_model" in decoded,
+        "decoder_layers": len(model.decoder.layers),
         "selection_sha256": hashlib.sha256(selection_bytes).hexdigest(), "selected": chosen}
     (args.output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"Exported {len(binary):,} bytes of bound spelling weights", flush=True)

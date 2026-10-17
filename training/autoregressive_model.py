@@ -7,6 +7,38 @@ from torch.nn import functional as F
 PAD, START, END = 0, 27, 28
 
 
+def decoder_dimensions(state):
+    """Read decoder dimensions from checkpoint tensors, including legacy files."""
+    indices = {int(key.split(".")[2]) for key in state if key.startswith("decoder.layers.")}
+    if not indices or indices != set(range(max(indices) + 1)) or max(indices) >= 12:
+        raise ValueError("decoder layers must be contiguous and contain one to twelve blocks")
+    return state["symbols.weight"].shape[1], len(indices), state["positions.weight"].shape[0]
+
+
+def load_decoder(state, raw_channels):
+    """Load the complete decoder without silently dropping added blocks."""
+    width, layers, positions = decoder_dimensions(state)
+    model = SpellingDecoder(raw_channels, width, layers, positions)
+    model.load_state_dict(state)
+    return model
+
+
+@torch.no_grad()
+def expand_decoder(model, original):
+    """Add identity blocks while preserving every existing spelling score."""
+    width, layers, positions = decoder_dimensions(original)
+    if width != model.symbols.embedding_dim or positions != model.positions.num_embeddings or layers > len(model.decoder.layers):
+        raise ValueError("decoder expansion cannot change width, positions, or remove blocks")
+    missing, unexpected = model.load_state_dict(original, strict=False)
+    expected_missing = {key for key in model.state_dict() if key.startswith("decoder.layers.") and int(key.split(".")[2]) >= layers}
+    if set(missing) != expected_missing or unexpected:
+        raise ValueError("decoder expansion has incompatible source tensors")
+    for block in model.decoder.layers[layers:]:
+        for output in [block.self_attn.out_proj, block.multihead_attn.out_proj, block.linear2]:
+            output.weight.zero_()
+            output.bias.zero_()
+
+
 def word_tokens(words):
     """Encode full words, retaining repeated letters and the end token."""
     width = max(map(len, words)) + 1

@@ -241,9 +241,22 @@ pub(crate) struct SpellingModel {
 
 impl SpellingModel {
     pub(crate) fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
-        if bytes.len() < 44 || bytes.get(..8) != Some(b"SWPSP001") {
+        let version = bytes.get(..8);
+        if bytes.len() < 44 || (version != Some(b"SWPSP001") && version != Some(b"SWPSP002")) {
             return Err("unsupported spelling decoder format".into());
         }
+        let (layers, header) = if bytes.get(..8) == Some(b"SWPSP002") {
+            if bytes.len() < 48 {
+                return Err("truncated spelling decoder header".into());
+            }
+            let layers = u32::from_le_bytes(bytes[44..48].try_into().unwrap()) as usize;
+            if !(1..=12).contains(&layers) {
+                return Err("invalid spelling decoder depth".into());
+            }
+            (layers, 48)
+        } else {
+            (3, 44)
+        };
         let tag = |start| u64::from_le_bytes(bytes[start..start + 8].try_into().unwrap());
         let channels = u32::from_le_bytes(bytes[32..36].try_into().unwrap()) as usize;
         let proxy_weight = f32::from_le_bytes(bytes[36..40].try_into().unwrap());
@@ -258,14 +271,14 @@ impl SpellingModel {
         }
         let mut reader = Reader {
             bytes,
-            position: 44,
+            position: header,
         };
         let memory = reader.linear(256 + channels, WIDTH)?;
         let memory_positions = reader.values(MEMORY * WIDTH)?;
         let symbols = reader.values(29 * WIDTH)?;
         let positions = reader.values(64 * WIDTH)?;
         let mut blocks = Vec::new();
-        for _ in 0..3 {
+        for _ in 0..layers {
             blocks.push(Block {
                 norms: [reader.norm()?, reader.norm()?, reader.norm()?],
                 self_attention: reader.attention()?,
@@ -441,6 +454,24 @@ mod tests {
             .unwrap()
             .contains("configuration"));
         bytes[32..36].copy_from_slice(&8_u32.to_le_bytes());
+        assert!(SpellingModel::from_bytes(&bytes)
+            .err()
+            .unwrap()
+            .contains("truncated"));
+        bytes[..8].copy_from_slice(b"SWPSP002");
+        assert!(SpellingModel::from_bytes(&bytes)
+            .err()
+            .unwrap()
+            .contains("header"));
+        bytes.extend(0_u32.to_le_bytes());
+        for invalid in [0_u32, 13, u32::MAX] {
+            bytes[44..48].copy_from_slice(&invalid.to_le_bytes());
+            assert!(SpellingModel::from_bytes(&bytes)
+                .err()
+                .unwrap()
+                .contains("depth"));
+        }
+        bytes[44..48].copy_from_slice(&9_u32.to_le_bytes());
         assert!(SpellingModel::from_bytes(&bytes)
             .err()
             .unwrap()
