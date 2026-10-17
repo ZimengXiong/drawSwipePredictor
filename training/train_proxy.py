@@ -35,6 +35,21 @@ def corpus(path):
                   "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
 
 
+def sample_corpora(shards, count, rng, device):
+    """Read a uniform batch from memory-mapped training shards."""
+    edges = np.cumsum([len(rows) for rows, _ in shards])
+    selected = rng.integers(int(edges[-1]), size=count)
+    shard_ids = np.searchsorted(edges, selected, side="right")
+    points = np.empty((count, 64, 2), dtype=np.float32)
+    labels = np.empty(count, dtype=np.int64)
+    starts = np.r_[0, edges[:-1]]
+    for i, (rows, _) in enumerate(shards):
+        mask = shard_ids == i
+        local = selected[mask] - starts[i]
+        points[mask], labels[mask] = rows["points"][local], rows["label"][local]
+    return torch.tensor(points, device=device), torch.tensor(labels, device=device)
+
+
 def proxy_scores(query, proxies):
     """Score one or several equally weighted route centers per word."""
     normalized = F.normalize(proxies, dim=-1)
@@ -62,6 +77,8 @@ def evaluate(model, proxies, datasets):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--train", type=Path, default=ROOT / "training/data/memory-proxy/train.bin")
+    parser.add_argument("--extra-train", type=Path, action="append", default=[])
+    parser.add_argument("--stream-corpus", action="store_true")
     parser.add_argument("--validation", type=Path, default=ROOT / "training/data/memory-proxy/validation.bin")
     parser.add_argument("--init-model", type=Path, default=ROOT / "training/checkpoints/retrieval-v3/best.pt")
     parser.add_argument("--output", type=Path, required=True)
@@ -89,12 +106,20 @@ def main():
     if device == "mps":
         torch.mps.set_per_process_memory_fraction(0.75)
     train, train_info = corpus(args.train)
+    shards = [(train, train_info)] + [corpus(path) for path in args.extra_train]
+    rng = np.random.default_rng(args.seed)
     validation, validation_info = corpus(args.validation)
-    if not (train_info["writer_end"] <= validation_info["writer_start"] or validation_info["writer_end"] <= train_info["writer_start"]):
-        raise ValueError("training and validation writers overlap")
-    for record in [train_info, validation_info]:
+    declared = [info for _, info in shards] + [validation_info]
+    for i, record in enumerate(declared):
         if record["seed"] in [101, 102, 9001, 12345, 246810, 700007]:
             raise ValueError("reserved benchmark writer block")
+        if record["vocabulary"] != train_info["vocabulary"]:
+            raise ValueError("corpus vocabularies differ")
+        for other in declared[:i]:
+            if not (record["writer_end"] <= other["writer_start"] or other["writer_end"] <= record["writer_start"]):
+                raise ValueError("declared writer ranges overlap")
+    if args.extra_train and not args.stream_corpus:
+        parser.error("additional training shards require --stream-corpus")
     words, counts, canonical = vocabulary(ROOT / "word_freq.txt", train_info["vocabulary"])
     if len(words) != validation_info["vocabulary"]:
         raise ValueError("corpus vocabularies differ")
@@ -103,8 +128,9 @@ def main():
     real, real_labels = load_recordings(real_path, ids)
     real = torch.tensor(real, device=device)
     real_labels = torch.tensor(real_labels, device=device)
-    train_paths = torch.tensor(np.array(train["points"]), device=device)
-    train_labels = torch.tensor(np.array(train["label"], dtype=np.int64), device=device)
+    if not args.stream_corpus:
+        train_paths = torch.tensor(np.array(train["points"]), device=device)
+        train_labels = torch.tensor(np.array(train["label"], dtype=np.int64), device=device)
     canonical = torch.tensor(canonical, device=device)
     datasets = {}
     for difficulty, name in enumerate(["clean", "loose", "memory"]):
@@ -156,8 +182,8 @@ def main():
         scheduler.load_state_dict(saved["scheduler"])
         start, best = saved["epoch"] + 1, saved["best_score"]
     args.output.mkdir(parents=True, exist_ok=True)
-    metadata = {"arguments": {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
-        "train_corpus": train_info, "validation_corpus": validation_info,
+    metadata = {"arguments": {k: [str(item) for item in v] if k == "extra_train" else str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
+        "train_corpus": train_info, "extra_train_corpora": [info for _, info in shards[1:]], "validation_corpus": validation_info,
         "real_training_sha256": hashlib.sha256(real_path.read_bytes()).hexdigest(),
         "test_data_used": False, "selection": "uniform full-vocabulary memory validation top1",
         "input_features": "geometry only; labels and writer identities are never model inputs",
@@ -174,12 +200,16 @@ def main():
             nf = int(args.batch * args.fresh_fraction)
             ns = args.batch - nr - nc - nf
             ri = torch.randint(len(real), (nr,), device=device)
-            si = torch.randint(len(train_paths), (ns,), device=device)
+            if args.stream_corpus:
+                synthetic_paths, synthetic_labels = sample_corpora(shards, ns, rng, device)
+            else:
+                si = torch.randint(len(train_paths), (ns,), device=device)
+                synthetic_paths, synthetic_labels = train_paths[si], train_labels[si]
             ci = torch.randint(len(words), (nc,), device=device)
             # Procedural drawings already contain strong memory errors. Avoid
             # destroying their remaining evidence with a second heavy distortion.
-            paths = torch.cat([augment(real[ri]), train_paths[si], augment(canonical[ci])])
-            labels = torch.cat([real_labels[ri], train_labels[si], ci])
+            paths = torch.cat([augment(real[ri]), synthetic_paths, augment(canonical[ci])])
+            labels = torch.cat([real_labels[ri], synthetic_labels, ci])
             if sampler:
                 fresh_labels = sampler.labels(nf)
                 paths = torch.cat([paths, sampler.sample(fresh_labels)])
