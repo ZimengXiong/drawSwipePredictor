@@ -609,6 +609,63 @@ mod tests {
     }
 
     #[test]
+    fn ensemble_combines_word_scores_and_requires_all_components() {
+        let mut first = vec![0_u8; 8 + 405072 * 4];
+        first[..8].copy_from_slice(b"SWPRT001");
+        let bias = first.len() - DIM * 4;
+        first[bias..bias + 4].copy_from_slice(&1.0_f32.to_le_bytes());
+        let mut second = first.clone();
+        second[bias..bias + 4].copy_from_slice(&0.0_f32.to_le_bytes());
+        second[bias + 4..bias + 8].copy_from_slice(&1.0_f32.to_le_bytes());
+        let mut bank = b"SWPBK001".to_vec();
+        bank.extend(fingerprint(&first).to_le_bytes());
+        bank.extend(3_u32.to_le_bytes());
+        bank.extend((DIM as u32).to_le_bytes());
+        for (name, coordinates) in [
+            ("hello", [1.0_f32, 0.0]),
+            ("world", [0.0, 1.0]),
+            ("lunch", [0.6, 0.8]),
+        ] {
+            bank.extend((name.len() as u16).to_le_bytes());
+            bank.extend(name.as_bytes());
+            bank.extend(0.5_f32.to_le_bytes());
+            let mut vector = [0.0_f32; DIM];
+            vector[..2].copy_from_slice(&coordinates);
+            for value in vector {
+                bank.extend(value.to_le_bytes());
+            }
+        }
+        let mut engine = RetrievalEngine::from_bytes(&first, &bank).unwrap();
+        engine.prior_weight = 0.0;
+        engine.auxiliary_weight = 0.75;
+        let path = [(0.0, 0.0), (1.0, 2.0), (3.0, 1.0)];
+        assert!(engine.predict_from_path(&path, 3).is_empty());
+        let vectors = [[1.0_f32, 0.0], [0.0, 1.0], [-1.0, 0.0]]
+            .into_iter()
+            .map(|xy| {
+                let mut vector = [0.0; DIM];
+                vector[..2].copy_from_slice(&xy);
+                vector
+            })
+            .collect();
+        engine.auxiliary = Some(Auxiliary {
+            encoder: Encoder::from_bytes(&second).unwrap(),
+            vectors,
+            centers: 1,
+        });
+        let ranked = engine.predict_from_path(&path, 3);
+        assert_eq!(
+            ranked.iter().map(|p| p.word.as_str()).collect::<Vec<_>>(),
+            ["world", "hello", "lunch"]
+        );
+        for (prediction, expected) in ranked.iter().zip([0.25, 0.75, 0.85]) {
+            assert!((prediction.raw_score - expected).abs() < 1e-6);
+        }
+        engine.truncate_vocabulary(2);
+        assert_eq!(engine.predict_from_path(&path, 3).len(), 2);
+    }
+
+    #[test]
     fn validates_bank_identity_and_values() {
         let mut model = vec![0_u8; 8 + 405072 * 4];
         model[..8].copy_from_slice(b"SWPRT001");
